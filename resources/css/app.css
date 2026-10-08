@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+html {
+    scroll-behavior: smooth;
+}
+
+@theme inline {
+    --font-sans:
+        Instrument Sans, ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+
+    /* Palet Warna Custom Siperjaka */
+    --color-sun: #FBAA27;      /* Oranye / Kuning (Matahari & Pohon Palem) */
+    --color-pink: #F3278C;     /* Merah Muda (Ornamen perahu kiri & tengah) */
+    --color-purple: #91278F;   /* Ungu (Karakter / ornamen kanan) */
+    --color-blue: #0B6FB8;     /* Biru (Ombak dan lambung perahu) */
+    --color-green: #8DC63F;    /* Hijau (Daun dan garis lengkung bawah) */
+    --color-dark: #232323;     /* Abu-abu Gelap (Latar belakang) */
+}

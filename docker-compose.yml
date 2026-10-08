@@ -1,0 +1,17 @@
+services:
+  pgsql:
+    image: postgres:16
+    container_name: siperjaka_pgsql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - siperjaka_pg_data:/var/lib/postgresql/data
+    restart: 'no'
+
+volumes:
+  siperjaka_pg_data:
+    driver: local
