@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\RateLimiter;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-
     config([
         'auth-throttle.login.max_attempts' => 5,
         'auth-throttle.register.max_attempts' => 3,
@@ -18,7 +17,7 @@ beforeEach(function () {
     ]);
     Cache::flush();
 });
- 
+
 /*
 |--------------------------------------------------------------------------
 | Login Rate Limiting
@@ -136,13 +135,16 @@ it('login yang berhasil setelah 4 kali gagal tetap diizinkan', function () {
 */
 
 it('memblokir register setelah 3 percobaan', function () {
-    // 3 percobaan pertama (gagal validasi karena email duplikat)
+    // Gunakan email yang SAMA di semua iterasi agar key rate limit konsisten
+    $sameEmail = 'duplikat@example.com';
+
+    // 3 percobaan pertama — semua gagal karena password pendek
     for ($i = 0; $i < 3; $i++) {
         $this->post('/register', [
             'name' => 'Budi',
             'username' => 'budi' . $i,
-            'email' => 'budi' . $i . '@example.com',
-            'password' => 'short', // sengaja gagal validasi
+            'email' => $sameEmail,
+            'password' => 'short',
             'password_confirmation' => 'short',
         ]);
     }
@@ -151,7 +153,7 @@ it('memblokir register setelah 3 percobaan', function () {
     $response = $this->from('/register')->post('/register', [
         'name' => 'Budi',
         'username' => 'budi4',
-        'email' => 'budi4@example.com',
+        'email' => $sameEmail,
         'password' => 'password123',
         'password_confirmation' => 'password123',
     ]);
