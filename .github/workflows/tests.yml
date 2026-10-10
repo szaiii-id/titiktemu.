@@ -193,8 +193,8 @@ jobs:
       - name: Install Bun dependencies
         run: bun install --frozen-lockfile
 
-      - name: Install Playwright Chromium
-        run: bunx playwright install chromium --with-deps
+      - name: Install Playwright Browser
+        run: bunx playwright install --with-deps
 
       - name: Prepare environment
         run: |
@@ -278,8 +278,8 @@ jobs:
       - name: Install Bun dependencies
         run: bun install --frozen-lockfile
 
-      - name: Install Playwright Chromium
-        run: bunx playwright install chromium --with-deps
+      - name: Install Playwright Browser
+        run: bunx playwright install --with-deps
 
       - name: Prepare environment
         run: |
