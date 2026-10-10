@@ -39,4 +39,9 @@ return [
         'decay_seconds' => (int) env('AUTH_THROTTLE_RESET_DECAY', 60),
         'test_override' => env('AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE'),
     ],
+    'contact' => [
+        'max_attempts' => (int) env('AUTH_THROTTLE_CONTACT_MAX', 3),
+        'decay_seconds' => (int) env('AUTH_THROTTLE_CONTACT_DECAY', 60),
+        'test_override' => env('AUTH_THROTTLE_CONTACT_TEST_OVERRIDE'),
+    ],
 ];

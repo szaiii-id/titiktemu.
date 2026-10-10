@@ -76,8 +76,7 @@ class AppServiceProvider extends ServiceProvider
          * (di-set di `playwright.config.ts`).
          */
         RateLimiter::for('contact', function (Request $request) {
-            // Override dari env (khusus untuk E2E)
-            $override = env('AUTH_THROTTLE_CONTACT_TEST_OVERRIDE');
+            $override = config('AUTH_THROTTLE_CONTACT_TEST_OVERRIDE');
 
             if ($override !== null && $override !== '') {
                 return Limit::perMinute((int) $override)->by($request->ip());

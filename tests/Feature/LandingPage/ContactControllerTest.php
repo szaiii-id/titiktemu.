@@ -2,7 +2,6 @@
 
 use App\Models\User;
 use App\Services\LandingPage\ContactService;
-use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -254,32 +253,22 @@ it('user yang sudah login juga bisa mengirim pesan kontak', function () {
 
 it('memblokir pengiriman setelah 3 kali dalam 1 menit', function () {
     // ============================================================
-    // PENTING: Rate limiter 'contact' di-define di AppServiceProvider
-    // dengan limit 3 per menit (default).
-    //
-    // Karena kita menggunakan named limiter `throttle:contact`, test
-    // ini akan MENGUJI BEHAVIOR throttle yang sebenarnya.
-    //
-    // TAPI — karena E2E menggunakan env
-    // `AUTH_THROTTLE_CONTACT_TEST_OVERRIDE=1000`, kita perlu
-    // memastikan env tersebut TIDAK di-set di test ini.
-    //
-    // Solusi: Override rate limiter langsung di test.
+    // Di `.env.testing`, `AUTH_THROTTLE_CONTACT_TEST_OVERRIDE=1000`
+    // (untuk E2E). Kita perlu OVERRIDE `test_override` menjadi null
+    // agar `max_attempts=3` digunakan.
     // ============================================================
+    config([
+        'auth-throttle.contact.test_override' => null,
+        'auth-throttle.contact.max_attempts' => 3,
+    ]);
 
-    // Override rate limiter 'contact' untuk test ini — limit 3
-    RateLimiter::for('contact', function ($request) {
-        return Limit::perMinute(3)->by($request->ip());
-    });
-
-    // Clear rate limiter dulu
+    // Clear rate limiter
     RateLimiter::clear('127.0.0.1');
 
     $this->mock(ContactService::class, function (MockInterface $mock) {
         $mock->shouldReceive('send')->times(3);
     });
 
-    // 3 kali pertama — berhasil
     for ($i = 0; $i < 3; $i++) {
         $this->post('/contact', [
             'nama' => 'Budi Santoso',
@@ -288,7 +277,6 @@ it('memblokir pengiriman setelah 3 kali dalam 1 menit', function () {
         ]);
     }
 
-    // Percobaan ke-4 — harus diblokir (429)
     $response = $this->post('/contact', [
         'nama' => 'Budi Santoso',
         'email' => 'budi@example.com',
