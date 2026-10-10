@@ -18,7 +18,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'identitas' => ['required', 'string'],
-            'password'  => ['required', 'string'],
+            'password' => ['required', 'string'],
         ];
     }
 
@@ -29,7 +29,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'identitas.required' => 'Username atau email wajib diisi.',
-            'password.required'  => 'Kata sandi wajib diisi.',
+            'password.required' => 'Kata sandi wajib diisi.',
         ];
     }
 }
