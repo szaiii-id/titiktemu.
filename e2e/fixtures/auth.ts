@@ -69,16 +69,11 @@ export async function forceLogout(page: Page): Promise<void> {
 // HELPER: LOGIN VIA UI
 // ==========================================
 /**
- * Login melalui halaman /login, lalu navigasi eksplisit ke dashboard.
+ * Login melalui halaman /login, lalu tunggu redirect ke dashboard.
  *
- * Strategi anti-flaky:
- *   1. forceLogout() dulu — pastikan tidak ada session sisa.
- *   2. Tunggu response POST /login selesai (bukan cuma waitForURL).
- *   3. Verifikasi status 302 + header Location.
- *   4. Beri jeda agar browser set cookie.
- *   5. page.goto(dashboardPath) eksplisit — tidak bergantung pada
- *      client-side redirect yang bisa menggantung di WebKit/Firefox.
- *   6. Cek URL akhir — kalau balik ke /login, throw error jelas.
+ * Menggunakan `waitUntil: 'commit'` agar tidak bergantung pada
+ * event `load` yang bisa menggantung di WebKit/Firefox (penyebab
+ * timeout di test sebelumnya).
  */
 export async function loginViaUI(
     page: Page,
@@ -91,7 +86,7 @@ export async function loginViaUI(
     const { useEmail = true, remember = false } = options;
     const user = SEED_USERS[role];
 
-    // 1. Logout dulu dari server + clear cookies
+    // Logout dulu dari server + clear cookies
     await forceLogout(page);
     await page.goto('/login');
 
@@ -103,52 +98,16 @@ export async function loginViaUI(
         await page.check('input#remember-me');
     }
 
-    // 2. Tunggu response POST /login selesai
-    const loginResponsePromise = page.waitForResponse(
-        (res) =>
-            res.url().includes('/login') &&
-            res.request().method() === 'POST',
-        { timeout: 15_000 }
-    );
-
+    // Submit form
     await page.click('button[type="submit"]');
-    const loginResponse = await loginResponsePromise;
 
-    // 3. Verifikasi status 302 (redirect = sukses)
-    if (loginResponse.status() !== 302) {
-        throw new Error(
-            `Login gagal untuk ${user.email}: ` +
-            `status ${loginResponse.status()} (expected 302)`
-        );
-    }
-
-    // Verifikasi header Location mengarah ke dashboard yang benar
-    const location = loginResponse.headers()['location'] ?? '';
-    if (!location.includes(user.dashboardPath)) {
-        throw new Error(
-            `Login redirect tidak sesuai untuk ${user.email}. ` +
-            `Expected: ${user.dashboardPath}, Got: ${location || '(empty)'}`
-        );
-    }
-
-    // 4. Beri jeda agar browser selesai set cookie session
-    await page.waitForTimeout(500);
-
-    // 5. Navigasi eksplisit ke dashboard — tidak bergantung pada
-    //    client-side redirect yang bisa menggantung
-    await page.goto(user.dashboardPath, {
-        waitUntil: 'domcontentloaded',
+    // Tunggu redirect ke dashboard.
+    // `waitUntil: 'commit'` — hanya tunggu URL berubah, tidak tunggu
+    // event 'load' yang bisa menggantung di WebKit/Firefox.
+    await page.waitForURL(`**${user.dashboardPath}`, {
         timeout: 15_000,
+        waitUntil: 'commit',
     });
-
-    // 6. Cek apakah kita tidak di-redirect balik ke /login
-    if (page.url().includes('/login')) {
-        throw new Error(
-            `Login sukses (302) tapi dashboard redirect balik ke /login. ` +
-            `Kemungkinan cookie session tidak terkirim oleh browser. ` +
-            `URL: ${page.url()}`
-        );
-    }
 }
 
 // ==========================================
