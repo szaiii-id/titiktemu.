@@ -12,19 +12,13 @@ test.describe('Login — Alur Masuk Pengguna', () => {
     */
 
     test('login dengan email berhasil dan redirect ke dashboard client', async ({ page }) => {
-        await page.fill('input#identitas', SEED_USERS.client.email);
-        await page.fill('input#password', SEED_USERS.client.password);
-        await page.click('button[type="submit"]');
-
-        await expect(page).toHaveURL('/client/dashboard', { timeout: 15_000 });
+        await loginViaUI(page, 'client', { useEmail: true });
+        await expect(page).toHaveURL('/client/dashboard');
     });
 
     test('login dengan username berhasil (dual-login)', async ({ page }) => {
-        await page.fill('input#identitas', SEED_USERS.client.username);
-        await page.fill('input#password', SEED_USERS.client.password);
-        await page.click('button[type="submit"]');
-
-        await expect(page).toHaveURL('/client/dashboard', { timeout: 15_000 });
+        await loginViaUI(page, 'client', { useEmail: false });
+        await expect(page).toHaveURL('/client/dashboard');
     });
 
     test('admin diarahkan ke dashboard admin setelah login', async ({ page }) => {
@@ -53,10 +47,7 @@ test.describe('Login — Alur Masuk Pengguna', () => {
         await page.fill('input#password', 'password-salah');
         await page.click('button[type="submit"]');
 
-        // Tetap di halaman login
         await expect(page).toHaveURL('/login');
-
-        // Pesan error muncul
         await expect(
             page.getByText(/Kredensial yang diberikan tidak cocok/i)
         ).toBeVisible();
@@ -77,7 +68,6 @@ test.describe('Login — Alur Masuk Pengguna', () => {
         await page.fill('input#password', 'password123');
         await page.click('button[type="submit"]');
 
-        // Browser blokir karena `required`, tetap di halaman login
         await expect(page).toHaveURL('/login');
     });
 
@@ -95,14 +85,9 @@ test.describe('Login — Alur Masuk Pengguna', () => {
     */
 
     test('login dengan remember me membuat sesi tetap aktif', async ({ page }) => {
-        await page.fill('input#identitas', SEED_USERS.client.email);
-        await page.fill('input#password', SEED_USERS.client.password);
-        await page.check('input#remember-me');
-        await page.click('button[type="submit"]');
-
+        await loginViaUI(page, 'client', { remember: true });
         await expect(page).toHaveURL('/client/dashboard');
 
-        // Cek cookie remember_web_* ada
         const cookies = await page.context().cookies();
         const rememberCookie = cookies.find((c) =>
             c.name.startsWith('remember_')
@@ -112,11 +97,7 @@ test.describe('Login — Alur Masuk Pengguna', () => {
     });
 
     test('login tanpa remember me tidak membuat cookie remember', async ({ page }) => {
-        await page.fill('input#identitas', SEED_USERS.client.email);
-        await page.fill('input#password', SEED_USERS.client.password);
-        // Tidak centang remember
-        await page.click('button[type="submit"]');
-
+        await loginViaUI(page, 'client', { remember: false });
         await expect(page).toHaveURL('/client/dashboard');
 
         const cookies = await page.context().cookies();
@@ -135,10 +116,8 @@ test.describe('Login — Alur Masuk Pengguna', () => {
     test('logout menghapus sesi dan redirect ke landing page', async ({ page, asClient }) => {
         await asClient();
 
-        // Logout
         await logout(page);
 
-        // Setelah logout, akses dashboard harus redirect ke login
         await page.goto('/client/dashboard');
         await expect(page).toHaveURL('/login');
     });
@@ -162,7 +141,6 @@ test.describe('Login — Alur Masuk Pengguna', () => {
 
         await page.goto('/login');
 
-        // Harus di-redirect ke dashboard
         await expect(page).not.toHaveURL('/login');
     });
 

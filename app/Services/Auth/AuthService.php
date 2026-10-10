@@ -7,6 +7,7 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 
@@ -42,7 +43,25 @@ class AuthService
     {
         $user = $this->userRepository->findByEmailOrUsername($identitas);
 
+        // ⚠️ LOG DEBUG
+        Log::info('=== AUTH SERVICE: LOGIN CHECK ===', [
+            'identitas_input' => $identitas,
+            'password_length' => strlen($password),
+            'user_found' => $user !== null,
+            'user_id' => $user?->id,
+            'user_email' => $user?->email,
+            'user_username' => $user?->username,
+            'user_role' => $user?->role,
+            'hash_check' => $user ? Hash::check($password, $user->password) : null,
+            'password_hash_in_db' => $user?->password,
+        ]);
+
         if (! $user || ! Hash::check($password, $user->password)) {
+            Log::warning('=== AUTH SERVICE: LOGIN REJECTED ===', [
+                'reason' => ! $user ? 'user_not_found' : 'password_mismatch',
+                'identitas_input' => $identitas,
+            ]);
+
             throw ValidationException::withMessages([
                 'identitas' => ['Kredensial yang diberikan tidak cocok dengan data kami.'],
             ]);
@@ -95,6 +114,13 @@ class AuthService
      */
     public function logout(): void
     {
+        $user = Auth::user();
+
+        Log::info('=== AUTH SERVICE: LOGOUT ===', [
+            'user_id' => $user?->id,
+            'user_email' => $user?->email,
+        ]);
+
         Auth::logout();
 
         request()->session()->invalidate();

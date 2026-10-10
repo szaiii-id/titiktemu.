@@ -33,14 +33,6 @@ export type SeedRole = keyof typeof SEED_USERS;
 // ==========================================
 // HELPER: PAKSA LOGOUT DARI SERVER
 // ==========================================
-/**
- * Paksa logout dari server, membersihkan session yang tersisa.
- *
- * `clearCookies()` hanya menghapus cookie di browser, tapi session
- * di server (tabel `sessions`) masih ada. Tanpa ini, test berurutan
- * dengan user yang sama akan gagal login karena server melihat
- * session lama masih aktif.
- */
 export async function forceLogout(page: Page): Promise<void> {
     try {
         await page.goto('/');
@@ -58,22 +50,27 @@ export async function forceLogout(page: Page): Promise<void> {
             failOnStatusCode: false,
         });
     } catch {
-        // Abaikan error — kalau belum login, logout memang akan gagal
+        // Abaikan error
     }
 
-    // Bersihkan cookie di browser
     await page.context().clearCookies();
 }
 
 // ==========================================
-// HELPER: LOGIN VIA UI
+// HELPER: LOGIN VIA HTTP (BYPASS INERTIA)
 // ==========================================
 /**
- * Login melalui halaman /login, lalu tunggu redirect ke dashboard.
+ * Login dengan mengirim POST /login via `page.request` (HTTP).
  *
- * Menggunakan `waitUntil: 'commit'` agar tidak bergantung pada
- * event `load` yang bisa menggantung di WebKit/Firefox (penyebab
- * timeout di test sebelumnya).
+ * Kenapa TIDAK via klik form?
+ * Karena Inertia meng-intercept form submit sebagai XHR dengan
+ * header `X-Inertia: true`. Response 302 di-handle berbeda oleh
+ * Inertia, dan Playwright tidak selalu bisa mendeteksi navigasi
+ * hasilnya.
+ *
+ * Dengan mengirim POST langsung via `page.request` (tanpa header
+ * `X-Inertia`), server return redirect HTML standar, cookie session
+ * di-set dengan benar, dan browser bisa follow redirect.
  */
 export async function loginViaUI(
     page: Page,
@@ -86,40 +83,10 @@ export async function loginViaUI(
     const { useEmail = true, remember = false } = options;
     const user = SEED_USERS[role];
 
-    // Logout dulu dari server + clear cookies
+    // 1. Bersihkan state lama
     await forceLogout(page);
-    await page.goto('/login');
 
-    // Isi form
-    await page.fill('input#identitas', useEmail ? user.email : user.username);
-    await page.fill('input#password', user.password);
-
-    if (remember) {
-        await page.check('input#remember-me');
-    }
-
-    // Submit form
-    await page.click('button[type="submit"]');
-
-    // Tunggu redirect ke dashboard.
-    // `waitUntil: 'commit'` — hanya tunggu URL berubah, tidak tunggu
-    // event 'load' yang bisa menggantung di WebKit/Firefox.
-    await page.waitForURL(`**${user.dashboardPath}`, {
-        timeout: 15_000,
-        waitUntil: 'commit',
-    });
-}
-
-// ==========================================
-// HELPER: LOGIN VIA HTTP (LEBIH CEPAT)
-// ==========================================
-export async function loginViaHTTP(
-    page: Page,
-    role: SeedRole
-): Promise<void> {
-    const user = SEED_USERS[role];
-
-    await forceLogout(page);
+    // 2. Buka halaman login untuk dapat CSRF token
     await page.goto('/login');
 
     const csrfToken = await page.evaluate(() => {
@@ -127,21 +94,60 @@ export async function loginViaHTTP(
         return match ? decodeURIComponent(match[1]) : '';
     });
 
-    await page.request.post(`${APP_URL}/login`, {
+    // 3. POST /login via page.request (bypass Inertia)
+    const response = await page.request.post(`${APP_URL}/login`, {
         form: {
-            identitas: user.email,
+            identitas: useEmail ? user.email : user.username,
             password: user.password,
+            remember: remember ? '1' : '',
         },
         headers: {
             'X-XSRF-TOKEN': csrfToken,
             Accept: 'text/html, application/xhtml+xml',
         },
+        maxRedirects: 0,
+        failOnStatusCode: false,
     });
 
+    // 4. Verifikasi status 302
+    if (response.status() !== 302) {
+        throw new Error(
+            `Login gagal untuk ${user.email}: ` +
+            `status ${response.status()} (expected 302)`
+        );
+    }
+
+    const location = response.headers()['location'] ?? '';
+    if (!location.includes(user.dashboardPath)) {
+        throw new Error(
+            `Login redirect tidak sesuai untuk ${user.email}. ` +
+            `Expected: ${user.dashboardPath}, Got: ${location}`
+        );
+    }
+
+    // 5. Navigasi ke dashboard
     await page.goto(user.dashboardPath, {
-        waitUntil: 'domcontentloaded',
+        waitUntil: 'commit',
         timeout: 15_000,
     });
+
+    // 6. Pastikan tidak redirect balik ke /login
+    if (page.url().includes('/login')) {
+        throw new Error(
+            `Login sukses tapi dashboard redirect balik ke /login. ` +
+            `URL: ${page.url()}`
+        );
+    }
+}
+
+// ==========================================
+// HELPER: LOGIN VIA HTTP (ALIAS)
+// ==========================================
+export async function loginViaHTTP(
+    page: Page,
+    role: SeedRole
+): Promise<void> {
+    await loginViaUI(page, role);
 }
 
 // ==========================================
