@@ -7,24 +7,27 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 
 class UserRepository implements UserRepositoryInterface
 {
-    public function findByEmailOrUsername(string $identitas)
+    public function findByEmailOrUsername(string $identitas): ?User
     {
         return User::where('email', $identitas)
             ->orWhere('username', $identitas)
             ->first();
     }
 
-    public function findByGoogleId(string $googleId)
+    public function findByGoogleId(string $googleId): ?User
     {
         return User::where('google_id', $googleId)->first();
     }
 
-    public function findByEmail(string $email)
+    public function findByEmail(string $email): ?User
     {
         return User::where('email', $email)->first();
     }
 
-    public function createClient(array $data)
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function createClient(array $data): User
     {
         return User::create([
             'name' => $data['name'],
@@ -32,7 +35,7 @@ class UserRepository implements UserRepositoryInterface
             'email' => $data['email'],
             'password' => isset($data['password']) ? bcrypt($data['password']) : null,
             'google_id' => $data['google_id'] ?? null,
-            'role' => 'client', // Otomatis dikunci sebagai client demi keamanan
+            'role' => 'client',
         ]);
     }
 }

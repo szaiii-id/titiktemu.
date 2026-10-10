@@ -11,15 +11,21 @@ class ResetPasswordRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>|string>
+     */
     public function rules(): array
     {
         return [
-            'token' => 'required',
-            'email' => 'required|email|exists:users,email',
+            'token'    => 'required',
+            'email'    => 'required|email|exists:users,email',
             'password' => 'required|string|min:8|confirmed',
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

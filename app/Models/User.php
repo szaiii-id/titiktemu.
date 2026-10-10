@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @use HasFactory<\Database\Factories\UserFactory>
+ */
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -14,7 +18,7 @@ class User extends Authenticatable
     /**
      * Atribut yang dapat diisi secara massal (mass assignable).
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'name',
@@ -28,7 +32,7 @@ class User extends Authenticatable
     /**
      * Atribut yang disembunyikan saat model diubah menjadi array/JSON (dikirim ke Svelte).
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -38,12 +42,15 @@ class User extends Authenticatable
     /**
      * Penyesuaian tipe data atribut (casting).
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
 
     /**
      * Fungsi bantuan untuk mengecek apakah user adalah Admin

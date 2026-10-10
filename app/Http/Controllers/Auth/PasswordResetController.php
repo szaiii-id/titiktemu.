@@ -5,18 +5,21 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class PasswordResetController extends Controller
 {
-    public function create()
+    public function create(): InertiaResponse
     {
         return Inertia::render('Auth/ForgotPassword');
     }
 
-    public function store(ForgotPasswordRequest $request)
+    public function store(ForgotPasswordRequest $request): RedirectResponse
     {
         $status = Password::sendResetLink(
             $request->only('email')
@@ -29,7 +32,7 @@ class PasswordResetController extends Controller
         };
     }
 
-    public function edit(Request $request, $token)
+    public function edit(Request $request, string $token): InertiaResponse
     {
         return Inertia::render('Auth/ResetPassword', [
             'token' => $token,
@@ -37,11 +40,11 @@ class PasswordResetController extends Controller
         ]);
     }
 
-    public function update(ResetPasswordRequest $request)
+    public function update(ResetPasswordRequest $request): RedirectResponse
     {
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user) use ($request) {
+            function (User $user) use ($request): void {
                 $user->forceFill([
                     'password' => $request->password,
                 ])->save();

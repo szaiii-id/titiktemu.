@@ -11,18 +11,21 @@ class RegisterRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>|string>
+     */
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'name'      => ['required', 'string', 'max:255'],
+            'username'  => ['required', 'string', 'max:255', 'unique:users'],
+            'email'     => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'  => ['required', 'string', 'min:8', 'confirmed'],
         ];
     }
 
     /**
-     * Pesan error kustom agar lebih informatif
+     * @return array<string, string>
      */
     public function messages(): array
     {
@@ -34,7 +37,7 @@ class RegisterRequest extends FormRequest
             'email.email' => 'Format alamat email tidak valid.',
             'email.unique' => 'Email ini sudah terdaftar di sistem.',
             'password.required' => 'Kata sandi wajib diisi.',
-            'password.min' => 'Password minimal harus 8 karakter.',
+            'password.min' => 'Kata sandi minimal harus 8 karakter.',
             'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
         ];
     }

@@ -11,6 +11,9 @@ class ForgotPasswordRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>|string>
+     */
     public function rules(): array
     {
         return [
@@ -18,6 +21,9 @@ class ForgotPasswordRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

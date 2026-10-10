@@ -45,16 +45,12 @@ class AuthThrottleResponse
     /**
      * Ambil jumlah percobaan maksimal dari config.
      *
-     * Mendukung override via env untuk test rate limit:
-     *   AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5
-     *   AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3
-     *   AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3
-     *   AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5
+     * Override bisa dilakukan via config `auth-throttle.{limiter}.test_override`
+     * yang dibaca dari env (di file config), bukan langsung dari env di sini.
      */
     protected function maxAttempts(string $limiterName): int
     {
-        $overrideKey = 'AUTH_THROTTLE_'.strtoupper(str_replace('-', '_', $limiterName)).'_TEST_OVERRIDE';
-        $override = env($overrideKey);
+        $override = config("auth-throttle.{$limiterName}.test_override");
         if ($override !== null && $override !== '') {
             return (int) $override;
         }
@@ -72,6 +68,8 @@ class AuthThrottleResponse
 
     /**
      * Susun pesan error sesuai limiter.
+     *
+     * @return array<string, string>
      */
     protected function errorBag(string $limiterName, int $seconds): array
     {

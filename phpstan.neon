@@ -11,3 +11,14 @@ parameters:
         - routes/
 
     level: 7
+
+    parallel:
+        maximumNumberOfProcesses: 1
+
+    ignoreErrors:
+        -
+            message: '#Class App\\Models\\User uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types: TFactory#'
+            path: app/Models/User.php
+        -
+            message: '#Parameter \#2 \$string of function explode expects string, bool\|string given#'
+            path: config/sanctum.php

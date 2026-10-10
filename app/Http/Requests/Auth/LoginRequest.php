@@ -11,22 +11,25 @@ class LoginRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>|string>
+     */
     public function rules(): array
     {
         return [
             'identitas' => ['required', 'string'],
-            'password' => ['required', 'string'],
+            'password'  => ['required', 'string'],
         ];
     }
 
     /**
-     * Pesan error kustom untuk form login
+     * @return array<string, string>
      */
     public function messages(): array
     {
         return [
             'identitas.required' => 'Username atau email wajib diisi.',
-            'password.required' => 'Kata sandi wajib diisi.',
+            'password.required'  => 'Kata sandi wajib diisi.',
         ];
     }
 }

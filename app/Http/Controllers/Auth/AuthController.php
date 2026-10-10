@@ -6,80 +6,83 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\AuthService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 
 class AuthController extends Controller
 {
-    protected $authService;
+    protected AuthService $authService;
 
-    // Menyuntikkan AuthService ke dalam Controller
     public function __construct(AuthService $authService)
     {
         $this->authService = $authService;
     }
 
     /**
-     * Tampilkan Halaman Login (Svelte)
+     * Tampilkan Halaman Login (Svelte).
      */
-    public function showLogin()
+    public function showLogin(): InertiaResponse
     {
         return Inertia::render('Auth/Login');
     }
 
     /**
-     * Tampilkan Halaman Register (Svelte)
+     * Tampilkan Halaman Register (Svelte).
      */
-    public function showRegister()
+    public function showRegister(): InertiaResponse
     {
         return Inertia::render('Auth/Register');
     }
 
     /**
-     * Proses pendaftaran Client secara manual
+     * Proses pendaftaran Client secara manual.
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): RedirectResponse
     {
-        // 1. Data sudah otomatis tervalidasi bersih melalui RegisterRequest
-        // 2. Lempar data tervalidasi ke Service untuk disimpan & login
         $this->authService->registerClient($request->validated());
 
-        // 3. Arahkan ke Dasbor Client
         return redirect()->route('client.dashboard');
     }
 
     /**
-     * Proses Login Manual (Username/Email)
+     * Proses Login Manual (Username/Email).
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): RedirectResponse
     {
-        // 1. Data sudah otomatis tervalidasi bersih melalui LoginRequest
-        // 2. Lempar ke Service
         $user = $this->authService->login(
             $request->identitas,
             $request->password,
             $request->boolean('remember')
         );
 
-        // 3. Arahkan ke dasbor sesuai Role menggunakan fungsi helper di bawah
         return $this->redirectBasedOnRole($user->role);
     }
 
     /**
-     * Arahkan pengguna ke halaman login Google
+     * Arahkan pengguna ke halaman login Google.
      */
-    public function redirectToGoogle()
+    public function redirectToGoogle(): SymfonyRedirectResponse
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        /** @var AbstractProvider $driver */
+        $driver = Socialite::driver('google');
+
+        return $driver->stateless()->redirect();
     }
 
     /**
-     * Tangkap data balasan dari Google setelah user memilih akun
+     * Tangkap data balasan dari Google setelah user memilih akun.
      */
-    public function handleGoogleCallback()
+    public function handleGoogleCallback(): RedirectResponse
     {
-        $googleUser = Socialite::driver('google')->stateless()->user();
+        /** @var AbstractProvider $driver */
+        $driver = Socialite::driver('google');
+
+        $googleUser = $driver->stateless()->user();
 
         $user = $this->authService->handleGoogleLogin($googleUser);
 
@@ -87,19 +90,19 @@ class AuthController extends Controller
     }
 
     /**
-     * Proses Keluar (Logout)
+     * Proses Keluar (Logout).
      */
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         $this->authService->logout();
 
-        return redirect('/'); // Kembali ke Landing Page
+        return redirect('/');
     }
 
     /**
-     * Fungsi Helper untuk mengarahkan pengguna berdasarkan Role
+     * Fungsi Helper untuk mengarahkan pengguna berdasarkan Role.
      */
-    private function redirectBasedOnRole(string $role)
+    private function redirectBasedOnRole(string $role): RedirectResponse
     {
         return match ($role) {
             'admin' => redirect()->route('admin.dashboard'),

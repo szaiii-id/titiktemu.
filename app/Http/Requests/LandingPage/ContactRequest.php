@@ -11,6 +11,9 @@ class ContactRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, string>>
+     */
     public function rules(): array
     {
         return [
@@ -20,6 +23,9 @@ class ContactRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

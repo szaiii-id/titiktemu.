@@ -8,6 +8,8 @@ class ContactService
 {
     /**
      * Kirim pesan kontak ke email admin.
+     *
+     * @param  array<string, mixed>  $data
      */
     public function send(array $data): void
     {
@@ -25,6 +27,8 @@ class ContactService
 
     /**
      * Susun isi email dalam format teks.
+     *
+     * @param  array<string, mixed>  $data
      */
     protected function buildBody(array $data): string
     {
