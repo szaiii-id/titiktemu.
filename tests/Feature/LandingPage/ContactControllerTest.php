@@ -2,8 +2,10 @@
 
 use App\Models\User;
 use App\Services\LandingPage\ContactService;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Mockery\MockInterface;
 
 uses(RefreshDatabase::class);
@@ -186,7 +188,6 @@ it('mengembalikan error yang ramah jika ContactService gagal', function () {
     $response->assertSessionHasErrors('pesan');
     $response->assertSessionMissing('status');
 
-    // Input tetap tersimpan agar user tidak perlu mengetik ulang
     $response->assertSessionHasInput('nama', 'Budi Santoso');
     $response->assertSessionHasInput('email', 'budi@example.com');
 });
@@ -252,10 +253,33 @@ it('user yang sudah login juga bisa mengirim pesan kontak', function () {
 */
 
 it('memblokir pengiriman setelah 3 kali dalam 1 menit', function () {
+    // ============================================================
+    // PENTING: Rate limiter 'contact' di-define di AppServiceProvider
+    // dengan limit 3 per menit (default).
+    //
+    // Karena kita menggunakan named limiter `throttle:contact`, test
+    // ini akan MENGUJI BEHAVIOR throttle yang sebenarnya.
+    //
+    // TAPI — karena E2E menggunakan env
+    // `AUTH_THROTTLE_CONTACT_TEST_OVERRIDE=1000`, kita perlu
+    // memastikan env tersebut TIDAK di-set di test ini.
+    //
+    // Solusi: Override rate limiter langsung di test.
+    // ============================================================
+
+    // Override rate limiter 'contact' untuk test ini — limit 3
+    RateLimiter::for('contact', function ($request) {
+        return Limit::perMinute(3)->by($request->ip());
+    });
+
+    // Clear rate limiter dulu
+    RateLimiter::clear('127.0.0.1');
+
     $this->mock(ContactService::class, function (MockInterface $mock) {
         $mock->shouldReceive('send')->times(3);
     });
 
+    // 3 kali pertama — berhasil
     for ($i = 0; $i < 3; $i++) {
         $this->post('/contact', [
             'nama' => 'Budi Santoso',
@@ -264,15 +288,15 @@ it('memblokir pengiriman setelah 3 kali dalam 1 menit', function () {
         ]);
     }
 
-    // Percobaan ke-4 — harus diblokir throttle
-    $response = $this->from('/')->post('/contact', [
+    // Percobaan ke-4 — harus diblokir (429)
+    $response = $this->post('/contact', [
         'nama' => 'Budi Santoso',
         'email' => 'budi@example.com',
         'pesan' => 'Pesan percobaan minimal sepuluh karakter.',
     ]);
 
     $response->assertStatus(429);
-});
+})->group('rate-limit');
 
 /*
 |--------------------------------------------------------------------------

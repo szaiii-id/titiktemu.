@@ -227,6 +227,7 @@ it('membuat client baru jika google user benar-benar baru', function () {
 */
 
 it('logout memanggil Auth::logout dan invalidate session', function () {
+    // ✅ HAPUS mock Auth::user() — AuthService::logout() tidak memanggilnya
     Auth::shouldReceive('logout')->once();
 
     $session = Mockery::mock(Session::class);

@@ -84,7 +84,11 @@ jobs:
           DB_PASSWORD: titiktemu04!
         run: php artisan migrate --force
 
-      - name: Run Pest tests
+      # ============================================================
+      # STEP 1: Pest Test Fungsional (KECUALI rate-limit)
+      # Env AUTH_THROTTLE_*_TEST_OVERRIDE = 1000 (longgar)
+      # ============================================================
+      - name: Run Pest tests (functional)
         env:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
@@ -92,7 +96,6 @@ jobs:
           DB_DATABASE: titiktemu_db_testing
           DB_USERNAME: titiktemu_dev
           DB_PASSWORD: titiktemu04!
-          # AUTH THROTTLE — OVERRIDE LONGGAR UNTUK TESTING
           AUTH_THROTTLE_LOGIN_MAX: 5
           AUTH_THROTTLE_LOGIN_DECAY: 60
           AUTH_THROTTLE_LOGIN_TEST_OVERRIDE: 1000
@@ -105,7 +108,24 @@ jobs:
           AUTH_THROTTLE_RESET_MAX: 5
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
-        run: php artisan test
+        run: php artisan test --exclude-group=rate-limit
+
+      # ============================================================
+      # STEP 2: Pest Test Rate Limiting (HANYA rate-limit)
+      # Env AUTH_THROTTLE_*_TEST_OVERRIDE = TIDAK DI-SET
+      # sehingga config() di beforeEach test akan digunakan.
+      # ============================================================
+      - name: Run Pest tests (rate limit)
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: titiktemu_db_testing
+          DB_USERNAME: titiktemu_dev
+          DB_PASSWORD: titiktemu04!
+          # ❌ TIDAK ADA AUTH_THROTTLE_*_TEST_OVERRIDE
+          # Test akan menggunakan config() di beforeEach
+        run: php artisan test --group=rate-limit
 
   # ============================================================
   # JAVASCRIPT TESTS (Vitest)
@@ -134,26 +154,6 @@ jobs:
 
   # ============================================================
   # E2E TESTS (Playwright)
-  #
-  # Struktur folder yang diharapkan:
-  #   e2e/
-  #   ├── auth/
-  #   │   ├── login.spec.ts
-  #   │   ├── register.spec.ts
-  #   │   └── password-reset.spec.ts
-  #   ├── landing/
-  #   │   └── contact.spec.ts
-  #   ├── accessibility.spec.ts
-  #   └── rate-limit/              ← Folder TERPISAH untuk rate limit
-  #       └── rate-limit.spec.ts
-  #
-  # `playwright.config.ts` menggunakan `testIgnore: ['**/rate-limit/**']`
-  # sehingga `bun run test:e2e` TIDAK menjalankan file di folder
-  # `rate-limit/`. Rate limit dijalankan terpisah via script
-  # `bun run test:e2e:rate-limit`.
-  #
-  # Setiap tambah file test baru di luar folder `rate-limit/`, file
-  # akan OTOMATIS dijalankan tanpa perlu update workflow ini.
   # ============================================================
   test-e2e:
     name: E2E Tests (Playwright)
@@ -215,15 +215,7 @@ jobs:
         run: bun run build
 
       # --------------------------------------------------------
-      # STEP 1: Test Fungsional (Login, Register, Password Reset,
-      #         Contact, Accessibility, dll)
-      #
-      # `bun run test:e2e` akan menjalankan SEMUA file test di
-      # folder `e2e/` KECUALI yang di-ignore oleh `testIgnore`
-      # (yaitu folder `rate-limit/`).
-      #
-      # Setiap tambah file test baru di luar `rate-limit/`, file
-      # akan otomatis dijalankan.
+      # STEP 1: Test Fungsional
       # --------------------------------------------------------
       - name: Run E2E tests (functional)
         env:
@@ -249,17 +241,12 @@ jobs:
           AUTH_THROTTLE_RESET_MAX: 5
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
+          # ✅ CONTACT THROTTLE — OVERRIDE LONGGAR UNTUK E2E
+          AUTH_THROTTLE_CONTACT_TEST_OVERRIDE: 1000
         run: bun run test:e2e
 
       # --------------------------------------------------------
       # STEP 2: Test Rate Limiting
-      #
-      # Dijalankan TERPISAH dengan env override KECIL.
-      # `bun run test:e2e:rate-limit` akan menjalankan HANYA file
-      # di folder `e2e/rate-limit/`.
-      #
-      # Setiap tambah file test rate limit baru di folder
-      # `rate-limit/`, file akan otomatis dijalankan.
       # --------------------------------------------------------
       - name: Run E2E tests (rate limit)
         env:
@@ -285,6 +272,8 @@ jobs:
           AUTH_THROTTLE_RESET_MAX: 5
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 5
+          # ✅ CONTACT THROTTLE — OVERRIDE LONGGAR UNTUK E2E
+          AUTH_THROTTLE_CONTACT_TEST_OVERRIDE: 1000
         run: bun run test:e2e:rate-limit
 
       - name: Upload Playwright report

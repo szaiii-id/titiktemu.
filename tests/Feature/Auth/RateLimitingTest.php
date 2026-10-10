@@ -7,13 +7,26 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 
 uses(RefreshDatabase::class);
+uses()->group('rate-limit');
 
 beforeEach(function () {
+    // ============================================================
+    // PENTING: Paksa `test_override` menjadi null agar `max_attempts`
+    // dari config yang digunakan, BUKAN dari env
+    // `AUTH_THROTTLE_*_TEST_OVERRIDE` yang mungkin di-set ke 1000.
+    //
+    // Ini penting karena test ini ingin MEMVERIFIKASI bahwa rate
+    // limit BEKERJA, jadi kita perlu limit yang KECIL.
+    // ============================================================
     config([
         'auth-throttle.login.max_attempts' => 5,
+        'auth-throttle.login.test_override' => null,
         'auth-throttle.register.max_attempts' => 3,
+        'auth-throttle.register.test_override' => null,
         'auth-throttle.forgot-password.max_attempts' => 3,
+        'auth-throttle.forgot-password.test_override' => null,
         'auth-throttle.reset-password.max_attempts' => 5,
+        'auth-throttle.reset-password.test_override' => null,
     ]);
     Cache::flush();
 });
@@ -77,7 +90,6 @@ it('menyertakan retry_after di flash session saat terblokir', function () {
 });
 
 it('memblokir login per kombinasi identitas + IP', function () {
-    // Dua user berbeda
     User::factory()->create([
         'email' => 'budi@example.com',
         'password' => Hash::make('password123'),

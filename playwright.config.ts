@@ -53,6 +53,10 @@ const AUTH_THROTTLE = {
     RESET_DECAY: process.env.AUTH_THROTTLE_RESET_DECAY ?? '60',
     RESET_TEST_OVERRIDE:
         process.env.AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE ?? '1000',
+
+    // ✅ CONTACT THROTTLE — untuk E2E, limit longgar agar tidak ter-throttle
+    CONTACT_TEST_OVERRIDE:
+        process.env.AUTH_THROTTLE_CONTACT_TEST_OVERRIDE ?? '1000',
 };
 
 // ==========================================
@@ -62,7 +66,7 @@ export default defineConfig({
     // 1. DIREKTORI & POLA TEST
     testDir: 'e2e',
     testMatch: /(.+\.)?(test|spec)\.[jt]s/,
-    testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**',],
+    testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
 
     // 2. GLOBAL SETUP — migrate:fresh + seed + cache:clear
     // Dijalankan per-shard (setiap shard punya DB sendiri)
@@ -80,8 +84,6 @@ export default defineConfig({
     workers: WORKERS,
 
     // 5. FAIL FAST
-    // Dinaikkan dari 3 → 10 agar tidak stop terlalu cepat saat debug.
-    // Set ke 0 untuk disable fail-fast sepenuhnya.
     maxFailures: isCI ? 10 : 0,
 
     // 6. REPORTER
@@ -157,6 +159,11 @@ export default defineConfig({
             AUTH_THROTTLE_RESET_DECAY: AUTH_THROTTLE.RESET_DECAY,
             AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE:
                 AUTH_THROTTLE.RESET_TEST_OVERRIDE,
+
+            // ✅ CONTACT THROTTLE — OVERRIDE UNTUK E2E
+            // Agar E2E test contact tidak ter-throttle (default 3 di production).
+            AUTH_THROTTLE_CONTACT_TEST_OVERRIDE:
+                AUTH_THROTTLE.CONTACT_TEST_OVERRIDE,
         },
     },
 
