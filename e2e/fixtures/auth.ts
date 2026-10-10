@@ -4,7 +4,6 @@ import { APP_URL } from '../config';
 // ==========================================
 // KONSTANTA AKUN SEED
 // ==========================================
-// Sesuai dengan database/seeders/UserSeeder.php
 export const SEED_USERS = {
     admin: {
         email: 'admin@titiktemu.test',
@@ -32,11 +31,53 @@ export const SEED_USERS = {
 export type SeedRole = keyof typeof SEED_USERS;
 
 // ==========================================
+// HELPER: PAKSA LOGOUT DARI SERVER
+// ==========================================
+/**
+ * Paksa logout dari server, membersihkan session yang tersisa.
+ * Ini penting karena `clearCookies()` hanya membersihkan cookie
+ * di browser, tapi session di server masih ada.
+ *
+ * Tanpa ini, test berurutan dengan user yang sama akan gagal login
+ * karena server melihat session lama masih aktif.
+ */
+export async function forceLogout(page: Page): Promise<void> {
+    try {
+        // Buka halaman apa saja dulu untuk dapat CSRF token & cookie
+        await page.goto('/');
+
+        // Ambil CSRF token
+        const csrfToken = await page.evaluate(() => {
+            const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        });
+
+        // POST /logout untuk hapus session di server
+        await page.request.post(`${APP_URL}/logout`, {
+            headers: {
+                'X-XSRF-TOKEN': csrfToken,
+                Accept: 'text/html, application/xhtml+xml',
+            },
+            failOnStatusCode: false,
+        });
+    } catch {
+        // Abaikan error — kalau memang belum login, logout akan gagal
+        // tapi kita tidak peduli. Yang penting cookie dibersihkan.
+    }
+
+    // Bersihkan cookie di browser
+    await page.context().clearCookies();
+}
+
+// ==========================================
 // HELPER: LOGIN VIA UI
 // ==========================================
 /**
  * Login melalui halaman /login menggunakan email atau username.
  * Setelah sukses, user akan berada di dashboard sesuai role.
+ *
+ * Sebelum login, fungsi ini melakukan forceLogout() untuk memastikan
+ * tidak ada session lama yang tersisa dari test sebelumnya.
  */
 export async function loginViaUI(
     page: Page,
@@ -49,7 +90,9 @@ export async function loginViaUI(
     const { useEmail = true, remember = false } = options;
     const user = SEED_USERS[role];
 
-    await page.context().clearCookies();
+    // PENTING: logout dulu dari server + clear cookies
+    // agar tidak ada session sisa dari test sebelumnya
+    await forceLogout(page);
 
     await page.goto('/login');
 
@@ -79,29 +122,22 @@ export async function loginViaUI(
 // ==========================================
 // HELPER: LOGIN VIA HTTP (LEBIH CEPAT)
 // ==========================================
-/**
- * Login tanpa melalui UI — langsung POST ke /login.
- * Cocok untuk test yang tidak menguji form login itu sendiri.
- *
- * Catatan: tetap memerlukan kunjungan pertama ke aplikasi
- * untuk mendapatkan CSRF token dan session cookie.
- */
 export async function loginViaHTTP(
     page: Page,
     role: SeedRole
 ): Promise<void> {
     const user = SEED_USERS[role];
 
-    // Kunjungi halaman login dulu untuk mendapatkan CSRF token
+    // Logout dulu
+    await forceLogout(page);
+
     await page.goto('/login');
 
-    // Ambil CSRF token dari cookie XSRF-TOKEN atau meta tag
     const csrfToken = await page.evaluate(() => {
         const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : '';
     });
 
-    // POST ke /login
     await page.request.post(`${APP_URL}/login`, {
         form: {
             identitas: user.email,
@@ -113,7 +149,6 @@ export async function loginViaHTTP(
         },
     });
 
-    // Navigasi ke dashboard untuk memverifikasi login berhasil
     await page.goto(user.dashboardPath);
     await page.waitForURL(`**${user.dashboardPath}`);
 }
@@ -122,39 +157,18 @@ export async function loginViaHTTP(
 // HELPER: LOGOUT
 // ==========================================
 export async function logout(page: Page): Promise<void> {
-    // Cari form logout atau tombol logout di navbar
-    // Karena aplikasi Anda menggunakan POST /logout,
-    // kita trigger via request
-    await page.goto('/');
-
-    const csrfToken = await page.evaluate(() => {
-        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    });
-
-    await page.request.post(`${APP_URL}/logout`, {
-        headers: {
-            'X-XSRF-TOKEN': csrfToken,
-        },
-    });
+    await forceLogout(page);
 }
 
 // ==========================================
 // HELPER: GENERATE EMAIL UNIK
 // ==========================================
-/**
- * Membuat email unik untuk test register.
- * Format: e2e-{timestamp}-{random}@titiktemu.test
- */
 export function uniqueEmail(prefix = 'e2e'): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).slice(2, 8);
     return `${prefix}-${timestamp}-${random}@titiktemu.test`;
 }
 
-/**
- * Membuat username unik.
- */
 export function uniqueUsername(prefix = 'e2e'): string {
     const timestamp = Date.now();
     const random = Math.random().toString(36).slice(2, 6);
@@ -164,15 +178,6 @@ export function uniqueUsername(prefix = 'e2e'): string {
 // ==========================================
 // CUSTOM TEST FIXTURE
 // ==========================================
-/**
- * Extend base test dengan fixture tambahan.
- *
- * Contoh penggunaan:
- *   test('admin bisa akses dashboard', async ({ page, asAdmin }) => {
- *       await asAdmin();
- *       await expect(page).toHaveURL('/admin/dashboard');
- *   });
- */
 type AuthFixtures = {
     asAdmin: () => Promise<void>;
     asMitra: () => Promise<void>;
@@ -201,8 +206,8 @@ export const test = base.extend<AuthFixtures>({
 
     asGuest: async ({ page }, use) => {
         await use(async () => {
-            // Tidak melakukan apa-apa — hanya memastikan state bersih
-            await page.context().clearCookies();
+            // Logout + clear cookies untuk state bersih
+            await forceLogout(page);
         });
     },
 });
