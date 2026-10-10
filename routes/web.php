@@ -1,11 +1,12 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\LandingPage\ContactController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Halaman Landing Utama
 Route::get('/', function () {
@@ -79,11 +80,11 @@ if (app()->environment('testing')) {
         $limiter = $request->input('limiter');
         $key = $request->input('key');
 
-        if (!$limiter || !$key) {
+        if (! $limiter || ! $key) {
             return response()->json(['error' => 'Missing limiter or key'], 400);
         }
 
-        \Illuminate\Support\Facades\RateLimiter::clear($key);
+        RateLimiter::clear($key);
 
         return response()->noContent();
     })->name('test.clear-throttle');

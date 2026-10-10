@@ -34,10 +34,10 @@ class AuthThrottleResponse
     protected function resolveKey(Request $request, string $limiterName): string
     {
         return match ($limiterName) {
-            'login' => mb_strtolower((string) $request->input('identitas')) . '|' . $request->ip(),
-            'register' => mb_strtolower((string) $request->input('email')) . '|' . $request->ip(),
-            'forgot-password' => mb_strtolower((string) $request->input('email')) . '|' . $request->ip(),
-            'reset-password' => mb_strtolower((string) $request->input('email')) . '|' . $request->ip(),
+            'login' => mb_strtolower((string) $request->input('identitas')).'|'.$request->ip(),
+            'register' => mb_strtolower((string) $request->input('email')).'|'.$request->ip(),
+            'forgot-password' => mb_strtolower((string) $request->input('email')).'|'.$request->ip(),
+            'reset-password' => mb_strtolower((string) $request->input('email')).'|'.$request->ip(),
             default => $request->ip(),
         };
     }
@@ -53,7 +53,7 @@ class AuthThrottleResponse
      */
     protected function maxAttempts(string $limiterName): int
     {
-        $overrideKey = 'AUTH_THROTTLE_' . strtoupper(str_replace('-', '_', $limiterName)) . '_TEST_OVERRIDE';
+        $overrideKey = 'AUTH_THROTTLE_'.strtoupper(str_replace('-', '_', $limiterName)).'_TEST_OVERRIDE';
         $override = env($overrideKey);
         if ($override !== null && $override !== '') {
             return (int) $override;

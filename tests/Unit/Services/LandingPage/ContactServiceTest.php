@@ -1,11 +1,13 @@
 <?php
 
 use App\Services\LandingPage\ContactService;
+use Illuminate\Mail\Message;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mime\Email;
 
 beforeEach(function () {
     config(['mail.contact_recipient' => 'admin@titiktemu.test']);
-    $this->service = new ContactService();
+    $this->service = new ContactService;
 });
 
 /*
@@ -20,7 +22,7 @@ it('mengirim email ke recipient yang dikonfigurasi', function () {
     Mail::shouldReceive('raw')
         ->once()
         ->andReturnUsing(function ($body, $callback) use (&$capturedTo) {
-            $message = new \Illuminate\Mail\Message(new \Symfony\Component\Mime\Email());
+            $message = new Message(new Email);
             $callback($message);
             $capturedTo = array_map(
                 fn ($addr) => $addr->getAddress(),
@@ -44,7 +46,7 @@ it('menyusun body email dengan data yang benar', function () {
         ->once()
         ->andReturnUsing(function ($body, $callback) use (&$capturedBody) {
             $capturedBody = $body;
-            $message = new \Illuminate\Mail\Message(new \Symfony\Component\Mime\Email());
+            $message = new Message(new Email);
             $callback($message);
         });
 
@@ -68,7 +70,7 @@ it('menyertakan subject dengan nama pengirim', function () {
     Mail::shouldReceive('raw')
         ->once()
         ->andReturnUsing(function ($body, $callback) use (&$capturedSubject) {
-            $message = new \Illuminate\Mail\Message(new \Symfony\Component\Mime\Email());
+            $message = new Message(new Email);
             $callback($message);
 
             // Gunakan method yang benar: getSymfonyMessage()
@@ -108,7 +110,7 @@ it('menggunakan recipient dari konfigurasi, bukan hardcode', function () {
     Mail::shouldReceive('raw')
         ->once()
         ->andReturnUsing(function ($body, $callback) use (&$capturedTo) {
-            $message = new \Illuminate\Mail\Message(new \Symfony\Component\Mime\Email());
+            $message = new Message(new Email);
             $callback($message);
             $capturedTo = array_map(
                 fn ($addr) => $addr->getAddress(),
@@ -140,7 +142,7 @@ it('menyusun format waktu dengan locale Indonesia', function () {
         ->once()
         ->andReturnUsing(function ($body, $callback) use (&$capturedBody) {
             $capturedBody = $body;
-            $message = new \Illuminate\Mail\Message(new \Symfony\Component\Mime\Email());
+            $message = new Message(new Email);
             $callback($message);
         });
 
@@ -161,7 +163,7 @@ it('tidak mengubah data input yang dikirim', function () {
         ->once()
         ->andReturnUsing(function ($body, $callback) use (&$capturedBody) {
             $capturedBody = $body;
-            $message = new \Illuminate\Mail\Message(new \Symfony\Component\Mime\Email());
+            $message = new Message(new Email);
             $callback($message);
         });
 

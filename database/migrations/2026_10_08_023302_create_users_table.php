@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('username')->unique()->nullable(); 
+            $table->string('username')->unique()->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password')->nullable(); 
+            $table->string('password')->nullable();
             $table->string('google_id')->unique()->nullable();
             $table->enum('role', ['admin', 'mitra', 'client'])->default('client');
             $table->rememberToken();

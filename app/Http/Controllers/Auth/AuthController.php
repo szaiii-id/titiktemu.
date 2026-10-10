@@ -57,8 +57,8 @@ class AuthController extends Controller
         // 1. Data sudah otomatis tervalidasi bersih melalui LoginRequest
         // 2. Lempar ke Service
         $user = $this->authService->login(
-            $request->identitas, 
-            $request->password, 
+            $request->identitas,
+            $request->password,
             $request->boolean('remember')
         );
 
@@ -80,7 +80,7 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         $googleUser = Socialite::driver('google')->stateless()->user();
-        
+
         $user = $this->authService->handleGoogleLogin($googleUser);
 
         return $this->redirectBasedOnRole($user->role);
@@ -92,7 +92,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $this->authService->logout();
-        
+
         return redirect('/'); // Kembali ke Landing Page
     }
 
@@ -101,7 +101,7 @@ class AuthController extends Controller
      */
     private function redirectBasedOnRole(string $role)
     {
-        return match($role) {
+        return match ($role) {
             'admin' => redirect()->route('admin.dashboard'),
             'mitra' => redirect()->route('mitra.dashboard'),
             default => redirect()->route('client.dashboard'),

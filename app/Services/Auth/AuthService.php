@@ -40,7 +40,7 @@ class AuthService
         $user = $this->userRepository->findByEmailOrUsername($identitas);
 
         // 2. Jika user tidak ditemukan ATAU password salah
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             throw ValidationException::withMessages([
                 'identitas' => ['Kredensial yang diberikan tidak cocok dengan data kami.'],
             ]);
@@ -60,7 +60,7 @@ class AuthService
         // 1. Cek apakah user dengan Google ID ini sudah pernah login
         $user = $this->userRepository->findByGoogleId($googleUser->getId());
 
-        if (!$user) {
+        if (! $user) {
             // 2. Jika belum, cek apakah email-nya sudah terdaftar secara manual sebelumnya
             $user = $this->userRepository->findByEmail($googleUser->getEmail());
 
@@ -70,14 +70,14 @@ class AuthService
             } else {
                 // 3. Jika benar-benar user baru, buatkan akun Client otomatis
                 // Kita buatkan username acak dari email (misal: budi.123)
-                $usernameLokal = explode('@', $googleUser->getEmail())[0] . rand(100, 999);
+                $usernameLokal = explode('@', $googleUser->getEmail())[0].rand(100, 999);
 
                 $user = $this->userRepository->createClient([
-                    'name'      => $googleUser->getName(),
-                    'email'     => $googleUser->getEmail(),
-                    'username'  => $usernameLokal,
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'username' => $usernameLokal,
                     'google_id' => $googleUser->getId(),
-                    'password'  => null, // Password kosong karena login via Google
+                    'password' => null, // Password kosong karena login via Google
                 ]);
             }
         }

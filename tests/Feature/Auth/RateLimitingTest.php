@@ -142,7 +142,7 @@ it('memblokir register setelah 3 percobaan', function () {
     for ($i = 0; $i < 3; $i++) {
         $this->post('/register', [
             'name' => 'Budi',
-            'username' => 'budi' . $i,
+            'username' => 'budi'.$i,
             'email' => $sameEmail,
             'password' => 'short',
             'password_confirmation' => 'short',

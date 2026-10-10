@@ -18,7 +18,7 @@ class ContactService
             function ($message) use ($data, $recipient) {
                 $message->to($recipient)
                     ->replyTo($data['email'], $data['nama'])
-                    ->subject('Pesan Kontak Baru — ' . $data['nama']);
+                    ->subject('Pesan Kontak Baru — '.$data['nama']);
             }
         );
     }
@@ -49,6 +49,6 @@ class ContactService
      */
     protected function formatTime(): string
     {
-        return now()->translatedFormat('l, d F Y H:i') . ' WIB';
+        return now()->translatedFormat('l, d F Y H:i').' WIB';
     }
 }

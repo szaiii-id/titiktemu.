@@ -297,7 +297,7 @@ it('user tidak bisa pakai token yang sama dua kali', function () {
     ]);
 
     // Reset kedua dengan token yang sama — harus gagal
-    $response = $this->from('/reset-password/' . $token)->post('/reset-password', [
+    $response = $this->from('/reset-password/'.$token)->post('/reset-password', [
         'token' => $token,
         'email' => 'budi@example.com',
         'password' => 'password-lain-456',

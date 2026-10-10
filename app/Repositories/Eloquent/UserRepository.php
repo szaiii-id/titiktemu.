@@ -10,8 +10,8 @@ class UserRepository implements UserRepositoryInterface
     public function findByEmailOrUsername(string $identitas)
     {
         return User::where('email', $identitas)
-                   ->orWhere('username', $identitas)
-                   ->first();
+            ->orWhere('username', $identitas)
+            ->first();
     }
 
     public function findByGoogleId(string $googleId)
@@ -27,12 +27,12 @@ class UserRepository implements UserRepositoryInterface
     public function createClient(array $data)
     {
         return User::create([
-            'name'      => $data['name'],
-            'username'  => $data['username'] ?? null,
-            'email'     => $data['email'],
-            'password'  => isset($data['password']) ? bcrypt($data['password']) : null,
+            'name' => $data['name'],
+            'username' => $data['username'] ?? null,
+            'email' => $data['email'],
+            'password' => isset($data['password']) ? bcrypt($data['password']) : null,
             'google_id' => $data['google_id'] ?? null,
-            'role'      => 'client', // Otomatis dikunci sebagai client demi keamanan
+            'role' => 'client', // Otomatis dikunci sebagai client demi keamanan
         ]);
     }
 }

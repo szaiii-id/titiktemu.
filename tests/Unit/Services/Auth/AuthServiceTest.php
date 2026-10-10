@@ -3,10 +3,11 @@
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Auth\AuthService;
+use Illuminate\Contracts\Session\Session;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use Tests\TestCase;
 
 beforeEach(function () {
     $this->userRepository = Mockery::mock(UserRepositoryInterface::class);
@@ -231,11 +232,11 @@ it('membuat client baru jika google user benar-benar baru', function () {
 it('logout memanggil Auth::logout dan invalidate session', function () {
     Auth::shouldReceive('logout')->once();
 
-    $session = Mockery::mock(\Illuminate\Contracts\Session\Session::class);
+    $session = Mockery::mock(Session::class);
     $session->shouldReceive('invalidate')->once();
     $session->shouldReceive('regenerateToken')->once();
 
-    $request = \Illuminate\Http\Request::create('/');
+    $request = Request::create('/');
     $request->setLaravelSession($session);
 
     $this->app->instance('request', $request);

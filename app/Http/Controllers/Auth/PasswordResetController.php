@@ -43,7 +43,7 @@ class PasswordResetController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) use ($request) {
                 $user->forceFill([
-                    'password' => $request->password
+                    'password' => $request->password,
                 ])->save();
             }
         );

@@ -166,7 +166,7 @@ it('mengembalikan error yang ramah jika ContactService gagal', function () {
     $this->mock(ContactService::class, function (MockInterface $mock) {
         $mock->shouldReceive('send')
             ->once()
-            ->andThrow(new \Exception('Brevo API down'));
+            ->andThrow(new Exception('Brevo API down'));
     });
 
     Log::shouldReceive('error')
@@ -193,7 +193,7 @@ it('mengembalikan error yang ramah jika ContactService gagal', function () {
 
 it('tidak menyimpan status sukses jika ContactService gagal', function () {
     $this->mock(ContactService::class, function (MockInterface $mock) {
-        $mock->shouldReceive('send')->once()->andThrow(new \Exception('SMTP timeout'));
+        $mock->shouldReceive('send')->once()->andThrow(new Exception('SMTP timeout'));
     });
 
     Log::shouldReceive('error')->once();
