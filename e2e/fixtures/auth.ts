@@ -95,7 +95,7 @@ export async function loginViaUI(
     });
 
     // 3. POST /login via page.request (bypass Inertia)
-    const response = await page.request.post(`${APP_URL}/login`, {
+    const response = await page.context().request.post(`${APP_URL}/login`, {
         form: {
             identitas: useEmail ? user.email : user.username,
             password: user.password,
