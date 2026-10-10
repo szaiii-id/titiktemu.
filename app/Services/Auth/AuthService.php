@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
@@ -84,7 +85,13 @@ class AuthService
     }
 
     /**
-     * Logika Logout & menghapus sesi.
+     * Logika Logout & menghapus sesi beserta cookie "remember me".
+     *
+     * Menghapus cookie remember_web_* sangat penting karena
+     * `Auth::logout()` dan `session()->invalidate()` TIDAK
+     * menghapus cookie tersebut. Tanpa penghapusan, browser akan
+     * auto-login ulang dari cookie, menyebabkan redirect loop
+     * setelah logout.
      */
     public function logout(): void
     {
@@ -92,5 +99,25 @@ class AuthService
 
         request()->session()->invalidate();
         request()->session()->regenerateToken();
+
+        $this->forgetRememberCookie();
+    }
+
+    /**
+     * Hapus semua cookie "remember me" yang di-set oleh Laravel.
+     *
+     * Laravel menamai cookie remember sebagai:
+     *   remember_<guard>_<sha1(provider_class)>
+     *
+     * Alih-alih menghitung hash, kita iterasi semua cookie yang
+     * diawali "remember_" agar aman untuk berbagai guard/provider.
+     */
+    private function forgetRememberCookie(): void
+    {
+        foreach (request()->cookies->all() as $name => $value) {
+            if (str_starts_with($name, 'remember_')) {
+                Cookie::queue(Cookie::forget($name));
+            }
+        }
     }
 }

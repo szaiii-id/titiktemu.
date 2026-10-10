@@ -1,7 +1,15 @@
+// e2e/global-setup.ts
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ARTISAN_ENV, E2E_DB_DATABASE } from './config';
+import {
+    ARTISAN_ENV,
+    E2E_DB_DATABASE,
+    E2E_DB_HOST,
+    E2E_DB_PORT,
+    E2E_DB_USERNAME,
+    E2E_DB_PASSWORD,
+} from './config';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,56 +18,78 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
 /**
  * Global setup untuk Playwright.
  *
- * Dijalankan sekali sebelum semua test, untuk:
- * 1. Memastikan database testing ada dan bersih.
- * 2. Menjalankan migrasi terbaru.
- * 3. Mengisi seed user (admin, mitra, client).
- * 4. Membersihkan cache (rate limiter, session, dll).
+ * Dijalankan sekali PER SHARD (karena setiap shard punya proses Playwright sendiri).
  *
- * Dengan begitu, setiap kali E2E dijalankan, kondisi awal selalu konsisten.
+ * 1. Pastikan database shard ada (buat jika belum).
+ * 2. migrate:fresh
+ * 3. db:seed
+ * 4. cache:clear & config:clear
  */
 export default async function globalSetup() {
-    console.log('\n[E2E] Menyiapkan database testing...');
-    console.log(`[E2E] Database: ${E2E_DB_DATABASE}`);
-    console.log(`[E2E] Cache: dibersihkan setelah migrasi\n`);
+    console.log(`\n[E2E] Menyiapkan database: ${E2E_DB_DATABASE}`);
+
+    // 1. Buat database jika belum ada
+    createDatabaseIfNotExists();
 
     const envString = Object.entries(ARTISAN_ENV)
         .map(([key, value]) => `${key}=${shellEscape(value)}`)
         .join(' ');
 
-    // 1. migrate:fresh — butuh --force karena destruktif
+    // 2. Migrate fresh + seed
     runArtisan('migrate:fresh', envString, 'Migrasi database...', {
         force: true,
     });
+    runArtisan('db:seed', envString, 'Mengisi seed data...', { force: true });
 
-    // 2. db:seed — butuh --force agar tidak minta konfirmasi di production env
-    runArtisan('db:seed', envString, 'Mengisi seed data...', {
-        force: true,
-    });
-
-    // 3. cache:clear — tidak butuh --force
+    // 3. Clear cache
     runArtisan('cache:clear', envString, 'Membersihkan cache...');
-
-    // 4. config:clear — tidak butuh --force
     runArtisan('config:clear', envString, 'Membersihkan config cache...');
 
-    console.log('\n[E2E] Database testing siap. Semua test akan dimulai dari kondisi bersih.\n');
+    console.log(
+        `\n[E2E] Database ${E2E_DB_DATABASE} siap. Semua test dimulai dari kondisi bersih.\n`,
+    );
+}
+
+/**
+ * Buat database jika belum ada (idempotent).
+ * Di CI, DB shard belum tentu di-create manual — ini handle otomatis.
+ * Di lokal, kalau `psql` tidak tersedia, akan di-skip dengan warning.
+ */
+function createDatabaseIfNotExists(): void {
+    const checkSql = `SELECT 1 FROM pg_database WHERE datname = '${E2E_DB_DATABASE}'`;
+    const createSql = `CREATE DATABASE "${E2E_DB_DATABASE}" OWNER "${E2E_DB_USERNAME}"`;
+
+    try {
+        const result = execSync(
+            `PGPASSWORD="${E2E_DB_PASSWORD}" psql -h ${E2E_DB_HOST} -p ${E2E_DB_PORT} -U ${E2E_DB_USERNAME} -d postgres -tAc "${checkSql}"`,
+            { encoding: 'utf-8' },
+        ).trim();
+
+        if (result !== '1') {
+            console.log(`[E2E] Membuat database ${E2E_DB_DATABASE}...`);
+            execSync(
+                `PGPASSWORD="${E2E_DB_PASSWORD}" psql -h ${E2E_DB_HOST} -p ${E2E_DB_PORT} -U ${E2E_DB_USERNAME} -d postgres -c "${createSql}"`,
+                { stdio: 'inherit' },
+            );
+        } else {
+            console.log(`[E2E] Database ${E2E_DB_DATABASE} sudah ada.`);
+        }
+    } catch (error) {
+        // Kalau psql tidak ada, atau DB sudah ada, skip
+        console.warn(
+            `[E2E] Skip createDatabaseIfNotExists: ${(error as Error).message}`,
+        );
+    }
 }
 
 /**
  * Menjalankan perintah artisan dengan environment testing.
- *
- * @param command  Perintah artisan, misalnya "migrate:fresh"
- * @param envString  String environment yang akan di-prefix
- * @param message  Pesan yang ditampilkan sebelum menjalankan
- * @param options  Opsi tambahan:
- *                 - force: tambahkan flag --force (untuk perintah destruktif)
  */
 function runArtisan(
     command: string,
     envString: string,
     message: string,
-    options: { force?: boolean } = {}
+    options: { force?: boolean } = {},
 ): void {
     const { force = false } = options;
     const forceFlag = force ? ' --force' : '';

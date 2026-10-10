@@ -1,7 +1,18 @@
+// playwright.config.ts
 import { defineConfig, devices } from '@playwright/test';
 import { config as loadEnv } from 'dotenv';
 import path from 'node:path';
-import { isCI, APP_PORT, APP_URL } from './e2e/config';
+import {
+    isCI,
+    APP_PORT,
+    APP_URL,
+    E2E_DB_DATABASE,
+    E2E_DB_CONNECTION,
+    E2E_DB_HOST,
+    E2E_DB_PORT,
+    E2E_DB_USERNAME,
+    E2E_DB_PASSWORD,
+} from './e2e/config';
 
 // Load .env.testing untuk konfigurasi E2E
 loadEnv({ path: path.resolve(process.cwd(), '.env.testing') });
@@ -26,6 +37,7 @@ export default defineConfig({
     testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
 
     // 2. GLOBAL SETUP — migrate:fresh + seed + cache:clear
+    // Dijalankan per-shard (setiap shard punya DB sendiri)
     globalSetup: './e2e/global-setup.ts',
 
     // 3. TIMEOUT
@@ -40,7 +52,9 @@ export default defineConfig({
     workers: WORKERS,
 
     // 5. FAIL FAST
-    maxFailures: isCI ? 3 : 0,
+    // Dinaikkan dari 3 → 10 agar tidak stop terlalu cepat saat debug.
+    // Set ke 0 untuk disable fail-fast sepenuhnya.
+    maxFailures: isCI ? 10 : 0,
 
     // 6. REPORTER
     reporter: isCI
@@ -71,6 +85,8 @@ export default defineConfig({
     },
 
     // 9. AUTO-START SERVER
+    // Port otomatis: 8000 + SHARD_INDEX (0 → 8000, 1 → 8001, 2 → 8002)
+    // DB otomatis: titiktemu_db_testing_w{SHARD_INDEX}
     webServer: {
         command: `php -S 127.0.0.1:${APP_PORT} -t public`,
         port: APP_PORT,
@@ -82,12 +98,13 @@ export default defineConfig({
             ...process.env,
             APP_ENV: 'testing',
             APP_DEBUG: 'true',
-            DB_CONNECTION: process.env.DB_CONNECTION ?? 'pgsql',
-            DB_HOST: process.env.DB_HOST ?? '127.0.0.1',
-            DB_PORT: process.env.DB_PORT ?? '5432',
-            DB_DATABASE: process.env.DB_DATABASE ?? 'titiktemu_db_testing',
-            DB_USERNAME: process.env.DB_USERNAME ?? 'titiktemu_dev',
-            DB_PASSWORD: process.env.DB_PASSWORD ?? '',
+            APP_URL: APP_URL,
+            DB_CONNECTION: E2E_DB_CONNECTION,
+            DB_HOST: E2E_DB_HOST,
+            DB_PORT: String(E2E_DB_PORT),
+            DB_DATABASE: E2E_DB_DATABASE,
+            DB_USERNAME: E2E_DB_USERNAME,
+            DB_PASSWORD: E2E_DB_PASSWORD,
             SESSION_DRIVER: 'database',
             CACHE_STORE: 'database',
             QUEUE_CONNECTION: 'sync',
