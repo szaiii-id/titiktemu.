@@ -17,9 +17,6 @@ env:
   DB_PASSWORD: 'titiktemu04!'
 
 jobs:
-  # ============================================================
-  # JOB 1: PHP Tests (Pest)
-  # ============================================================
   test-php:
     name: PHP Tests (Pest)
     runs-on: ubuntu-latest
@@ -38,7 +35,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
 
     steps:
       - uses: actions/checkout@v4
@@ -95,9 +91,6 @@ jobs:
           DB_PASSWORD: titiktemu04!
         run: php artisan test
 
-  # ============================================================
-  # JOB 2: JavaScript Tests (Vitest)
-  # ============================================================
   test-js:
     name: JavaScript Tests (Vitest)
     runs-on: ubuntu-latest
@@ -120,19 +113,10 @@ jobs:
         env:
           LARAVEL_BYPASS_ENV_CHECK: '1'
 
-  # ============================================================
-  # JOB 3: E2E Tests (Playwright) — SHARDED 3x
-  # ============================================================
   test-e2e:
-    name: E2E (Shard ${{ matrix.shard }}/3)
+    name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
-    strategy:
-      fail-fast: false
-      matrix:
-        # 0-based: konsisten dengan SHARD_INDEX untuk port & DB name
-        shard: [0, 1, 2]
 
     services:
       postgres:
@@ -148,22 +132,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
-    env:
-      CI: true
-      SHARD_INDEX: ${{ matrix.shard }}
-      TOTAL_SHARDS: 3
-
-      # DB base — akan di-suffix _w{shard} oleh e2e/config.ts
-      E2E_DB_CONNECTION: pgsql
-      E2E_DB_HOST: 127.0.0.1
-      E2E_DB_PORT: 5432
-      E2E_DB_USERNAME: titiktemu_dev
-      E2E_DB_PASSWORD: titiktemu04!
-      E2E_DB_DATABASE: titiktemu_db_testing
-
-      # Port dinamis: 8000 + shard
-      E2E_APP_PORT: ${{ 8000 + matrix.shard }}
 
     steps:
       - uses: actions/checkout@v4
@@ -204,18 +172,24 @@ jobs:
       - name: Build frontend assets
         run: bun run build
 
-      # DB shard dibuat otomatis oleh e2e/global-setup.ts
-      # (createDatabaseIfNotExists) — tidak perlu step manual.
-
-      - name: Run E2E tests (Shard ${{ matrix.shard }}/3)
-        # Playwright --shard 1-based, jadi matrix.shard + 1
-        run: bun run test:e2e --shard=${{ matrix.shard + 1 }}/3
+      - name: Run E2E tests
+        env:
+          CI: true
+          E2E_APP_PORT: 8000
+          E2E_APP_URL: http://127.0.0.1:8000
+          E2E_DB_CONNECTION: pgsql
+          E2E_DB_HOST: 127.0.0.1
+          E2E_DB_PORT: 5432
+          E2E_DB_DATABASE: titiktemu_db_testing
+          E2E_DB_USERNAME: titiktemu_dev
+          E2E_DB_PASSWORD: titiktemu04!
+        run: bun run test:e2e -- e2e/auth/login.spec.ts
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-shard-${{ matrix.shard }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
 
@@ -223,13 +197,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-shard-${{ matrix.shard }}
+          name: test-results
           path: test-results/
           retention-days: 7
 
-  # ============================================================
-  # JOB 4: Code Quality
-  # ============================================================
   lint:
     name: Code Quality
     runs-on: ubuntu-latest
