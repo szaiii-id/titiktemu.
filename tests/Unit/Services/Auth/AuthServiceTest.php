@@ -3,11 +3,10 @@
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Auth\AuthService;
-use Illuminate\Contracts\Session\Session;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 beforeEach(function () {
     $this->userRepository = Mockery::mock(UserRepositoryInterface::class);
@@ -88,7 +87,6 @@ it('melempar ValidationException jika password salah', function () {
         ->once()
         ->andReturn($user);
 
-    // Auth::login TIDAK boleh dipanggil
     Auth::shouldReceive('login')->never();
 
     expect(fn () => $this->authService->login('budi@example.com', 'password-salah'))
@@ -132,7 +130,7 @@ it('login dengan remember = true memanggil Auth::login dengan parameter remember
 */
 
 it('login google dengan user yang sudah terdaftar via Google ID', function () {
-    $googleUser = Mockery::mock();
+    $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('google-123');
     $googleUser->shouldReceive('getEmail')->andReturn('budi@example.com');
     $googleUser->shouldReceive('getName')->andReturn('Budi');
@@ -145,7 +143,6 @@ it('login google dengan user yang sudah terdaftar via Google ID', function () {
         ->with('google-123')
         ->andReturn($user);
 
-    // findByEmail TIDAK boleh dipanggil karena user sudah ditemukan
     $this->userRepository->shouldReceive('findByEmail')->never();
     $this->userRepository->shouldReceive('createClient')->never();
 
@@ -157,7 +154,7 @@ it('login google dengan user yang sudah terdaftar via Google ID', function () {
 });
 
 it('menautkan google_id ke user lama yang terdaftar via email', function () {
-    $googleUser = Mockery::mock();
+    $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('google-456');
     $googleUser->shouldReceive('getEmail')->andReturn('budi@example.com');
     $googleUser->shouldReceive('getName')->andReturn('Budi');
@@ -178,7 +175,6 @@ it('menautkan google_id ke user lama yang terdaftar via email', function () {
         ->with('budi@example.com')
         ->andReturn($user);
 
-    // createClient TIDAK boleh dipanggil karena user sudah ada
     $this->userRepository->shouldReceive('createClient')->never();
 
     Auth::shouldReceive('login')->once()->with($user);
@@ -187,7 +183,7 @@ it('menautkan google_id ke user lama yang terdaftar via email', function () {
 });
 
 it('membuat client baru jika google user benar-benar baru', function () {
-    $googleUser = Mockery::mock();
+    $googleUser = Mockery::mock(SocialiteUser::class);
     $googleUser->shouldReceive('getId')->andReturn('google-789');
     $googleUser->shouldReceive('getEmail')->andReturn('baru@example.com');
     $googleUser->shouldReceive('getName')->andReturn('User Baru');
@@ -208,7 +204,6 @@ it('membuat client baru jika google user benar-benar baru', function () {
         ->shouldReceive('createClient')
         ->once()
         ->with(Mockery::on(function ($data) {
-            // Username harus diawali "baru" + 3 digit angka
             return $data['email'] === 'baru@example.com'
                 && $data['google_id'] === 'google-789'
                 && $data['password'] === null
@@ -232,11 +227,11 @@ it('membuat client baru jika google user benar-benar baru', function () {
 it('logout memanggil Auth::logout dan invalidate session', function () {
     Auth::shouldReceive('logout')->once();
 
-    $session = Mockery::mock(Session::class);
+    $session = Mockery::mock(\Illuminate\Contracts\Session\Session::class);
     $session->shouldReceive('invalidate')->once();
     $session->shouldReceive('regenerateToken')->once();
 
-    $request = Request::create('/');
+    $request = \Illuminate\Http\Request::create('/');
     $request->setLaravelSession($session);
 
     $this->app->instance('request', $request);
