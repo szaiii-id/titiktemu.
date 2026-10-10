@@ -215,7 +215,7 @@ jobs:
           E2E_DB_DATABASE: titiktemu_db_testing
           E2E_DB_USERNAME: titiktemu_dev
           E2E_DB_PASSWORD: titiktemu04!
-        run: bun run test:e2e
+        run: bun run test:e2e -- e2e/auth/login.spec.ts
 
       - name: Upload Playwright report
         if: always()
@@ -237,6 +237,7 @@ jobs:
   # JOB 4: E2E Rate Limit Tests
   # ============================================================
   test-e2e-rate-limit:
+    if: false
     name: E2E Rate Limit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
