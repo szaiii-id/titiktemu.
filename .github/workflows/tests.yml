@@ -28,7 +28,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: titiktemu_testing
+          POSTGRES_DB: titiktemu_db_testing
           POSTGRES_USER: titiktemu_dev
           POSTGRES_PASSWORD: titiktemu04!
         ports:
@@ -88,7 +88,7 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: titiktemu_testing
+          DB_DATABASE: titiktemu_db_testing
           DB_USERNAME: titiktemu_dev
           DB_PASSWORD: titiktemu04!
         run: php artisan migrate --force
@@ -98,7 +98,7 @@ jobs:
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
-          DB_DATABASE: titiktemu_testing
+          DB_DATABASE: titiktemu_db_testing
           DB_USERNAME: titiktemu_dev
           DB_PASSWORD: titiktemu04!
         run: php artisan test
@@ -146,7 +146,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: titiktemu_testing
+          POSTGRES_DB: titiktemu_db_testing
           POSTGRES_USER: titiktemu_dev
           POSTGRES_PASSWORD: titiktemu04!
         ports:
@@ -212,7 +212,7 @@ jobs:
           E2E_DB_CONNECTION: pgsql
           E2E_DB_HOST: 127.0.0.1
           E2E_DB_PORT: 5432
-          E2E_DB_DATABASE: titiktemu_testing
+          E2E_DB_DATABASE: titiktemu_db_testing
           E2E_DB_USERNAME: titiktemu_dev
           E2E_DB_PASSWORD: titiktemu04!
         run: bun run test:e2e
@@ -245,7 +245,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: titiktemu_testing
+          POSTGRES_DB: titiktemu_db_testing
           POSTGRES_USER: titiktemu_dev
           POSTGRES_PASSWORD: titiktemu04!
         ports:
@@ -297,7 +297,7 @@ jobs:
           E2E_DB_CONNECTION: pgsql
           E2E_DB_HOST: 127.0.0.1
           E2E_DB_PORT: 5432
-          E2E_DB_DATABASE: titiktemu_testing
+          E2E_DB_DATABASE: titiktemu_db_testing
           E2E_DB_USERNAME: titiktemu_dev
           E2E_DB_PASSWORD: titiktemu04!
         run: bun run test:e2e:rate-limit
