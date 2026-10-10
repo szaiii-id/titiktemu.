@@ -1,13 +1,9 @@
 // e2e/config.ts
-import { config } from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Muat .env untuk mendapatkan E2E_* dan variabel lain
-config({ path: path.resolve(__dirname, '../.env') });
 
 // ==========================================
 // CI & SHARD
@@ -86,6 +82,19 @@ export const ARTISAN_ENV: Record<string, string> = {
     CACHE_STORE: 'database',
     QUEUE_CONNECTION: 'sync',
     MAIL_MAILER: 'log',
+    // ✅ AUTH THROTTLE — OVERRIDE UNTUK TESTING
+    AUTH_THROTTLE_LOGIN_MAX: '5',
+    AUTH_THROTTLE_LOGIN_DECAY: '60',
+    AUTH_THROTTLE_LOGIN_TEST_OVERRIDE: '1000',
+    AUTH_THROTTLE_REGISTER_MAX: '3',
+    AUTH_THROTTLE_REGISTER_DECAY: '60',
+    AUTH_THROTTLE_REGISTER_TEST_OVERRIDE: '1000',
+    AUTH_THROTTLE_FORGOT_MAX: '3',
+    AUTH_THROTTLE_FORGOT_DECAY: '60',
+    AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE: '1000',
+    AUTH_THROTTLE_RESET_MAX: '5',
+    AUTH_THROTTLE_RESET_DECAY: '60',
+    AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: '1000',
 };
 
 /**
