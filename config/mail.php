@@ -97,6 +97,10 @@ return [
             'retry_after' => 60,
         ],
 
+        'brevo' => [
+            'transport' => 'brevo',
+        ],
+
     ],
 
     /*
@@ -114,5 +118,16 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
+
+     /*
+    |--------------------------------------------------------------------------
+    | Contact Recipient
+    |--------------------------------------------------------------------------
+    |
+    | Alamat email yang menerima pesan dari form kontak di halaman landing.
+    |
+    */
+
+    'contact_recipient' => env('CONTACT_RECIPIENT_EMAIL', 'titiktemukm7@gmail.com'),
 
 ];

@@ -1,0 +1,1287 @@
+$ playwright test
+◇ injected env (0) from .env
+[WebServer] [Sat Oct 10 09:05:17 2026] PHP 8.5.7 Development Server (http://127.0.0.1:8000) started
+[WebServer] [Sat Oct 10 09:05:17 2026] 127.0.0.1:34738 Accepted
+
+[E2E] Menyiapkan database testing...
+[E2E] Database: titiktemu_testing
+[E2E] Cache: dibersihkan setelah migrasi
+
+[E2E] Migrasi database...
+
+  Dropping all tables ................................................................................................................. 16.02ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table ............................................................................................................. 7.13ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000001_create_cache_table ................................................................................................ 14.43ms DONE
+  0001_01_01_000002_create_jobs_table ................................................................................................. 20.02ms DONE
+  2026_10_08_023302_create_users_table ................................................................................................ 23.89ms DONE
+  2026_10_08_024104_create_personal_access_tokens_table ............................................................................... 11.02ms DONE
+
+[E2E] Mengisi seed data...
+
+   INFO  Seeding database.  
+
+  Database\Seeders\UserSeeder .............................................................................................................. RUNNING  
+  Database\Seeders\UserSeeder .......................................................................................................... 802 ms DONE  
+
+[E2E] Membersihkan cache...
+
+   INFO  Application cache cleared successfully.  
+
+[E2E] Membersihkan config cache...
+
+   INFO  Configuration cache cleared successfully.  
+
+
+[E2E] Database testing siap. Semua test akan dimulai dari kondisi bersih.
+
+[WebServer] [Sat Oct 10 09:05:17 2026] 127.0.0.1:34738 Closed without sending a request; it was probably just an unused speculative preconnection
+[WebServer] [Sat Oct 10 09:05:17 2026] 127.0.0.1:34738 Closing
+
+Running 84 tests using 1 worker
+
+◇ injected env (0) from .env
+[WebServer] [Sat Oct 10 09:05:20 2026] 127.0.0.1:34752 Accepted
+[WebServer] [Sat Oct 10 09:05:20 2026] 127.0.0.1:34752 [200]: GET /
+[WebServer] [Sat Oct 10 09:05:20 2026] 127.0.0.1:34752 Closing
+[WebServer] [Sat Oct 10 09:05:21 2026] 127.0.0.1:34766 Accepted
+[WebServer] [Sat Oct 10 09:05:21 2026] 127.0.0.1:34766 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:21 2026] 127.0.0.1:34766 Closing
+[WebServer] [Sat Oct 10 09:05:21 2026] 127.0.0.1:34770 Accepted
+[WebServer] [Sat Oct 10 09:05:21 2026] 127.0.0.1:34770 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:21 2026] 127.0.0.1:34770 Closing
+  ✓   1 [Brave] › e2e/accessibility.spec.ts:31:9 › Accessibility — Pemindaian Halaman Publik › Landing Page tidak memiliki pelanggaran WCAG kritis (2.6s)
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34772 Accepted
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34772 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34772 Closing
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34780 Accepted
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34780 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34780 Closing
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34792 Accepted
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34792 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:23 2026] 127.0.0.1:34792 Closing
+  ✓   2 [Brave] › e2e/accessibility.spec.ts:31:9 › Accessibility — Pemindaian Halaman Publik › Halaman Login tidak memiliki pelanggaran WCAG kritis (1.8s)
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37178 Accepted
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37178 [200]: GET /register
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37178 Closing
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37180 Accepted
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37180 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37180 Closing
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37190 Accepted
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37190 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:25 2026] 127.0.0.1:37190 Closing
+  ✓   3 [Brave] › e2e/accessibility.spec.ts:31:9 › Accessibility — Pemindaian Halaman Publik › Halaman Register tidak memiliki pelanggaran WCAG kritis (1.9s)
+[WebServer] [Sat Oct 10 09:05:26 2026] 127.0.0.1:37196 Accepted
+[WebServer] [Sat Oct 10 09:05:26 2026] 127.0.0.1:37196 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:05:26 2026] 127.0.0.1:37196 Closing
+[WebServer] [Sat Oct 10 09:05:27 2026] 127.0.0.1:37198 Accepted
+[WebServer] [Sat Oct 10 09:05:27 2026] 127.0.0.1:37198 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:27 2026] 127.0.0.1:37198 Closing
+[WebServer] [Sat Oct 10 09:05:27 2026] 127.0.0.1:37202 Accepted
+[WebServer] [Sat Oct 10 09:05:27 2026] 127.0.0.1:37202 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:27 2026] 127.0.0.1:37202 Closing
+  ✓   4 [Brave] › e2e/accessibility.spec.ts:31:9 › Accessibility — Pemindaian Halaman Publik › Halaman Lupa Password tidak memiliki pelanggaran WCAG kritis (1.8s)
+[WebServer] [Sat Oct 10 09:05:28 2026] 127.0.0.1:37218 Accepted
+[WebServer] [Sat Oct 10 09:05:28 2026] 127.0.0.1:37218 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:28 2026] 127.0.0.1:37218 Closing
+[WebServer] [Sat Oct 10 09:05:29 2026] 127.0.0.1:37220 Accepted
+[WebServer] [Sat Oct 10 09:05:29 2026] 127.0.0.1:37220 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:29 2026] 127.0.0.1:37220 Closing
+[WebServer] [Sat Oct 10 09:05:29 2026] 127.0.0.1:37228 Accepted
+[WebServer] [Sat Oct 10 09:05:29 2026] 127.0.0.1:37228 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:29 2026] 127.0.0.1:37228 Closing
+  ✓   5 [Brave] › e2e/accessibility.spec.ts:63:5 › Accessibility — Pemindaian Halaman Auth (Login) › Halaman Login memiliki label yang benar untuk semua input (1.3s)
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37242 Accepted
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37242 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37242 Closing
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37244 Accepted
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37244 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37244 Closing
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37256 Accepted
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37256 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:30 2026] 127.0.0.1:37256 Closing
+  ✓   6 [Brave] › e2e/accessibility.spec.ts:80:5 › Accessibility — Pemindaian Halaman Auth (Login) › Halaman Login memiliki struktur heading yang benar (1.3s)
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37272 Accepted
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37272 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37272 Closing
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37278 Accepted
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37278 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37278 Closing
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37290 Accepted
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37290 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:31 2026] 127.0.0.1:37290 Closing
+  ✓   7 [Brave] › e2e/accessibility.spec.ts:95:5 › Accessibility — Pemindaian Halaman Auth (Login) › Halaman Login memiliki kontras warna yang cukup (1.3s)
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37300 Accepted
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37300 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37300 Closing
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37302 Accepted
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37302 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37302 Closing
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37316 Accepted
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37316 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:32 2026] 127.0.0.1:37316 Closing
+  ✓   8 [Brave] › e2e/accessibility.spec.ts:125:5 › Accessibility — Navigasi Keyboard › semua elemen form bisa diakses dengan Tab (654ms)
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37324 Accepted
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37324 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37324 Closing
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37340 Accepted
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37340 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37340 Closing
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37346 Accepted
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37346 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37346 Closing
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37352 Accepted
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37352 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37352 Closing
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37366 Accepted
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37366 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:33 2026] 127.0.0.1:37366 Closing
+  ✓   9 [Brave] › e2e/accessibility.spec.ts:149:5 › Accessibility — Navigasi Keyboard › tombol submit bisa di-submit dengan Enter (1.3s)
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:37368 Accepted
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:37368 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:37368 Closing
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:43214 Accepted
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:43214 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:43214 Closing
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:43226 Accepted
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:43226 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:34 2026] 127.0.0.1:43226 Closing
+[Login] Halaman tidak memiliki landmark <main>. Disarankan menambahkan untuk aksesibilitas.
+  ✓  10 [Brave] › e2e/accessibility.spec.ts:165:5 › Accessibility — Landmark & Struktur › Halaman Login memiliki landmark main (652ms)
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43232 Accepted
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43232 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43232 Closing
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43244 Accepted
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43244 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43244 Closing
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43254 Accepted
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43254 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43254 Closing
+  ✓  11 [Brave] › e2e/accessibility.spec.ts:181:5 › Accessibility — Landmark & Struktur › Halaman Login memiliki bahasa dokumen yang benar (636ms)
+[WebServer] [Sat Oct 10 09:05:35 2026] 127.0.0.1:43268 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43268 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43268 Closing
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43280 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43280 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43280 Closing
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43290 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43290 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43290 Closing
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43302 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43302 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43302 Closing
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43312 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43312 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43312 Closing
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43328 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43328 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43328 Closing
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43336 Accepted
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43336 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43336 Closing
+  ✓  12 [Brave] › e2e/auth/login.spec.ts:14:5 › Login — Alur Masuk Pengguna › login dengan email berhasil dan redirect ke dashboard client (969ms)
+[WebServer] [Sat Oct 10 09:05:36 2026] 127.0.0.1:43342 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43342 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43342 Closing
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43354 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43354 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43354 Closing
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43364 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43364 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43364 Closing
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43366 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43366 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43366 Closing
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43382 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43382 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43382 Closing
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43384 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43384 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43384 Closing
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43394 Accepted
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43394 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:37 2026] 127.0.0.1:43394 Closing
+  ✓  13 [Brave] › e2e/auth/login.spec.ts:22:5 › Login — Alur Masuk Pengguna › login dengan username berhasil (dual-login) (1.6s)
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43406 Accepted
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43406 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43406 Closing
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43420 Accepted
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43420 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43420 Closing
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43426 Accepted
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43426 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43426 Closing
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43432 Accepted
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43432 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43432 Closing
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43442 Accepted
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43442 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43442 Closing
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43448 Accepted
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43448 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:38 2026] 127.0.0.1:43448 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43450 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43450 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43450 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43454 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43454 [200]: GET /admin/dashboard
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43454 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43468 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43468 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43468 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43484 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43484 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43484 Closing
+  ✓  14 [Brave] › e2e/auth/login.spec.ts:30:5 › Login — Alur Masuk Pengguna › admin diarahkan ke dashboard admin setelah login (1.2s)
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43498 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43498 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43498 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43500 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43500 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43500 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43514 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43514 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43514 Closing
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43528 Accepted
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43528 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:39 2026] 127.0.0.1:43528 Closing
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43536 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43536 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43536 Closing
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43544 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43544 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43544 Closing
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43550 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43550 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43550 Closing
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43556 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43556 [200]: GET /mitra/dashboard
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43556 Closing
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43570 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43570 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43570 Closing
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43584 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43584 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43584 Closing
+  ✓  15 [Brave] › e2e/auth/login.spec.ts:35:5 › Login — Alur Masuk Pengguna › mitra diarahkan ke dashboard mitra setelah login (1.2s)
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43588 Accepted
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43588 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:40 2026] 127.0.0.1:43588 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43596 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43596 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43596 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43598 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43598 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43598 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43604 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43604 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43604 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43612 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43612 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43612 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43626 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43626 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43626 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43632 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43632 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43632 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43636 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43636 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43636 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43648 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43648 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43648 Closing
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43652 Accepted
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43652 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:41 2026] 127.0.0.1:43652 Closing
+  ✓  16 [Brave] › e2e/auth/login.spec.ts:40:5 › Login — Alur Masuk Pengguna › client diarahkan ke dashboard client setelah login (1.1s)
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43656 Accepted
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43656 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43656 Closing
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43664 Accepted
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43664 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43664 Closing
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43672 Accepted
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43672 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43672 Closing
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43686 Accepted
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43686 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43686 Closing
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43702 Accepted
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43702 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:42 2026] 127.0.0.1:43702 Closing
+  ✓  17 [Brave] › e2e/auth/login.spec.ts:51:5 › Login — Alur Masuk Pengguna › gagal login jika password salah (1.1s)
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43710 Accepted
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43710 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43710 Closing
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43718 Accepted
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43718 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43718 Closing
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43726 Accepted
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43726 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43726 Closing
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43736 Accepted
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43736 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43736 Closing
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43752 Accepted
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43752 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43752 Closing
+  ✓  18 [Brave] › e2e/auth/login.spec.ts:65:5 › Login — Alur Masuk Pengguna › gagal login jika email tidak terdaftar (842ms)
+[WebServer] [Sat Oct 10 09:05:43 2026] 127.0.0.1:43760 Accepted
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43760 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43760 Closing
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43772 Accepted
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43772 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43772 Closing
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43776 Accepted
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43776 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:43776 Closing
+  ✓  19 [Brave] › e2e/auth/login.spec.ts:76:5 › Login — Alur Masuk Pengguna › gagal login jika identitas kosong (745ms)
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:34010 Accepted
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:34010 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:44 2026] 127.0.0.1:34010 Closing
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34026 Accepted
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34026 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34026 Closing
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34028 Accepted
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34028 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34028 Closing
+  ✓  20 [Brave] › e2e/auth/login.spec.ts:84:5 › Login — Alur Masuk Pengguna › gagal login jika password kosong (750ms)
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34032 Accepted
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34032 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34032 Closing
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34038 Accepted
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34038 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34038 Closing
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34048 Accepted
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34048 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34048 Closing
+[WebServer] [Sat Oct 10 09:05:45 2026] 127.0.0.1:34062 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34062 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34062 Closing
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34070 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34070 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34070 Closing
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34074 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34074 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34074 Closing
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34090 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34090 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34090 Closing
+  ✓  21 [Brave] › e2e/auth/login.spec.ts:97:5 › Login — Alur Masuk Pengguna › login dengan remember me membuat sesi tetap aktif (1.1s)
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34104 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34104 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34104 Closing
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34120 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34120 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34120 Closing
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34136 Accepted
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34136 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:46 2026] 127.0.0.1:34136 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34142 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34142 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34142 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34156 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34156 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34156 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34158 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34158 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34158 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34162 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34162 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34162 Closing
+  ✓  22 [Brave] › e2e/auth/login.spec.ts:114:5 › Login — Alur Masuk Pengguna › login tanpa remember me tidak membuat cookie remember (1.0s)
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34166 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34166 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34166 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34176 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34176 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34176 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34190 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34190 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34190 Closing
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34198 Accepted
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34198 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:47 2026] 127.0.0.1:34198 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34206 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34206 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34206 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34218 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34218 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34218 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34234 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34234 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34234 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34250 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34250 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34250 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34262 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34262 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34262 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34264 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34264 [200]: GET /
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34264 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34274 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34274 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34274 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34282 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34282 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34282 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34290 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34290 [302]: POST /logout
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34290 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34302 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34302 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34302 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34318 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34318 [200]: GET /
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34318 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34328 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34328 [302]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34328 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34340 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34340 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34340 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34342 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34342 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34342 Closing
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34352 Accepted
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34352 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:48 2026] 127.0.0.1:34352 Closing
+  ✓  23 [Brave] › e2e/auth/login.spec.ts:135:5 › Login — Alur Masuk Pengguna › logout menghapus sesi dan redirect ke landing page (1.5s)
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34362 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34362 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34362 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34364 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34364 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34364 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34366 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34366 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34366 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34370 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34370 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34370 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34380 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34380 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34380 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34384 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34384 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34384 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34386 Accepted
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34386 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34386 Closing
+[WebServer] [Sat Oct 10 09:05:49 2026] 127.0.0.1:34390 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34390 [200]: GET /admin/dashboard
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34390 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34400 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34408 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34400 [200]: GET /
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34400 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34408 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34408 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34414 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34414 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34414 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34428 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34428 [302]: POST /logout
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34428 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34434 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34434 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34434 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34448 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34448 [200]: GET /
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34448 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34454 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34454 [302]: GET /admin/dashboard
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34454 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34464 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34464 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34464 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34466 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34466 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34466 Closing
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34478 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34478 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34478 Closing
+  ✓  24 [Brave] › e2e/auth/login.spec.ts:146:5 › Login — Alur Masuk Pengguna › setelah logout, tidak bisa akses dashboard admin (1.6s)
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34488 Accepted
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34488 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:50 2026] 127.0.0.1:34488 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34490 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34490 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34490 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34500 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34500 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34500 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34506 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34506 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34506 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34512 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34512 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34512 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34524 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34524 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34524 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34536 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34536 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34536 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34548 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34548 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34548 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34560 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34560 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34560 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34574 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34574 [302]: GET /login
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34574 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34590 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34590 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34590 Closing
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34602 Accepted
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34602 [200]: GET /
+[WebServer] [Sat Oct 10 09:05:51 2026] 127.0.0.1:34602 Closing
+[WebServer] [Sat Oct 10 09:05:52 2026] 127.0.0.1:34616 Accepted
+[WebServer] [Sat Oct 10 09:05:52 2026] 127.0.0.1:34616 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:52 2026] 127.0.0.1:34616 Closing
+[WebServer] [Sat Oct 10 09:05:52 2026] 127.0.0.1:34632 Accepted
+[WebServer] [Sat Oct 10 09:05:52 2026] 127.0.0.1:34632 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:52 2026] 127.0.0.1:34632 Closing
+  ✓  25 [Brave] › e2e/auth/login.spec.ts:160:5 › Login — Alur Masuk Pengguna › user yang sudah login tidak bisa akses halaman login (2.5s)
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34646 Accepted
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34646 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34646 Closing
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34648 Accepted
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34648 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34648 Closing
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34652 Accepted
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34652 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:53 2026] 127.0.0.1:34652 Closing
+  ✓  26 [Brave] › e2e/auth/login.spec.ts:175:5 › Login — Alur Masuk Pengguna › toggle password menampilkan dan menyembunyikan password (742ms)
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34662 Accepted
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34662 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34662 Closing
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34668 Accepted
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34668 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34668 Closing
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34670 Accepted
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34670 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:34670 Closing
+  ✓  27 [Brave] › e2e/auth/login.spec.ts:193:5 › Login — Alur Masuk Pengguna › semua input memiliki label yang terasosiasi (670ms)
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:37554 Accepted
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:37554 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:54 2026] 127.0.0.1:37554 Closing
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37570 Accepted
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37570 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37570 Closing
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37580 Accepted
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37580 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37580 Closing
+  ✓  28 [Brave] › e2e/auth/login.spec.ts:199:5 › Login — Alur Masuk Pengguna › tombol toggle password memiliki aria-label (676ms)
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37586 Accepted
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37586 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37586 Closing
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37598 Accepted
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37598 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37598 Closing
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37610 Accepted
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37610 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37610 Closing
+[WebServer] [Sat Oct 10 09:05:55 2026] 127.0.0.1:37616 Accepted
+[WebServer] [Sat Oct 10 09:05:56 2026] 127.0.0.1:37616 [302]: POST /login
+[WebServer] [Sat Oct 10 09:05:56 2026] 127.0.0.1:37616 Closing
+[WebServer] [Sat Oct 10 09:05:56 2026] 127.0.0.1:37630 Accepted
+[WebServer] [Sat Oct 10 09:05:56 2026] 127.0.0.1:37630 [200]: GET /login
+[WebServer] [Sat Oct 10 09:05:56 2026] 127.0.0.1:37630 Closing
+  ✓  29 [Brave] › e2e/auth/login.spec.ts:211:5 › Login — Alur Masuk Pengguna › error dari server ditampilkan sebagai teks merah di form (1.5s)
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37642 Accepted
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37642 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37642 Closing
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37644 Accepted
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37644 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37644 Closing
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37650 Accepted
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37650 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37650 Closing
+  ✓  30 [Brave] › e2e/auth/password-reset.spec.ts:15:9 › Password Reset — Alur Lupa Password › Halaman Forgot Password › menampilkan heading "Pemulihan" (649ms)
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37664 Accepted
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37664 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37664 Closing
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37670 Accepted
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37670 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37670 Closing
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37672 Accepted
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37672 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:57 2026] 127.0.0.1:37672 Closing
+  ✓  31 [Brave] › e2e/auth/password-reset.spec.ts:21:9 › Password Reset — Alur Lupa Password › Halaman Forgot Password › menampilkan field email (664ms)
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37674 Accepted
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37674 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37674 Closing
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37678 Accepted
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37678 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37678 Closing
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37684 Accepted
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37684 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37684 Closing
+  ✓  32 [Brave] › e2e/auth/password-reset.spec.ts:26:9 › Password Reset — Alur Lupa Password › Halaman Forgot Password › menampilkan tombol "Kirim Tautan Pemulihan" (644ms)
+[WebServer] [Sat Oct 10 09:05:58 2026] 127.0.0.1:37688 Accepted
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37688 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37688 Closing
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37704 Accepted
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37704 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37704 Closing
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37712 Accepted
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37712 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37712 Closing
+  ✓  33 [Brave] › e2e/auth/password-reset.spec.ts:32:9 › Password Reset — Alur Lupa Password › Halaman Forgot Password › menampilkan tombol kembali ke login (611ms)
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37726 Accepted
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37726 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37726 Closing
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37728 Accepted
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37728 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37728 Closing
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37744 Accepted
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37744 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:05:59 2026] 127.0.0.1:37744 Closing
+  ✓  34 [Brave] › e2e/auth/password-reset.spec.ts:38:9 › Password Reset — Alur Lupa Password › Halaman Forgot Password › input email memiliki autocomplete="email" (661ms)
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37752 Accepted
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37752 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37752 Closing
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37762 Accepted
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37762 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37762 Closing
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37764 Accepted
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37764 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37764 Closing
+  ✓  35 [Brave] › e2e/auth/password-reset.spec.ts:45:9 › Password Reset — Alur Lupa Password › Halaman Forgot Password › input email bertipe email (644ms)
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37778 Accepted
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37778 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:00 2026] 127.0.0.1:37778 Closing
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37782 Accepted
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37782 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37782 Closing
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37792 Accepted
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37792 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37792 Closing
+[WebServer] [Sat Oct 10 09:06:01 2026] 127.0.0.1:37800 Accepted
+[WebServer] [Sat Oct 10 09:06:07 2026] 127.0.0.1:37800 [302]: POST /forgot-password
+[WebServer] [Sat Oct 10 09:06:07 2026] 127.0.0.1:37800 Closing
+[WebServer] [Sat Oct 10 09:06:07 2026] 127.0.0.1:44304 Accepted
+[WebServer] [Sat Oct 10 09:06:07 2026] 127.0.0.1:44304 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:07 2026] 127.0.0.1:44304 Closing
+  ✓  36 [Brave] › e2e/auth/password-reset.spec.ts:59:5 › Password Reset — Alur Lupa Password › kirim tautan reset untuk email yang terdaftar (7.1s)
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44314 Accepted
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44314 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44314 Closing
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44322 Accepted
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44322 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44322 Closing
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44336 Accepted
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44336 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44336 Closing
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44338 Accepted
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44338 [302]: POST /forgot-password
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44338 Closing
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44354 Accepted
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44354 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44354 Closing
+  ✓  37 [Brave] › e2e/auth/password-reset.spec.ts:80:5 › Password Reset — Alur Lupa Password › gagal kirim tautan jika email tidak terdaftar (822ms)
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44364 Accepted
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44364 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:08 2026] 127.0.0.1:44364 Closing
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44372 Accepted
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44372 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44372 Closing
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44386 Accepted
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44386 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44386 Closing
+  ✓  38 [Brave] › e2e/auth/password-reset.spec.ts:95:5 › Password Reset — Alur Lupa Password › gagal kirim tautan jika email kosong (753ms)
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44394 Accepted
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44394 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44394 Closing
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44410 Accepted
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44410 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44410 Closing
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44424 Accepted
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44424 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:09 2026] 127.0.0.1:44424 Closing
+  ✓  39 [Brave] › e2e/auth/password-reset.spec.ts:105:5 › Password Reset — Alur Lupa Password › gagal kirim tautan jika format email tidak valid (723ms)
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44426 Accepted
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44426 [200]: GET /reset-password/token-palsu?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44426 Closing
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44436 Accepted
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44436 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44436 Closing
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44442 Accepted
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44442 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44442 Closing
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44456 Accepted
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44456 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44456 Closing
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44470 Accepted
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44470 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:10 2026] 127.0.0.1:44470 Closing
+  ✓  40 [Brave] › e2e/auth/password-reset.spec.ts:121:9 › Password Reset — Alur Lupa Password › Halaman Reset Password › guest bisa akses halaman reset dengan token apapun (658ms)
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44484 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44484 [200]: GET /reset-password/token-apa-saja?email=budi@example.com
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44484 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44486 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44486 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44486 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44498 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44498 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44498 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44508 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44508 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44508 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44512 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44512 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44512 Closing
+  ✓  41 [Brave] › e2e/auth/password-reset.spec.ts:134:9 › Password Reset — Alur Lupa Password › Halaman Reset Password › menampilkan email dari query string (readonly) (629ms)
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44516 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44516 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44516 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44526 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44526 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44526 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44530 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44530 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44530 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44536 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44536 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44536 Closing
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44538 Accepted
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44538 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:11 2026] 127.0.0.1:44538 Closing
+  ✓  42 [Brave] › e2e/auth/password-reset.spec.ts:144:9 › Password Reset — Alur Lupa Password › Halaman Reset Password › menampilkan field password baru dan konfirmasi (635ms)
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44550 Accepted
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44550 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44550 Closing
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44552 Accepted
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44552 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44552 Closing
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44564 Accepted
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44564 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44564 Closing
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44568 Accepted
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44568 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44568 Closing
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44570 Accepted
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44570 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44570 Closing
+  ✓  43 [Brave] › e2e/auth/password-reset.spec.ts:151:9 › Password Reset — Alur Lupa Password › Halaman Reset Password › menampilkan tombol "Simpan Password Baru" (658ms)
+[WebServer] [Sat Oct 10 09:06:12 2026] 127.0.0.1:44582 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44582 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44582 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44594 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44594 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44594 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44598 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44598 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44598 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44614 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44614 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44614 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44616 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44616 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44616 Closing
+  ✓  44 [Brave] › e2e/auth/password-reset.spec.ts:159:9 › Password Reset — Alur Lupa Password › Halaman Reset Password › input password memiliki autocomplete="new-password" (647ms)
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44632 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44632 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44632 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44644 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44644 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44644 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44660 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44660 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44660 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44664 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44664 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44664 Closing
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44668 Accepted
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44668 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:13 2026] 127.0.0.1:44668 Closing
+  ✓  45 [Brave] › e2e/auth/password-reset.spec.ts:185:9 › Password Reset — Alur Lupa Password › Validasi Frontend Reset Password › menampilkan peringatan jika konfirmasi tidak cocok (674ms)
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44684 Accepted
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44684 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44684 Closing
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44686 Accepted
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44686 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44686 Closing
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44698 Accepted
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44698 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44698 Closing
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44712 Accepted
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44712 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44712 Closing
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44718 Accepted
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44718 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:44718 Closing
+  ✓  46 [Brave] › e2e/auth/password-reset.spec.ts:194:9 › Password Reset — Alur Lupa Password › Validasi Frontend Reset Password › tombol submit disabled saat password tidak cocok (654ms)
+[WebServer] [Sat Oct 10 09:06:14 2026] 127.0.0.1:42908 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42908 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42908 Closing
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42918 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42918 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42918 Closing
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42928 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42928 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42928 Closing
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42934 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42934 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42934 Closing
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42946 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42946 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42946 Closing
+  ✓  47 [Brave] › e2e/auth/password-reset.spec.ts:203:9 › Password Reset — Alur Lupa Password › Validasi Frontend Reset Password › toggle password menampilkan password (694ms)
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42950 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42950 [200]: GET /reset-password/token-palsu?email=client@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42950 Closing
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42954 Accepted
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42954 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:15 2026] 127.0.0.1:42954 Closing
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42962 Accepted
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42962 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42962 Closing
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42978 Accepted
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42978 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42978 Closing
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42992 Accepted
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42992 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:42992 Closing
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43000 Accepted
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43000 [302]: POST /reset-password
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43000 Closing
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43006 Accepted
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43006 [200]: GET /reset-password/token-palsu?email=client%40titiktemu.test
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43006 Closing
+  ✓  48 [Brave] › e2e/auth/password-reset.spec.ts:218:5 › Password Reset — Alur Lupa Password › gagal reset password dengan token palsu (1.1s)
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43012 Accepted
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43012 [200]: GET /forgot-password
+[WebServer] [Sat Oct 10 09:06:16 2026] 127.0.0.1:43012 Closing
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43028 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43028 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43028 Closing
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43042 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43042 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43042 Closing
+  ✓  49 [Brave] › e2e/auth/password-reset.spec.ts:240:5 › Password Reset — Alur Lupa Password › halaman forgot password memiliki semua label terasosiasi (658ms)
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43044 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43044 [200]: GET /reset-password/token-abc?email=test@titiktemu.test
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43044 Closing
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43056 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43056 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43056 Closing
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43062 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43062 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43062 Closing
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43066 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43066 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43066 Closing
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43080 Accepted
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43080 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:17 2026] 127.0.0.1:43080 Closing
+  ✓  50 [Brave] › e2e/auth/password-reset.spec.ts:245:5 › Password Reset — Alur Lupa Password › halaman reset password memiliki semua label terasosiasi (635ms)
+  -  51 [Brave] › e2e/auth/rate-limit.spec.ts:62:5 › Rate Limiting — Proteksi Endpoint Auth › login diblokir setelah melebihi limit
+  -  52 [Brave] › e2e/auth/rate-limit.spec.ts:84:5 › Rate Limiting — Proteksi Endpoint Auth › pesan rate limit menyertakan waktu tunggu
+  -  53 [Brave] › e2e/auth/rate-limit.spec.ts:107:5 › Rate Limiting — Proteksi Endpoint Auth › register diblokir setelah melebihi limit
+  -  54 [Brave] › e2e/auth/rate-limit.spec.ts:140:5 › Rate Limiting — Proteksi Endpoint Auth › forgot password diblokir setelah melebihi limit
+  -  55 [Brave] › e2e/auth/rate-limit.spec.ts:169:5 › Rate Limiting — Proteksi Endpoint Auth › rate limit login akun A tidak mempengaruhi akun B
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43096 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43096 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43096 Closing
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43108 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43108 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43108 Closing
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43120 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43120 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43120 Closing
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43128 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43128 [302]: POST /register
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43128 Closing
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43142 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43142 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43142 Closing
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43156 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43156 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43156 Closing
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43162 Accepted
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43162 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:18 2026] 127.0.0.1:43162 Closing
+  ✓  56 [Brave] › e2e/auth/register.spec.ts:14:5 › Register — Alur Registrasi Client › client baru bisa register dan langsung masuk dashboard (1.1s)
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43168 Accepted
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43168 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43168 Closing
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43176 Accepted
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43176 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43176 Closing
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43182 Accepted
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43182 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43182 Closing
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43190 Accepted
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43190 [302]: POST /register
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43190 Closing
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43196 Accepted
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43196 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:19 2026] 127.0.0.1:43196 Closing
+  ✓  57 [Brave] › e2e/auth/register.spec.ts:39:5 › Register — Alur Registrasi Client › gagal register jika email sudah terdaftar (978ms)
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43200 Accepted
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43200 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43200 Closing
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43204 Accepted
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43204 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43204 Closing
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43216 Accepted
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43216 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43216 Closing
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43222 Accepted
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43222 [302]: POST /register
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43222 Closing
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43226 Accepted
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43226 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:20 2026] 127.0.0.1:43226 Closing
+  ✓  58 [Brave] › e2e/auth/register.spec.ts:56:5 › Register — Alur Registrasi Client › gagal register jika username sudah dipakai (947ms)
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43228 Accepted
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43228 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43228 Closing
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43232 Accepted
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43232 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43232 Closing
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43244 Accepted
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43244 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43244 Closing
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43256 Accepted
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43256 [302]: POST /register
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43256 Closing
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43268 Accepted
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43268 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:21 2026] 127.0.0.1:43268 Closing
+  ✓  59 [Brave] › e2e/auth/register.spec.ts:69:5 › Register — Alur Registrasi Client › gagal register jika password kurang dari 8 karakter (956ms)
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43276 Accepted
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43276 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43276 Closing
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43286 Accepted
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43286 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43286 Closing
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43288 Accepted
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43288 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43288 Closing
+  ✓  60 [Brave] › e2e/auth/register.spec.ts:82:5 › Register — Alur Registrasi Client › gagal register jika konfirmasi password tidak cocok (740ms)
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43296 Accepted
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43296 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:22 2026] 127.0.0.1:43296 Closing
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43308 Accepted
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43308 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43308 Closing
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43322 Accepted
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43322 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43322 Closing
+  ✓  61 [Brave] › e2e/auth/register.spec.ts:97:5 › Register — Alur Registrasi Client › gagal register jika nama kosong (870ms)
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43336 Accepted
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43336 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:23 2026] 127.0.0.1:43336 Closing
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43346 Accepted
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43346 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43346 Closing
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43356 Accepted
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43356 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43356 Closing
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43366 Accepted
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43366 [302]: POST /register
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43366 Closing
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43374 Accepted
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43374 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:43374 Closing
+  ✓  62 [Brave] › e2e/auth/register.spec.ts:115:5 › Register — Alur Registrasi Client › error dari server ditampilkan sebagai teks merah di form (1.0s)
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:57218 Accepted
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:57218 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:24 2026] 127.0.0.1:57218 Closing
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57224 Accepted
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57224 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57224 Closing
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57226 Accepted
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57226 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57226 Closing
+  ✓  63 [Brave] › e2e/auth/register.spec.ts:142:5 › Register — Alur Registrasi Client › toggle password menampilkan dan menyembunyikan password (666ms)
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57238 Accepted
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57238 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57238 Closing
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57252 Accepted
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57252 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57252 Closing
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57258 Accepted
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57258 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:25 2026] 127.0.0.1:57258 Closing
+  ✓  64 [Brave] › e2e/auth/register.spec.ts:153:5 › Register — Alur Registrasi Client › indikator kekuatan password muncul saat password diisi (738ms)
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57260 Accepted
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57260 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57260 Closing
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57274 Accepted
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57274 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57274 Closing
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57278 Accepted
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57278 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57278 Closing
+  ✓  65 [Brave] › e2e/auth/register.spec.ts:170:5 › Register — Alur Registrasi Client › semua input memiliki label yang terasosiasi (660ms)
+[WebServer] [Sat Oct 10 09:06:26 2026] 127.0.0.1:57280 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57280 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57280 Closing
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57286 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57286 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57286 Closing
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57288 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57288 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57288 Closing
+  ✓  66 [Brave] › e2e/auth/register.spec.ts:178:5 › Register — Alur Registrasi Client › tombol toggle password memiliki aria-label (640ms)
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57294 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57294 [200]: GET /register
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57294 Closing
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57304 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57304 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57304 Closing
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57316 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57316 [200]: GET /login
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57316 Closing
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57328 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57328 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57328 Closing
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57332 Accepted
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57332 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:27 2026] 127.0.0.1:57332 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57342 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57342 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57342 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57346 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57346 [302]: POST /login
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57346 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57358 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57358 [200]: GET /client/dashboard
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57358 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57368 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57384 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57384 [302]: GET /register
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57384 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57368 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57368 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57392 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57392 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57392 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57398 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57398 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57398 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57410 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57410 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57410 Closing
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57424 Accepted
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57424 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:28 2026] 127.0.0.1:57424 Closing
+  ✓  67 [Brave] › e2e/auth/register.spec.ts:184:5 › Register — Alur Registrasi Client › user yang sudah login tidak bisa akses halaman register (1.5s)
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57438 Accepted
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57438 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57438 Closing
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57452 Accepted
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57452 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57452 Closing
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57456 Accepted
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57456 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57456 Closing
+  ✓  68 [Brave] › e2e/landing/contact.spec.ts:17:9 › Contact — Form Kontak Landing Page › Elemen Form › menampilkan heading "Hubungi Kami" (862ms)
+[WebServer] [Sat Oct 10 09:06:29 2026] 127.0.0.1:57472 Accepted
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57472 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57472 Closing
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57486 Accepted
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57486 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57486 Closing
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57492 Accepted
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57492 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57492 Closing
+  ✓  69 [Brave] › e2e/landing/contact.spec.ts:23:9 › Contact — Form Kontak Landing Page › Elemen Form › menampilkan heading "Punya Pertanyaan atau Butuh Bantuan?" (872ms)
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57502 Accepted
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57502 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:30 2026] 127.0.0.1:57502 Closing
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57512 Accepted
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57512 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57512 Closing
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57524 Accepted
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57524 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57524 Closing
+  ✓  70 [Brave] › e2e/landing/contact.spec.ts:29:9 › Contact — Form Kontak Landing Page › Elemen Form › menampilkan field nama, email, dan pesan (822ms)
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57532 Accepted
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57532 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:31 2026] 127.0.0.1:57532 Closing
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57542 Accepted
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57542 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57542 Closing
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57546 Accepted
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57546 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57546 Closing
+  ✓  71 [Brave] › e2e/landing/contact.spec.ts:35:9 › Contact — Form Kontak Landing Page › Elemen Form › menampilkan tombol "Kirim Pesan Sekarang" (896ms)
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57560 Accepted
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57560 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:32 2026] 127.0.0.1:57560 Closing
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57562 Accepted
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57562 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57562 Closing
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57564 Accepted
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57564 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57564 Closing
+  ✓  72 [Brave] › e2e/landing/contact.spec.ts:41:9 › Contact — Form Kontak Landing Page › Elemen Form › menampilkan informasi kontak (lokasi, email, telepon) (935ms)
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57576 Accepted
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57576 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57576 Closing
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57588 Accepted
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57588 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57588 Closing
+[WebServer] [Sat Oct 10 09:06:33 2026] 127.0.0.1:57600 Accepted
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:57600 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:57600 Closing
+  ✓  73 [Brave] › e2e/landing/contact.spec.ts:55:9 › Contact — Form Kontak Landing Page › Atribut Input › input nama memiliki autocomplete="name" (895ms)
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:57616 Accepted
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:57616 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:57616 Closing
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:56104 Accepted
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:56104 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:56104 Closing
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:56120 Accepted
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:56120 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:34 2026] 127.0.0.1:56120 Closing
+  ✓  74 [Brave] › e2e/landing/contact.spec.ts:62:9 › Contact — Form Kontak Landing Page › Atribut Input › input email memiliki autocomplete="email" (799ms)
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56122 Accepted
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56122 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56122 Closing
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56126 Accepted
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56126 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56126 Closing
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56130 Accepted
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56130 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:35 2026] 127.0.0.1:56130 Closing
+  ✓  75 [Brave] › e2e/landing/contact.spec.ts:69:9 › Contact — Form Kontak Landing Page › Atribut Input › input nama, email, dan pesan wajib diisi (required) (815ms)
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56146 Accepted
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56146 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56146 Closing
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56158 Accepted
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56158 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56158 Closing
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56174 Accepted
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56174 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56174 Closing
+[WebServer] [Sat Oct 10 09:06:36 2026] 127.0.0.1:56176 Accepted
+[WebServer] [Sat Oct 10 09:06:37 2026] 127.0.0.1:56176 [302]: POST /contact
+[WebServer] [Sat Oct 10 09:06:37 2026] 127.0.0.1:56176 Closing
+[WebServer] [Sat Oct 10 09:06:37 2026] 127.0.0.1:56192 Accepted
+[WebServer] [Sat Oct 10 09:06:37 2026] 127.0.0.1:56192 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:37 2026] 127.0.0.1:56192 Closing
+  ✓  76 [Brave] › e2e/landing/contact.spec.ts:82:5 › Contact — Form Kontak Landing Page › berhasil kirim pesan kontak dengan data valid (2.2s)
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56202 Accepted
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56202 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56202 Closing
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56208 Accepted
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56208 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56208 Closing
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56224 Accepted
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56224 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:38 2026] 127.0.0.1:56224 Closing
+  ✓  77 [Brave] › e2e/landing/contact.spec.ts:110:5 › Contact — Form Kontak Landing Page › gagal kirim jika nama kosong (912ms)
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56228 Accepted
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56228 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56228 Closing
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56230 Accepted
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56230 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56230 Closing
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56240 Accepted
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56240 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:39 2026] 127.0.0.1:56240 Closing
+  ✓  78 [Brave] › e2e/landing/contact.spec.ts:119:5 › Contact — Form Kontak Landing Page › gagal kirim jika email kosong (889ms)
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56246 Accepted
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56246 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56246 Closing
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56262 Accepted
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56262 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56262 Closing
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56278 Accepted
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56278 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:40 2026] 127.0.0.1:56278 Closing
+  ✓  79 [Brave] › e2e/landing/contact.spec.ts:127:5 › Contact — Form Kontak Landing Page › gagal kirim jika pesan kosong (931ms)
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56294 Accepted
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56294 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56294 Closing
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56306 Accepted
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56306 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56306 Closing
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56310 Accepted
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56310 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56310 Closing
+  ✓  80 [Brave] › e2e/landing/contact.spec.ts:135:5 › Contact — Form Kontak Landing Page › gagal kirim jika format email tidak valid (909ms)
+[WebServer] [Sat Oct 10 09:06:41 2026] 127.0.0.1:56320 Accepted
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56320 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56320 Closing
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56322 Accepted
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56322 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56322 Closing
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56338 Accepted
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56338 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56338 Closing
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56354 Accepted
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56354 [302]: POST /contact
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56354 Closing
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56368 Accepted
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56368 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:42 2026] 127.0.0.1:56368 Closing
+  ✓  81 [Brave] › e2e/landing/contact.spec.ts:145:5 › Contact — Form Kontak Landing Page › gagal kirim jika pesan kurang dari 10 karakter (1.0s)
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56374 Accepted
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56374 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56374 Closing
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56388 Accepted
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56388 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56388 Closing
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56402 Accepted
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56402 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56402 Closing
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56412 Accepted
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56412 [302]: POST /contact
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56412 Closing
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56422 Accepted
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56422 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:43 2026] 127.0.0.1:56422 Closing
+  ✓  82 [Brave] › e2e/landing/contact.spec.ts:164:5 › Contact — Form Kontak Landing Page › error dari server ditampilkan sebagai teks di form (1.1s)
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56424 Accepted
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56424 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56424 Closing
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56438 Accepted
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56438 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56438 Closing
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56446 Accepted
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56446 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:44 2026] 127.0.0.1:56446 Closing
+  ✓  83 [Brave] › e2e/landing/contact.spec.ts:182:5 › Contact — Form Kontak Landing Page › semua input memiliki label yang terasosiasi (880ms)
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60418 Accepted
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60418 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60418 Closing
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60422 Accepted
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60422 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60422 Closing
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60438 Accepted
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60438 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60438 Closing
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60454 Accepted
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60454 [200]: GET /
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60454 Closing
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60468 Accepted
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60468 [200]: GET /favicon.svg
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60468 Closing
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60476 Accepted
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60476 [200]: GET /favicon.ico
+[WebServer] [Sat Oct 10 09:06:45 2026] 127.0.0.1:60476 Closing
+  ✓  84 [Brave] › e2e/landing/contact.spec.ts:188:5 › Contact — Form Kontak Landing Page › form kontak bisa diakses dari navbar (1.3s)
+
+  5 skipped
+  79 passed (1.5m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

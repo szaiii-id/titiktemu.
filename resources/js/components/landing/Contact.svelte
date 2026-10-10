@@ -1,27 +1,43 @@
 <script>
-    // State sederhana untuk form interaktif
+    import { inertia, router, page } from '@inertiajs/svelte';
+
     let nama = $state("");
     let email = $state("");
     let pesan = $state("");
-    let isSubmitted = $state(false);
+    let errors = $state({});
+    let processing = $state(false);
 
     function handleSubmit(e) {
         e.preventDefault();
-        // Simulasi pengiriman pesan
-        isSubmitted = true;
-        setTimeout(() => {
-            isSubmitted = false;
-            nama = "";
-            email = "";
-            pesan = "";
-        }, 4000);
+        errors = {};
+        processing = true;
+
+        router.post('/contact', {
+            nama: nama,
+            email: email,
+            pesan: pesan
+        }, {
+            onSuccess: () => {
+                nama = "";
+                email = "";
+                pesan = "";
+                processing = false;
+            },
+            onError: (err) => {
+                errors = err;
+                processing = false;
+            },
+            onFinish: () => {
+                processing = false;
+            }
+        });
     }
 </script>
 
 <!-- ID "contact" agar tersambung dengan navigasi Navbar -->
 <section id="contact" class="py-28 bg-gray-50/60 relative overflow-hidden border-t border-gray-100 scroll-mt-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         <!-- Header Section -->
         <div class="text-center max-w-3xl mx-auto mb-20">
             <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue/5 border border-blue/10 mb-4">
@@ -35,12 +51,11 @@
             </p>
         </div>
 
-        <!-- Grid Layout: Kiri (Info Kontak), Kanan (Formulir) -->
+        <!-- Grid Layout -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            
-            <!-- KOLOM KIRI: Informasi Kontak (Lebar 5) -->
+
+            <!-- KOLOM KIRI: Informasi Kontak -->
             <div class="lg:col-span-5 bg-dark text-white rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden flex flex-col justify-between space-y-12">
-                <!-- Efek cahaya pendar -->
                 <div class="absolute -top-20 -right-20 w-60 h-60 bg-blue/20 rounded-full filter blur-[70px] pointer-events-none"></div>
                 <div class="absolute -bottom-20 -left-20 w-60 h-60 bg-pink/20 rounded-full filter blur-[70px] pointer-events-none"></div>
 
@@ -50,7 +65,6 @@
                         Silakan hubungi kami melalui saluran resmi di bawah ini atau kirimkan pesan langsung melalui formulir.
                     </p>
 
-                    <!-- Daftar Info -->
                     <div class="space-y-6">
                         <!-- Lokasi -->
                         <div class="flex items-start gap-4">
@@ -62,7 +76,7 @@
                             </div>
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Lokasi</p>
-                                <p class="text-white font-medium text-sm sm:text-base mt-0.5">Banjarbaru, Kalimantan Selatan, Indonesia</p>
+                                <p class="text-white font-medium text-sm sm:text-base mt-0.5">Kertak Hanyar, Kalimantan Selatan, Indonesia</p>
                             </div>
                         </div>
 
@@ -75,7 +89,7 @@
                             </div>
                             <div>
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Email Resmi</p>
-                                <p class="text-white font-medium text-sm sm:text-base mt-0.5">hello@siperjaka.com</p>
+                                <p class="text-white font-medium text-sm sm:text-base mt-0.5">titiktemukm7@gmail.com</p>
                             </div>
                         </div>
 
@@ -99,64 +113,94 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN: Formulir Pesan (Lebar 7) -->
+            <!-- KOLOM KANAN: Formulir Pesan -->
             <div class="lg:col-span-7 bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-xl border border-gray-100">
-                
-                {#if isSubmitted}
-                    <!-- Notifikasi Sukses Berkilau -->
-                    <div class="bg-green/10 border border-green/30 text-green rounded-2xl p-6 text-center space-y-2 animate-in fade-in duration-300">
+
+                <!-- Flash Sukses -->
+                {#if page.props.flash?.status}
+                    <div class="bg-green/10 border border-green/30 text-green rounded-2xl p-6 text-center space-y-2 mb-6">
                         <h4 class="text-xl font-bold">Pesan Berhasil Terkirim!</h4>
-                        <p class="text-sm text-gray-600">Terima kasih telah menghubungi kami. Tim kami akan segera merespons pesan Anda.</p>
+                        <p class="text-sm text-gray-600">{page.props.flash.status}</p>
                     </div>
-                {:else}
-                    <form on:submit={handleSubmit} class="space-y-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <!-- Nama -->
-                            <div>
-                                <label for="nama" class="block text-sm font-bold text-dark mb-2">Nama Lengkap</label>
-                                <input 
-                                    type="text" 
-                                    id="nama" 
-                                    bind:value={nama} 
-                                    required
-                                    placeholder="Masukkan nama Anda" 
-                                    class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue focus:bg-white focus:outline-none transition-all text-sm font-medium"
-                                />
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <label for="email" class="block text-sm font-bold text-dark mb-2">Alamat Email</label>
-                                <input 
-                                    type="email" 
-                                    id="email" 
-                                    bind:value={email} 
-                                    required
-                                    placeholder="nama@instansi.com" 
-                                    class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue focus:bg-white focus:outline-none transition-all text-sm font-medium"
-                                />
-                            </div>
-                        </div>
-
-                        <!-- Pesan -->
-                        <div>
-                            <label for="pesan" class="block text-sm font-bold text-dark mb-2">Pesan atau Keterangan</label>
-                            <textarea 
-                                id="pesan" 
-                                bind:value={pesan} 
-                                required
-                                rows="5" 
-                                placeholder="Tuliskan pesan, pertanyaan, atau permohonan informasi kerja sama di sini..." 
-                                class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue focus:bg-white focus:outline-none transition-all text-sm font-medium resize-none"
-                            ></textarea>
-                        </div>
-
-                        <!-- Tombol Kirim -->
-                        <button type="submit" class="w-full bg-blue text-white py-4 rounded-full font-bold text-base hover:bg-purple transition-all shadow-lg hover:shadow-blue/30 transform hover:-translate-y-0.5">
-                            Kirim Pesan Sekarang
-                        </button>
-                    </form>
                 {/if}
+
+                <!-- Flash Error Global -->
+                {#if page.props.flash?.error}
+                    <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 mb-6">
+                        <p class="text-sm font-bold">{page.props.flash.error}</p>
+                    </div>
+                {/if}
+
+                <form onsubmit={handleSubmit} class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <!-- Nama -->
+                        <div>
+                            <label for="nama" class="block text-sm font-bold text-dark mb-2">Nama Lengkap</label>
+                            <input
+                                type="text"
+                                id="nama"
+                                bind:value={nama}
+                                required
+                                autocomplete="name"
+                                placeholder="Masukkan nama Anda"
+                                class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                            />
+                            {#if errors.nama}
+                                <p class="text-pink text-xs mt-1.5 font-bold">{errors.nama}</p>
+                            {/if}
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label for="email" class="block text-sm font-bold text-dark mb-2">Alamat Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                bind:value={email}
+                                required
+                                autocomplete="email"
+                                placeholder="nama@instansi.com"
+                                class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue focus:bg-white focus:outline-none transition-all text-sm font-medium"
+                            />
+                            {#if errors.email}
+                                <p class="text-pink text-xs mt-1.5 font-bold">{errors.email}</p>
+                            {/if}
+                        </div>
+                    </div>
+
+                    <!-- Pesan -->
+                    <div>
+                        <label for="pesan" class="block text-sm font-bold text-dark mb-2">Pesan atau Keterangan</label>
+                        <textarea
+                            id="pesan"
+                            bind:value={pesan}
+                            required
+                            rows="5"
+                            placeholder="Tuliskan pesan, pertanyaan, atau permohonan informasi kerja sama di sini..."
+                            class="w-full px-5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 focus:border-blue focus:bg-white focus:outline-none transition-all text-sm font-medium resize-none"
+                        ></textarea>
+                        {#if errors.pesan}
+                            <p class="text-pink text-xs mt-1.5 font-bold">{errors.pesan}</p>
+                        {/if}
+                    </div>
+
+                    <!-- Tombol Kirim -->
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        class="w-full bg-blue text-white py-4 rounded-full font-bold text-base hover:bg-purple transition-all shadow-lg hover:shadow-blue/30 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex justify-center items-center"
+                    >
+                        {#if processing}
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Mengirim...
+                        {:else}
+                            Kirim Pesan Sekarang
+                        {/if}
+                    </button>
+                </form>
 
             </div>
 
