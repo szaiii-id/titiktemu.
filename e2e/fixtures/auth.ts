@@ -35,24 +35,21 @@ export type SeedRole = keyof typeof SEED_USERS;
 // ==========================================
 /**
  * Paksa logout dari server, membersihkan session yang tersisa.
- * Ini penting karena `clearCookies()` hanya membersihkan cookie
- * di browser, tapi session di server masih ada.
  *
- * Tanpa ini, test berurutan dengan user yang sama akan gagal login
- * karena server melihat session lama masih aktif.
+ * `clearCookies()` hanya menghapus cookie di browser, tapi session
+ * di server (tabel `sessions`) masih ada. Tanpa ini, test berurutan
+ * dengan user yang sama akan gagal login karena server melihat
+ * session lama masih aktif.
  */
 export async function forceLogout(page: Page): Promise<void> {
     try {
-        // Buka halaman apa saja dulu untuk dapat CSRF token & cookie
         await page.goto('/');
 
-        // Ambil CSRF token
         const csrfToken = await page.evaluate(() => {
             const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
             return match ? decodeURIComponent(match[1]) : '';
         });
 
-        // POST /logout untuk hapus session di server
         await page.request.post(`${APP_URL}/logout`, {
             headers: {
                 'X-XSRF-TOKEN': csrfToken,
@@ -61,8 +58,7 @@ export async function forceLogout(page: Page): Promise<void> {
             failOnStatusCode: false,
         });
     } catch {
-        // Abaikan error — kalau memang belum login, logout akan gagal
-        // tapi kita tidak peduli. Yang penting cookie dibersihkan.
+        // Abaikan error — kalau belum login, logout memang akan gagal
     }
 
     // Bersihkan cookie di browser
@@ -73,11 +69,16 @@ export async function forceLogout(page: Page): Promise<void> {
 // HELPER: LOGIN VIA UI
 // ==========================================
 /**
- * Login melalui halaman /login menggunakan email atau username.
- * Setelah sukses, user akan berada di dashboard sesuai role.
+ * Login melalui halaman /login, lalu navigasi eksplisit ke dashboard.
  *
- * Sebelum login, fungsi ini melakukan forceLogout() untuk memastikan
- * tidak ada session lama yang tersisa dari test sebelumnya.
+ * Strategi anti-flaky:
+ *   1. forceLogout() dulu — pastikan tidak ada session sisa.
+ *   2. Tunggu response POST /login selesai (bukan cuma waitForURL).
+ *   3. Verifikasi status 302 + header Location.
+ *   4. Beri jeda agar browser set cookie.
+ *   5. page.goto(dashboardPath) eksplisit — tidak bergantung pada
+ *      client-side redirect yang bisa menggantung di WebKit/Firefox.
+ *   6. Cek URL akhir — kalau balik ke /login, throw error jelas.
  */
 export async function loginViaUI(
     page: Page,
@@ -90,33 +91,64 @@ export async function loginViaUI(
     const { useEmail = true, remember = false } = options;
     const user = SEED_USERS[role];
 
-    // PENTING: logout dulu dari server + clear cookies
-    // agar tidak ada session sisa dari test sebelumnya
+    // 1. Logout dulu dari server + clear cookies
     await forceLogout(page);
-
     await page.goto('/login');
 
-    // Isi identitas (email atau username)
-    await page.fill(
-        'input#identitas',
-        useEmail ? user.email : user.username
-    );
-
-    // Isi password
+    // Isi form
+    await page.fill('input#identitas', useEmail ? user.email : user.username);
     await page.fill('input#password', user.password);
 
-    // Centang "Ingat saya" jika diminta
     if (remember) {
         await page.check('input#remember-me');
     }
 
-    // Submit form
-    await page.click('button[type="submit"]');
+    // 2. Tunggu response POST /login selesai
+    const loginResponsePromise = page.waitForResponse(
+        (res) =>
+            res.url().includes('/login') &&
+            res.request().method() === 'POST',
+        { timeout: 15_000 }
+    );
 
-    // Tunggu redirect ke dashboard
-    await page.waitForURL(`**${user.dashboardPath}`, {
+    await page.click('button[type="submit"]');
+    const loginResponse = await loginResponsePromise;
+
+    // 3. Verifikasi status 302 (redirect = sukses)
+    if (loginResponse.status() !== 302) {
+        throw new Error(
+            `Login gagal untuk ${user.email}: ` +
+            `status ${loginResponse.status()} (expected 302)`
+        );
+    }
+
+    // Verifikasi header Location mengarah ke dashboard yang benar
+    const location = loginResponse.headers()['location'] ?? '';
+    if (!location.includes(user.dashboardPath)) {
+        throw new Error(
+            `Login redirect tidak sesuai untuk ${user.email}. ` +
+            `Expected: ${user.dashboardPath}, Got: ${location || '(empty)'}`
+        );
+    }
+
+    // 4. Beri jeda agar browser selesai set cookie session
+    await page.waitForTimeout(500);
+
+    // 5. Navigasi eksplisit ke dashboard — tidak bergantung pada
+    //    client-side redirect yang bisa menggantung
+    await page.goto(user.dashboardPath, {
+        waitUntil: 'domcontentloaded',
         timeout: 15_000,
     });
+
+    // 6. Cek apakah kita tidak di-redirect balik ke /login
+    if (page.url().includes('/login')) {
+        throw new Error(
+            `Login sukses (302) tapi dashboard redirect balik ke /login. ` +
+            `Kemungkinan cookie session tidak terkirim oleh browser. ` +
+            `URL: ${page.url()}`
+        );
+    }
 }
 
 // ==========================================
@@ -128,9 +160,7 @@ export async function loginViaHTTP(
 ): Promise<void> {
     const user = SEED_USERS[role];
 
-    // Logout dulu
     await forceLogout(page);
-
     await page.goto('/login');
 
     const csrfToken = await page.evaluate(() => {
@@ -149,8 +179,10 @@ export async function loginViaHTTP(
         },
     });
 
-    await page.goto(user.dashboardPath);
-    await page.waitForURL(`**${user.dashboardPath}`);
+    await page.goto(user.dashboardPath, {
+        waitUntil: 'domcontentloaded',
+        timeout: 15_000,
+    });
 }
 
 // ==========================================
@@ -206,7 +238,6 @@ export const test = base.extend<AuthFixtures>({
 
     asGuest: async ({ page }, use) => {
         await use(async () => {
-            // Logout + clear cookies untuk state bersih
             await forceLogout(page);
         });
     },
