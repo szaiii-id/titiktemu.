@@ -5,20 +5,21 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  PHP_VERSION: '8.5'
+  PHP_VERSION: '8.3'
   NODE_VERSION: '22'
 
 jobs:
   # ============================================================
   # JOB 1: PHP Tests (Pest) dengan PostgreSQL
   # ============================================================
-    test-php:
+  test-php:
     name: PHP Tests (Pest)
     runs-on: ubuntu-latest
 
