@@ -7,15 +7,15 @@ import { test, expect, SEED_USERS, uniqueUsername } from '../fixtures/auth';
  *
  * Jalankan dengan perintah:
  *
+ *   bun run test:e2e:rate-limit
+ *
+ * ATAU manual:
+ *
  *   AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 \
  *   AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 \
  *   AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 \
  *   AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5 \
- *   bun run test:e2e -- e2e/auth/rate-limit.spec.ts
- *
- * ATAU via script:
- *
- *   bun run test:e2e:rate-limit
+ *   bun run test:e2e -- e2e/rate-limit/
  *
  * PENTING: Test ini HANYA berjalan jika `AUTH_THROTTLE_*_TEST_OVERRIDE`
  * di-set ke nilai KECIL (misal 5, 3, 3). Jika di-set ke 1000 (default
@@ -56,10 +56,7 @@ test.describe('Rate Limiting — Proteksi Endpoint Auth', () => {
         `Rate limit test memerlukan env override KECIL (misal 5, 3, 3). ` +
             `Saat ini: LOGIN=${LOGIN_LIMIT_RAW}, REGISTER=${REGISTER_LIMIT_RAW}, ` +
             `FORGOT=${FORGOT_LIMIT_RAW}. ` +
-            `Jalankan dengan: AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 ` +
-            `AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 ` +
-            `AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 ` +
-            `bun run test:e2e -- e2e/auth/rate-limit.spec.ts`,
+            `Jalankan dengan: bun run test:e2e:rate-limit`,
     );
 
     /*

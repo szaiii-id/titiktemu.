@@ -15,7 +15,7 @@
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:debug": "playwright test --debug",
-        "test:e2e:rate-limit": "AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5 playwright test e2e/auth/rate-limit.spec.ts"
+        "test:e2e:rate-limit": "AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5 playwright test e2e/rate-limit/rate-limit.spec.ts"
     },
     "dependencies": {
         "@inertiajs/svelte": "^3.0.0",
