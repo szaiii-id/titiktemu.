@@ -62,7 +62,7 @@ export default defineConfig({
     // 1. DIREKTORI & POLA TEST
     testDir: 'e2e',
     testMatch: /(.+\.)?(test|spec)\.[jt]s/,
-    testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/rate-limit/**',],
+    testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**',],
 
     // 2. GLOBAL SETUP — migrate:fresh + seed + cache:clear
     // Dijalankan per-shard (setiap shard punya DB sendiri)
