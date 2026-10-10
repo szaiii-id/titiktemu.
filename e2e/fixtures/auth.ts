@@ -49,6 +49,8 @@ export async function loginViaUI(
     const { useEmail = true, remember = false } = options;
     const user = SEED_USERS[role];
 
+    await page.context().clearCookies();
+
     await page.goto('/login');
 
     // Isi identitas (email atau username)

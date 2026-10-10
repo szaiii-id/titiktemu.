@@ -50,7 +50,7 @@ test.describe('Register — Alur Registrasi Client', () => {
         await expect(page).toHaveURL('/register');
 
         // Pesan error harus muncul di bawah input email
-        await expect(page.locator('text=Email ini sudah terdaftar')).toBeVisible();
+        await expect(page.getByText(/Email ini sudah terdaftar/i)).toBeVisible();
     });
 
     test('gagal register jika username sudah dipakai', async ({ page }) => {
@@ -63,7 +63,7 @@ test.describe('Register — Alur Registrasi Client', () => {
         await page.click('button[type="submit"]');
 
         await expect(page).toHaveURL('/register');
-        await expect(page.locator('text=Username ini sudah digunakan')).toBeVisible();
+        await expect(page.getByText(/Username ini sudah digunakan/i)).toBeVisible();
     });
 
     test('gagal register jika password kurang dari 8 karakter', async ({ page }) => {
