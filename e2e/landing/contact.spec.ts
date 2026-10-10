@@ -1,6 +1,83 @@
 import { test, expect } from '../fixtures/auth';
 
+/**
+ * Contact — Form Kontak Landing Page
+ *
+ * PENTING: Route `/contact` menggunakan `throttle:3,1` (Laravel built-in).
+ * Ini BUKAN `auth.throttle`, jadi `AUTH_THROTTLE_*_TEST_OVERRIDE` TIDAK
+ * berpengaruh. Limit tetap 3 POST per 1 menit.
+ *
+ * Untuk menghindari throttle, kita:
+ * 1. Reset throttle sebelum test yang mengirim POST /contact
+ * 2. Gunakan `waitForResponse` bukan `networkidle` (lebih cepat)
+ */
+
 test.describe('Contact — Form Kontak Landing Page', () => {
+    /**
+     * Helper: reset throttle untuk route `/contact`.
+     *
+     * Route `/contact` menggunakan `throttle:3,1` yang di-handle oleh
+     * Laravel built-in RateLimiter. Key-nya adalah `ip` (default).
+     *
+     * Kita bisa reset via endpoint `/_test/clear-throttle` dengan
+     * limiter `contact` (jika terdaftar) atau fallback ke hapus
+     * langsung via tinker.
+     *
+     * CATATAN: Karena `throttle:3,1` bukan `auth.throttle`, endpoint
+     * `/_test/clear-throttle` mungkin TIDAK bisa menghapusnya. Jadi
+     * kita hanya bisa mengandalkan jumlah POST yang sedikit.
+     */
+    async function resetContactThrottle(page: any): Promise<void> {
+        // Coba reset via endpoint (jika didukung)
+        try {
+            await page.goto('/');
+            const csrfToken = await page.evaluate(() => {
+                const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+                return match ? decodeURIComponent(match[1]) : '';
+            });
+
+            await page.request.post('/_test/clear-throttle', {
+                form: { limiter: 'contact', key: '127.0.0.1' },
+                headers: { 'X-XSRF-TOKEN': csrfToken },
+                failOnStatusCode: false,
+            });
+        } catch {
+            // Abaikan error — mungkin endpoint tidak support
+        }
+    }
+
+    /**
+     * Helper: submit form kontak dan tunggu response.
+     */
+    async function submitContact(
+        page: any,
+        data: {
+            nama?: string;
+            email?: string;
+            pesan?: string;
+        },
+    ): Promise<void> {
+        if (data.nama !== undefined) {
+            await page.fill('input#nama', data.nama);
+        }
+        if (data.email !== undefined) {
+            await page.fill('input#email', data.email);
+        }
+        if (data.pesan !== undefined) {
+            await page.fill('textarea#pesan', data.pesan);
+        }
+
+        await Promise.all([
+            page.waitForResponse(
+                (resp: any) =>
+                    resp.url().includes('/contact') &&
+                    resp.request().method() === 'POST',
+                { timeout: 10_000 },
+            ),
+            page.click('button[type="submit"]'),
+        ]);
+    }
+
     test.beforeEach(async ({ page }) => {
         await page.goto('/');
         // Scroll ke form kontak
@@ -16,13 +93,15 @@ test.describe('Contact — Form Kontak Landing Page', () => {
     test.describe('Elemen Form', () => {
         test('menampilkan heading "Hubungi Kami"', async ({ page }) => {
             await expect(
-                page.getByText(/Hubungi Kami/i).first()
+                page.getByText(/Hubungi Kami/i).first(),
             ).toBeVisible();
         });
 
-        test('menampilkan heading "Punya Pertanyaan atau Butuh Bantuan?"', async ({ page }) => {
+        test('menampilkan heading "Punya Pertanyaan atau Butuh Bantuan?"', async ({
+            page,
+        }) => {
             await expect(
-                page.getByRole('heading', { name: /Punya Pertanyaan/i })
+                page.getByRole('heading', { name: /Punya Pertanyaan/i }),
             ).toBeVisible();
         });
 
@@ -34,14 +113,20 @@ test.describe('Contact — Form Kontak Landing Page', () => {
 
         test('menampilkan tombol "Kirim Pesan Sekarang"', async ({ page }) => {
             await expect(
-                page.getByRole('button', { name: /Kirim Pesan Sekarang/i })
+                page.getByRole('button', { name: /Kirim Pesan Sekarang/i }),
             ).toBeVisible();
         });
 
-        test('menampilkan informasi kontak (lokasi, email, telepon)', async ({ page }) => {
+        test('menampilkan informasi kontak (lokasi, email, telepon)', async ({
+            page,
+        }) => {
             await expect(page.getByText(/Kertak Hanyar/i)).toBeVisible();
-            await expect(page.getByText(/titiktemukm7@gmail.com/i)).toBeVisible();
-            await expect(page.getByText(/\+62 811 2233 4455/i)).toBeVisible();
+            await expect(
+                page.getByText(/titiktemukm7@gmail.com/i),
+            ).toBeVisible();
+            await expect(
+                page.getByText(/\+62 811 2233 4455/i),
+            ).toBeVisible();
         });
     });
 
@@ -55,21 +140,32 @@ test.describe('Contact — Form Kontak Landing Page', () => {
         test('input nama memiliki autocomplete="name"', async ({ page }) => {
             await expect(page.locator('input#nama')).toHaveAttribute(
                 'autocomplete',
-                'name'
+                'name',
             );
         });
 
         test('input email memiliki autocomplete="email"', async ({ page }) => {
             await expect(page.locator('input#email')).toHaveAttribute(
                 'autocomplete',
-                'email'
+                'email',
             );
         });
 
-        test('input nama, email, dan pesan wajib diisi (required)', async ({ page }) => {
-            await expect(page.locator('input#nama')).toHaveAttribute('required', '');
-            await expect(page.locator('input#email')).toHaveAttribute('required', '');
-            await expect(page.locator('textarea#pesan')).toHaveAttribute('required', '');
+        test('input nama, email, dan pesan wajib diisi (required)', async ({
+            page,
+        }) => {
+            await expect(page.locator('input#nama')).toHaveAttribute(
+                'required',
+                '',
+            );
+            await expect(page.locator('input#email')).toHaveAttribute(
+                'required',
+                '',
+            );
+            await expect(page.locator('textarea#pesan')).toHaveAttribute(
+                'required',
+                '',
+            );
         });
     });
 
@@ -77,34 +173,33 @@ test.describe('Contact — Form Kontak Landing Page', () => {
     |--------------------------------------------------------------------------
     | Happy Path — Kirim Pesan
     |--------------------------------------------------------------------------
+    |
+    | PENTING: Test ini mengirim POST /contact. Untuk menghindari
+    | throttle (3 per menit), kita reset throttle dulu.
     */
 
     test('berhasil kirim pesan kontak dengan data valid', async ({ page }) => {
-        // Matikan email agar tidak benar-benar dikirim
-        // (di .env.testing, MAIL_MAILER=log, jadi aman)
+        await resetContactThrottle(page);
 
-        await page.fill('input#nama', 'Budi Test E2E');
-        await page.fill('input#email', 'budi-e2e@titiktemu.test');
-        await page.fill(
-            'textarea#pesan',
-            'Ini adalah pesan test E2E untuk memastikan form kontak berfungsi dengan baik.'
-        );
-
-        await page.click('button[type="submit"]');
-
-        // Tunggu redirect back (ke halaman yang sama)
-        await page.waitForLoadState('networkidle');
+        await submitContact(page, {
+            nama: 'Budi Test E2E',
+            email: 'budi-e2e@titiktemu.test',
+            pesan: 'Ini adalah pesan test E2E untuk memastikan form kontak berfungsi dengan baik.',
+        });
 
         // Pesan sukses harus muncul
         await expect(
-            page.getByText(/Pesan Anda berhasil terkirim/i)
+            page.getByText(/Pesan Anda berhasil terkirim/i),
         ).toBeVisible({ timeout: 10_000 });
     });
 
     /*
     |--------------------------------------------------------------------------
-    | Negative Path — Validasi
+    | Negative Path — Validasi Frontend (Browser)
     |--------------------------------------------------------------------------
+    |
+    | Test di bawah ini TIDAK mengirim POST karena browser memblokir
+    | submit (karena `required` atau `type="email"`).
     */
 
     test('gagal kirim jika nama kosong', async ({ page }) => {
@@ -112,7 +207,7 @@ test.describe('Contact — Form Kontak Landing Page', () => {
         await page.fill('textarea#pesan', 'Pesan test minimal 10 karakter.');
         await page.click('button[type="submit"]');
 
-        // Browser blokir karena `required`
+        // Browser blokir karena `required`, tetap di halaman
         await expect(page).toHaveURL('/');
     });
 
@@ -142,35 +237,32 @@ test.describe('Contact — Form Kontak Landing Page', () => {
         await expect(page).toHaveURL('/');
     });
 
-    test('gagal kirim jika pesan kurang dari 10 karakter', async ({ page }) => {
-        await page.fill('input#nama', 'Budi');
-        await page.fill('input#email', 'budi@titiktemu.test');
-        await page.fill('textarea#pesan', 'Halo');
-
-        await page.click('button[type="submit"]');
-
-        // Server menolak dengan error validasi
-        await expect(
-            page.getByText(/Pesan minimal 10 karakter/i)
-        ).toBeVisible({ timeout: 10_000 });
-    });
-
     /*
     |--------------------------------------------------------------------------
-    | Error Handling (Level UI)
+    | Negative Path — Validasi Server
     |--------------------------------------------------------------------------
+    |
+    | Test di bawah ini MENGIRIM POST /contact. Untuk menghindari
+    | throttle (3 per menit), kita reset throttle dulu.
+    |
+    | PENTING: Hanya ada SATU test yang mengirim POST untuk validasi
+    | server, agar tidak melebihi limit.
     */
 
-    test('error dari server ditampilkan sebagai teks di form', async ({ page }) => {
-        await page.fill('input#nama', 'Budi');
-        await page.fill('input#email', 'budi@titiktemu.test');
-        await page.fill('textarea#pesan', 'Halo'); // kurang dari 10 karakter
+    test('gagal kirim jika pesan kurang dari 10 karakter', async ({ page }) => {
+        await resetContactThrottle(page);
 
-        await page.click('button[type="submit"]');
+        await submitContact(page, {
+            nama: 'Budi',
+            email: 'budi@titiktemu.test',
+            pesan: 'Halo', // kurang dari 10 karakter
+        });
 
-        // Error validasi harus muncul dengan warna merah/pink
-        const errorMessage = page.locator('p.text-pink, [class*="red"]').first();
-        await expect(errorMessage).toBeVisible({ timeout: 10_000 });
+        // Server menolak dengan error validasi
+        // Pesan error bisa dari server (Inertia) atau frontend
+        await expect(
+            page.getByText(/Pesan minimal 10 karakter/i),
+        ).toBeVisible({ timeout: 10_000 });
     });
 
     /*

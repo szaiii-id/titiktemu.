@@ -1,6 +1,68 @@
 import { test, expect, uniqueEmail, SEED_USERS } from '../fixtures/auth';
 
+/**
+ * Password Reset — Alur Lupa Password
+ *
+ * CATATAN:
+ * - Route `/forgot-password` menggunakan `auth.throttle:forgot-password`.
+ * - Route `/reset-password` menggunakan `auth.throttle:reset-password`.
+ * - Di testing, `AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE` dan
+ *   `AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE` di-set ke 1000
+ *   (default) agar test fungsional tidak ter-throttle.
+ */
+
 test.describe('Password Reset — Alur Lupa Password', () => {
+    /**
+     * Helper: submit form forgot-password dan tunggu response.
+     */
+    async function submitForgotPassword(
+        page: any,
+        email: string,
+    ): Promise<void> {
+        await page.fill('input#email', email);
+
+        await Promise.all([
+            page.waitForResponse(
+                (resp: any) =>
+                    resp.url().includes('/forgot-password') &&
+                    resp.request().method() === 'POST',
+                { timeout: 10_000 },
+            ),
+            page.click('button[type="submit"]'),
+        ]);
+    }
+
+    /**
+     * Helper: submit form reset-password dan tunggu response.
+     */
+    async function submitResetPassword(
+        page: any,
+        data: {
+            password?: string;
+            password_confirmation?: string;
+        },
+    ): Promise<void> {
+        if (data.password !== undefined) {
+            await page.fill('input#password', data.password);
+        }
+        if (data.password_confirmation !== undefined) {
+            await page.fill(
+                'input#password_confirmation',
+                data.password_confirmation,
+            );
+        }
+
+        await Promise.all([
+            page.waitForResponse(
+                (resp: any) =>
+                    resp.url().includes('/reset-password') &&
+                    resp.request().method() === 'POST',
+                { timeout: 10_000 },
+            ),
+            page.click('button[type="submit"]'),
+        ]);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Halaman Forgot Password — Contract
@@ -14,7 +76,7 @@ test.describe('Password Reset — Alur Lupa Password', () => {
 
         test('menampilkan heading "Pemulihan"', async ({ page }) => {
             await expect(
-                page.getByRole('heading', { name: /^Pemulihan/i })
+                page.getByRole('heading', { name: /^Pemulihan/i }),
             ).toBeVisible();
         });
 
@@ -23,29 +85,31 @@ test.describe('Password Reset — Alur Lupa Password', () => {
             await expect(page.locator('input#email')).toBeVisible();
         });
 
-        test('menampilkan tombol "Kirim Tautan Pemulihan"', async ({ page }) => {
+        test('menampilkan tombol "Kirim Tautan Pemulihan"', async ({
+            page,
+        }) => {
             await expect(
-                page.getByRole('button', { name: /Kirim Tautan Pemulihan/i })
+                page.getByRole('button', {
+                    name: /Kirim Tautan Pemulihan/i,
+                }),
             ).toBeVisible();
         });
 
         test('menampilkan tombol kembali ke login', async ({ page }) => {
-            await expect(
-                page.getByText(/Kembali ke Login/i)
-            ).toBeVisible();
+            await expect(page.getByText(/Kembali ke Login/i)).toBeVisible();
         });
 
         test('input email memiliki autocomplete="email"', async ({ page }) => {
             await expect(page.locator('input#email')).toHaveAttribute(
                 'autocomplete',
-                'email'
+                'email',
             );
         });
 
         test('input email bertipe email', async ({ page }) => {
             await expect(page.locator('input#email')).toHaveAttribute(
                 'type',
-                'email'
+                'email',
             );
         });
     });
@@ -59,15 +123,14 @@ test.describe('Password Reset — Alur Lupa Password', () => {
     test('kirim tautan reset untuk email yang terdaftar', async ({ page }) => {
         await page.goto('/forgot-password');
 
-        await page.fill('input#email', SEED_USERS.client.email);
-        await page.click('button[type="submit"]');
+        await submitForgotPassword(page, SEED_USERS.client.email);
 
         // Setelah submit, tetap di halaman forgot-password
         await expect(page).toHaveURL('/forgot-password');
 
         // Pesan sukses muncul
         await expect(
-            page.getByText(/Tautan pemulihan password telah dikirim/i)
+            page.getByText(/Tautan pemulihan password telah dikirim/i),
         ).toBeVisible({ timeout: 10_000 });
     });
 
@@ -80,31 +143,34 @@ test.describe('Password Reset — Alur Lupa Password', () => {
     test('gagal kirim tautan jika email tidak terdaftar', async ({ page }) => {
         await page.goto('/forgot-password');
 
-        await page.fill('input#email', 'tidak-ada@titiktemu.test');
-        await page.click('button[type="submit"]');
+        await submitForgotPassword(page, 'tidak-ada@titiktemu.test');
 
         // Tetap di halaman forgot-password
         await expect(page).toHaveURL('/forgot-password');
 
         // Pesan error muncul
         await expect(
-            page.getByText(/Email tersebut tidak terdaftar/i)
-        ).toBeVisible();
+            page.getByText(/Email tersebut tidak terdaftar/i),
+        ).toBeVisible({ timeout: 10_000 });
     });
 
     test('gagal kirim tautan jika email kosong', async ({ page }) => {
         await page.goto('/forgot-password');
 
         // Tidak isi email, klik submit
+        // Browser blokir karena `required`, TIDAK ada POST
         await page.click('button[type="submit"]');
 
-        // Browser blokir karena required, tetap di halaman
+        // Tetap di halaman
         await expect(page).toHaveURL('/forgot-password');
     });
 
-    test('gagal kirim tautan jika format email tidak valid', async ({ page }) => {
+    test('gagal kirim tautan jika format email tidak valid', async ({
+        page,
+    }) => {
         await page.goto('/forgot-password');
 
+        // Browser blokir karena `type="email"`, TIDAK ada POST
         await page.fill('input#email', 'bukan-email');
         await page.click('button[type="submit"]');
 
@@ -118,22 +184,26 @@ test.describe('Password Reset — Alur Lupa Password', () => {
     */
 
     test.describe('Halaman Reset Password', () => {
-        test('guest bisa akses halaman reset dengan token apapun', async ({ page }) => {
-            await page.goto('/reset-password/token-palsu?email=test@titiktemu.test');
+        test('guest bisa akses halaman reset dengan token apapun', async ({
+            page,
+        }) => {
+            await page.goto(
+                '/reset-password/token-palsu?email=test@titiktemu.test',
+            );
 
             // Halaman reset password harus bisa dibuka (form tetap tampil)
             // Validasi token terjadi saat submit, bukan saat render
-            await expect(page).toHaveURL(
-                /reset-password\/token-palsu/
-            );
+            await expect(page).toHaveURL(/reset-password\/token-palsu/);
             await expect(
-                page.getByRole('heading', { name: /Reset Sandi/i })
+                page.getByRole('heading', { name: /Reset Sandi/i }),
             ).toBeVisible();
         });
 
-        test('menampilkan email dari query string (readonly)', async ({ page }) => {
+        test('menampilkan email dari query string (readonly)', async ({
+            page,
+        }) => {
             await page.goto(
-                '/reset-password/token-apa-saja?email=budi@example.com'
+                '/reset-password/token-apa-saja?email=budi@example.com',
             );
 
             const emailInput = page.locator('input#email');
@@ -141,30 +211,42 @@ test.describe('Password Reset — Alur Lupa Password', () => {
             await expect(emailInput).toHaveAttribute('readonly', '');
         });
 
-        test('menampilkan field password baru dan konfirmasi', async ({ page }) => {
-            await page.goto('/reset-password/token-abc?email=test@titiktemu.test');
+        test('menampilkan field password baru dan konfirmasi', async ({
+            page,
+        }) => {
+            await page.goto(
+                '/reset-password/token-abc?email=test@titiktemu.test',
+            );
 
             await expect(page.locator('input#password')).toBeVisible();
-            await expect(page.locator('input#password_confirmation')).toBeVisible();
-        });
-
-        test('menampilkan tombol "Simpan Password Baru"', async ({ page }) => {
-            await page.goto('/reset-password/token-abc?email=test@titiktemu.test');
-
             await expect(
-                page.getByRole('button', { name: /Simpan Password Baru/i })
+                page.locator('input#password_confirmation'),
             ).toBeVisible();
         });
 
-        test('input password memiliki autocomplete="new-password"', async ({ page }) => {
-            await page.goto('/reset-password/token-abc?email=test@titiktemu.test');
+        test('menampilkan tombol "Simpan Password Baru"', async ({ page }) => {
+            await page.goto(
+                '/reset-password/token-abc?email=test@titiktemu.test',
+            );
+
+            await expect(
+                page.getByRole('button', { name: /Simpan Password Baru/i }),
+            ).toBeVisible();
+        });
+
+        test('input password memiliki autocomplete="new-password"', async ({
+            page,
+        }) => {
+            await page.goto(
+                '/reset-password/token-abc?email=test@titiktemu.test',
+            );
 
             await expect(page.locator('input#password')).toHaveAttribute(
                 'autocomplete',
-                'new-password'
+                'new-password',
             );
             await expect(
-                page.locator('input#password_confirmation')
+                page.locator('input#password_confirmation'),
             ).toHaveAttribute('autocomplete', 'new-password');
         });
     });
@@ -178,25 +260,31 @@ test.describe('Password Reset — Alur Lupa Password', () => {
     test.describe('Validasi Frontend Reset Password', () => {
         test.beforeEach(async ({ page }) => {
             await page.goto(
-                '/reset-password/token-abc?email=test@titiktemu.test'
+                '/reset-password/token-abc?email=test@titiktemu.test',
             );
         });
 
-        test('menampilkan peringatan jika konfirmasi tidak cocok', async ({ page }) => {
+        test('menampilkan peringatan jika konfirmasi tidak cocok', async ({
+            page,
+        }) => {
             await page.fill('input#password', 'password123');
             await page.fill('input#password_confirmation', 'password456');
 
             await expect(
-                page.getByText(/Konfirmasi password tidak cocok/i)
+                page.getByText(/Konfirmasi password tidak cocok/i),
             ).toBeVisible();
         });
 
-        test('tombol submit disabled saat password tidak cocok', async ({ page }) => {
+        test('tombol submit disabled saat password tidak cocok', async ({
+            page,
+        }) => {
             await page.fill('input#password', 'password123');
             await page.fill('input#password_confirmation', 'password456');
 
             await expect(
-                page.getByRole('button', { name: /Simpan Password Baru/i })
+                page.getByRole('button', {
+                    name: /Simpan Password Baru/i,
+                }),
             ).toBeDisabled();
         });
 
@@ -217,17 +305,18 @@ test.describe('Password Reset — Alur Lupa Password', () => {
 
     test('gagal reset password dengan token palsu', async ({ page }) => {
         await page.goto(
-            '/reset-password/token-palsu?email=' + SEED_USERS.client.email
+            '/reset-password/token-palsu?email=' + SEED_USERS.client.email,
         );
 
-        await page.fill('input#password', 'password-baru-123');
-        await page.fill('input#password_confirmation', 'password-baru-123');
-        await page.click('button[type="submit"]');
+        await submitResetPassword(page, {
+            password: 'password-baru-123',
+            password_confirmation: 'password-baru-123',
+        });
 
         // Server menolak token, tetap di halaman reset
         // atau redirect dengan error
         await expect(
-            page.locator('p.text-pink, [class*="red"]')
+            page.locator('p.text-pink, [class*="red"]'),
         ).toBeVisible({ timeout: 10_000 });
     });
 
@@ -237,18 +326,24 @@ test.describe('Password Reset — Alur Lupa Password', () => {
     |--------------------------------------------------------------------------
     */
 
-    test('halaman forgot password memiliki semua label terasosiasi', async ({ page }) => {
+    test('halaman forgot password memiliki semua label terasosiasi', async ({
+        page,
+    }) => {
         await page.goto('/forgot-password');
         await expect(page.locator('label[for="email"]')).toBeVisible();
     });
 
-    test('halaman reset password memiliki semua label terasosiasi', async ({ page }) => {
-        await page.goto('/reset-password/token-abc?email=test@titiktemu.test');
+    test('halaman reset password memiliki semua label terasosiasi', async ({
+        page,
+    }) => {
+        await page.goto(
+            '/reset-password/token-abc?email=test@titiktemu.test',
+        );
 
         await expect(page.locator('label[for="email"]')).toBeVisible();
         await expect(page.locator('label[for="password"]')).toBeVisible();
         await expect(
-            page.locator('label[for="password_confirmation"]')
+            page.locator('label[for="password_confirmation"]'),
         ).toBeVisible();
     });
 });

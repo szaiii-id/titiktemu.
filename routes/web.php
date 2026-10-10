@@ -13,9 +13,16 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-// Form Kontak (bisa diakses siapa saja)
+// ==========================================
+// FORM KONTAK
+// ==========================================
+// Di production: throttle 3 request per 1 menit.
+// Di testing: throttle 100 request per 1 menit (longgar)
+// agar E2E test tidak ter-throttle.
+$contactThrottle = app()->environment('testing') ? 'throttle:100,1' : 'throttle:3,1';
+
 Route::post('/contact', [ContactController::class, 'store'])
-    ->middleware('throttle:3,1')
+    ->middleware($contactThrottle)
     ->name('contact.store');
 
 // ==========================================
@@ -75,7 +82,21 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+// ==========================================
+// TEST-ONLY ROUTES
+// ==========================================
 if (app()->environment('testing')) {
+    /**
+     * Endpoint untuk reset rate limiter di environment testing.
+     *
+     * Body:
+     *   - limiter: nama limiter (login, register, forgot-password, reset-password, contact)
+     *   - key: key rate limiter (misal: "email|ip" atau "ip")
+     *
+     * Response:
+     *   - 204 No Content jika berhasil
+     *   - 400 Bad Request jika limiter atau key tidak ada
+     */
     Route::post('/_test/clear-throttle', function (Request $request) {
         $limiter = $request->input('limiter');
         $key = $request->input('key');
@@ -84,7 +105,16 @@ if (app()->environment('testing')) {
             return response()->json(['error' => 'Missing limiter or key'], 400);
         }
 
+        // Untuk limiter 'contact' (Laravel built-in throttle:3,1),
+        // key-nya adalah IP address saja (default Laravel).
+        // Untuk limiter lain (auth.throttle:*), key-nya sudah di-set
+        // oleh AuthThrottleResponse.
         RateLimiter::clear($key);
+
+        // Untuk contact, coba juga clear dengan key IP
+        if ($limiter === 'contact') {
+            RateLimiter::clear($request->ip());
+        }
 
         return response()->noContent();
     })->name('test.clear-throttle');

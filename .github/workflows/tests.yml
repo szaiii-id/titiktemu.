@@ -17,6 +17,9 @@ env:
   DB_PASSWORD: 'titiktemu04!'
 
 jobs:
+  # ============================================================
+  # PHP TESTS (Pest)
+  # ============================================================
   test-php:
     name: PHP Tests (Pest)
     runs-on: ubuntu-latest
@@ -89,7 +92,7 @@ jobs:
           DB_DATABASE: titiktemu_db_testing
           DB_USERNAME: titiktemu_dev
           DB_PASSWORD: titiktemu04!
-          # ✅ AUTH THROTTLE — OVERRIDE UNTUK TESTING
+          # AUTH THROTTLE — OVERRIDE LONGGAR UNTUK TESTING
           AUTH_THROTTLE_LOGIN_MAX: 5
           AUTH_THROTTLE_LOGIN_DECAY: 60
           AUTH_THROTTLE_LOGIN_TEST_OVERRIDE: 1000
@@ -104,6 +107,9 @@ jobs:
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
         run: php artisan test
 
+  # ============================================================
+  # JAVASCRIPT TESTS (Vitest)
+  # ============================================================
   test-js:
     name: JavaScript Tests (Vitest)
     runs-on: ubuntu-latest
@@ -126,6 +132,29 @@ jobs:
         env:
           LARAVEL_BYPASS_ENV_CHECK: '1'
 
+  # ============================================================
+  # E2E TESTS (Playwright)
+  #
+  # Struktur folder yang diharapkan:
+  #   e2e/
+  #   ├── auth/
+  #   │   ├── login.spec.ts
+  #   │   ├── register.spec.ts
+  #   │   └── password-reset.spec.ts
+  #   ├── landing/
+  #   │   └── contact.spec.ts
+  #   ├── accessibility.spec.ts
+  #   └── rate-limit/              ← Folder TERPISAH untuk rate limit
+  #       └── rate-limit.spec.ts
+  #
+  # `playwright.config.ts` menggunakan `testIgnore: ['**/rate-limit/**']`
+  # sehingga `bun run test:e2e` TIDAK menjalankan file di folder
+  # `rate-limit/`. Rate limit dijalankan terpisah via script
+  # `bun run test:e2e:rate-limit`.
+  #
+  # Setiap tambah file test baru di luar folder `rate-limit/`, file
+  # akan OTOMATIS dijalankan tanpa perlu update workflow ini.
+  # ============================================================
   test-e2e:
     name: E2E Tests (Playwright)
     runs-on: ubuntu-latest
@@ -185,7 +214,18 @@ jobs:
       - name: Build frontend assets
         run: bun run build
 
-      - name: Run E2E tests
+      # --------------------------------------------------------
+      # STEP 1: Test Fungsional (Login, Register, Password Reset,
+      #         Contact, Accessibility, dll)
+      #
+      # `bun run test:e2e` akan menjalankan SEMUA file test di
+      # folder `e2e/` KECUALI yang di-ignore oleh `testIgnore`
+      # (yaitu folder `rate-limit/`).
+      #
+      # Setiap tambah file test baru di luar `rate-limit/`, file
+      # akan otomatis dijalankan.
+      # --------------------------------------------------------
+      - name: Run E2E tests (functional)
         env:
           CI: true
           E2E_APP_PORT: 8000
@@ -196,7 +236,7 @@ jobs:
           E2E_DB_DATABASE: titiktemu_db_testing
           E2E_DB_USERNAME: titiktemu_dev
           E2E_DB_PASSWORD: titiktemu04!
-          # ✅ AUTH THROTTLE — OVERRIDE UNTUK TESTING
+          # AUTH THROTTLE — OVERRIDE LONGGAR
           AUTH_THROTTLE_LOGIN_MAX: 5
           AUTH_THROTTLE_LOGIN_DECAY: 60
           AUTH_THROTTLE_LOGIN_TEST_OVERRIDE: 1000
@@ -209,7 +249,43 @@ jobs:
           AUTH_THROTTLE_RESET_MAX: 5
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
-        run: bun run test:e2e -- e2e/auth/login.spec.ts
+        run: bun run test:e2e
+
+      # --------------------------------------------------------
+      # STEP 2: Test Rate Limiting
+      #
+      # Dijalankan TERPISAH dengan env override KECIL.
+      # `bun run test:e2e:rate-limit` akan menjalankan HANYA file
+      # di folder `e2e/rate-limit/`.
+      #
+      # Setiap tambah file test rate limit baru di folder
+      # `rate-limit/`, file akan otomatis dijalankan.
+      # --------------------------------------------------------
+      - name: Run E2E tests (rate limit)
+        env:
+          CI: true
+          E2E_APP_PORT: 8000
+          E2E_APP_URL: http://127.0.0.1:8000
+          E2E_DB_CONNECTION: pgsql
+          E2E_DB_HOST: 127.0.0.1
+          E2E_DB_PORT: 5432
+          E2E_DB_DATABASE: titiktemu_db_testing
+          E2E_DB_USERNAME: titiktemu_dev
+          E2E_DB_PASSWORD: titiktemu04!
+          # AUTH THROTTLE — OVERRIDE KETAT UNTUK RATE LIMIT
+          AUTH_THROTTLE_LOGIN_MAX: 5
+          AUTH_THROTTLE_LOGIN_DECAY: 60
+          AUTH_THROTTLE_LOGIN_TEST_OVERRIDE: 5
+          AUTH_THROTTLE_REGISTER_MAX: 3
+          AUTH_THROTTLE_REGISTER_DECAY: 60
+          AUTH_THROTTLE_REGISTER_TEST_OVERRIDE: 3
+          AUTH_THROTTLE_FORGOT_MAX: 3
+          AUTH_THROTTLE_FORGOT_DECAY: 60
+          AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE: 3
+          AUTH_THROTTLE_RESET_MAX: 5
+          AUTH_THROTTLE_RESET_DECAY: 60
+          AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 5
+        run: bun run test:e2e:rate-limit
 
       - name: Upload Playwright report
         if: always()
@@ -227,6 +303,9 @@ jobs:
           path: test-results/
           retention-days: 7
 
+  # ============================================================
+  # CODE QUALITY
+  # ============================================================
   lint:
     name: Code Quality
     runs-on: ubuntu-latest
