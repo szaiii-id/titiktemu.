@@ -20,7 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
-        $middleware->statefulApi();
         $middleware->alias([
             'role' => CheckRole::class,
             'auth.throttle' => AuthThrottleResponse::class,
