@@ -85,7 +85,7 @@ export default defineConfig({
             DB_CONNECTION: process.env.DB_CONNECTION ?? 'pgsql',
             DB_HOST: process.env.DB_HOST ?? '127.0.0.1',
             DB_PORT: process.env.DB_PORT ?? '5432',
-            DB_DATABASE: process.env.DB_DATABASE ?? 'titiktemu_testing',
+            DB_DATABASE: process.env.DB_DATABASE ?? 'titiktemu_db_testing',
             DB_USERNAME: process.env.DB_USERNAME ?? 'titiktemu_dev',
             DB_PASSWORD: process.env.DB_PASSWORD ?? '',
             SESSION_DRIVER: 'database',
