@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
-import 'dotenv/config';
+import { config as loadEnv } from 'dotenv';
+import path from 'node:path';
 import { isCI, APP_PORT, APP_URL } from './e2e/config';
+
+// Load .env.testing untuk konfigurasi E2E
+loadEnv({ path: path.resolve(process.cwd(), '.env.testing') });
 
 // ==========================================
 // WORKERS & TIMEOUT
@@ -67,15 +71,28 @@ export default defineConfig({
     },
 
     // 9. AUTO-START SERVER
-    // Menggunakan `php -S` langsung dengan APP_ENV=testing agar
-    // Laravel membaca .env.testing dan semua konfigurasi testing berlaku.
     webServer: {
-        command: `APP_ENV=testing php -S 127.0.0.1:${APP_PORT} -t public`,
+        command: `php -S 127.0.0.1:${APP_PORT} -t public`,
         port: APP_PORT,
         reuseExistingServer: !isCI,
         timeout: 120_000,
         stdout: 'pipe',
         stderr: 'pipe',
+        env: {
+            ...process.env,
+            APP_ENV: 'testing',
+            APP_DEBUG: 'true',
+            DB_CONNECTION: process.env.DB_CONNECTION ?? 'pgsql',
+            DB_HOST: process.env.DB_HOST ?? '127.0.0.1',
+            DB_PORT: process.env.DB_PORT ?? '5432',
+            DB_DATABASE: process.env.DB_DATABASE ?? 'titiktemu_testing',
+            DB_USERNAME: process.env.DB_USERNAME ?? 'titiktemu_dev',
+            DB_PASSWORD: process.env.DB_PASSWORD ?? '',
+            SESSION_DRIVER: 'database',
+            CACHE_STORE: 'database',
+            QUEUE_CONNECTION: 'sync',
+            MAIL_MAILER: 'log',
+        },
     },
 
     // 10. PROJECTS

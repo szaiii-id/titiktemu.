@@ -124,5 +124,5 @@
         "resources/js/**/*.ts",
         "resources/js/**/*.d.ts",
         "resources/js/**/*.svelte"
-    ]
+, "vitest-setup.ts", "vitest-setup.ts"    ]
 }
