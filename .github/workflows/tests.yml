@@ -130,6 +130,8 @@ jobs:
 
       - name: Run Vitest
         run: bun run test
+        env:
+          LARAVEL_BYPASS_ENV_CHECK: '1'
 
   # ============================================================
   # JOB 3: E2E Tests (Playwright)
