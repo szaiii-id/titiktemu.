@@ -1,5 +1,6 @@
 // e2e/global-setup.ts
 import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -24,6 +25,7 @@ const PROJECT_ROOT = path.resolve(__dirname, '..');
  * 2. migrate:fresh
  * 3. db:seed
  * 4. cache:clear & config:clear
+ * 5. Hapus file session lama (karena SESSION_DRIVER=file)
  */
 export default async function globalSetup() {
     console.log(`\n[E2E] Menyiapkan database: ${E2E_DB_DATABASE}`);
@@ -45,9 +47,43 @@ export default async function globalSetup() {
     runArtisan('cache:clear', envString, 'Membersihkan cache...');
     runArtisan('config:clear', envString, 'Membersihkan config cache...');
 
+    // 4. Hapus file session lama (SESSION_DRIVER=file)
+    clearSessionFiles();
+
     console.log(
         `\n[E2E] Database ${E2E_DB_DATABASE} siap. Semua test dimulai dari kondisi bersih.\n`,
     );
+}
+
+/**
+ * Hapus semua file session lama di storage/framework/sessions/.
+ *
+ * Penting karena SESSION_DRIVER=file — file session bisa menumpuk
+ * antar run dan menyebabkan race condition antar test.
+ */
+function clearSessionFiles(): void {
+    const sessionPath = path.join(PROJECT_ROOT, 'storage/framework/sessions');
+
+    if (!fs.existsSync(sessionPath)) {
+        console.log('[E2E] Folder sessions tidak ada, skip cleanup.');
+        return;
+    }
+
+    const files = fs.readdirSync(sessionPath);
+    let deleted = 0;
+
+    for (const file of files) {
+        if (file === '.gitignore') continue;
+
+        try {
+            fs.unlinkSync(path.join(sessionPath, file));
+            deleted++;
+        } catch (e) {
+            console.warn(`[E2E] Gagal hapus ${file}: ${(e as Error).message}`);
+        }
+    }
+
+    console.log(`[E2E] ${deleted} file session dibersihkan.`);
 }
 
 /**
