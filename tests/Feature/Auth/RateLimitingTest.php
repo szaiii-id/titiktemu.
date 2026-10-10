@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\RateLimiter;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+
+    config([
+        'auth-throttle.login.max_attempts' => 5,
+        'auth-throttle.register.max_attempts' => 3,
+        'auth-throttle.forgot-password.max_attempts' => 3,
+        'auth-throttle.reset-password.max_attempts' => 5,
+    ]);
     Cache::flush();
 });
 

@@ -18,7 +18,7 @@ jobs:
   # ============================================================
   # JOB 1: PHP Tests (Pest) dengan PostgreSQL
   # ============================================================
-  test-php:
+    test-php:
     name: PHP Tests (Pest)
     runs-on: ubuntu-latest
 
@@ -48,6 +48,11 @@ jobs:
           extensions: mbstring, bcmath, pdo_pgsql, gd, zip, intl
           coverage: none
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
@@ -55,13 +60,26 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-
+
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Install Bun dependencies
+        run: bun install --frozen-lockfile
 
       - name: Prepare environment
         run: |
           cp .env.example .env
           php artisan key:generate
+
+      - name: Build frontend assets
+        run: bun run build
 
       - name: Run migrations
         env:
