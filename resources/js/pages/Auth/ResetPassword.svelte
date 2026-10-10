@@ -5,15 +5,20 @@
     let { token, email: propEmail, errors: propErrors } = $props();
 
     // Data Form
-    let email = $state(propEmail || "");
+    let email = $derived(propEmail ?? "");
     let password = $state("");
     let password_confirmation = $state("");
 
-    let errors = $state(propErrors || {});
+    let errors = $state.raw({});
     let processing = $state(false);
     let showPassword = $state(false);
     let showPasswordConfirmation = $state(false);
     let countdown = $state(0);
+
+    // Inisialisasi errors dari props sekali di mount
+    $effect(() => {
+        errors = { ...propErrors };
+    });
 
     // Cek apakah password dan konfirmasi cocok
     let passwordMismatch = $derived(
@@ -54,7 +59,6 @@
         });
     }
 </script>
-
 <svelte:head>
     <title>Reset Password | Titiktemu</title>
 </svelte:head>
@@ -126,7 +130,7 @@
                             type="button"
                             onclick={() => showPassword = !showPassword}
                             aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                            class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-dark transition-colors"
+                            class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-600 hover:text-dark transition-colors"
                         >
                             {#if showPassword}
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -162,7 +166,7 @@
                             type="button"
                             onclick={() => showPasswordConfirmation = !showPasswordConfirmation}
                             aria-label={showPasswordConfirmation ? "Sembunyikan password" : "Tampilkan password"}
-                            class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-dark transition-colors"
+                            class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-600 hover:text-dark transition-colors"
                         >
                             {#if showPasswordConfirmation}
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -191,7 +195,7 @@
                 <button
                     type="submit"
                     disabled={processing || countdown > 0 || passwordMismatch}
-                    class="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-full shadow-lg text-base font-bold text-white bg-pink hover:bg-sun focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink transition-all transform hover:-translate-y-1 mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    class="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-full shadow-lg text-base font-bold text-white bg-pink-dark hover:bg-sun-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-dark transition-all transform hover:-translate-y-1 mt-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                     {#if countdown > 0}
                         Tunggu {countdown} detik...

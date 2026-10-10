@@ -22,6 +22,7 @@ vi.mock('@inertiajs/svelte', () => ({
 const defaultProps = {
     token: 'token-abc-123',
     email: 'budi@example.com',
+    errors: {},
 };
 
 describe('ResetPassword.svelte', () => {

@@ -92,7 +92,7 @@
             </a>
 
             <!-- Tombol Hamburger (Hanya tampil di HP) -->
-            <button on:click={toggleMenu} class="md:hidden text-gray-300 hover:text-sun focus:outline-none p-1" aria-label="Buka menu navigasi">
+            <button onclick={toggleMenu} class="md:hidden text-gray-300 hover:text-sun focus:outline-none p-1" aria-label="Buka menu navigasi">
                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {#if isMobileMenuOpen}
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

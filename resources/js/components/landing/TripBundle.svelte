@@ -352,6 +352,8 @@
 
             <div
                 class="relative z-10"
+                role="region"
+                aria-label="Galeri paket perjalanan"
                 onmouseenter={() => {
                     isHovering = true;
                 }}
