@@ -86,7 +86,6 @@ jobs:
 
       # ============================================================
       # STEP 1: Pest Test Fungsional (KECUALI rate-limit)
-      # Env AUTH_THROTTLE_*_TEST_OVERRIDE = 1000 (longgar)
       # ============================================================
       - name: Run Pest tests (functional)
         env:
@@ -112,8 +111,6 @@ jobs:
 
       # ============================================================
       # STEP 2: Pest Test Rate Limiting (HANYA rate-limit)
-      # Env AUTH_THROTTLE_*_TEST_OVERRIDE = TIDAK DI-SET
-      # sehingga config() di beforeEach test akan digunakan.
       # ============================================================
       - name: Run Pest tests (rate limit)
         env:
@@ -123,8 +120,6 @@ jobs:
           DB_DATABASE: titiktemu_db_testing
           DB_USERNAME: titiktemu_dev
           DB_PASSWORD: titiktemu04!
-          # ❌ TIDAK ADA AUTH_THROTTLE_*_TEST_OVERRIDE
-          # Test akan menggunakan config() di beforeEach
         run: php artisan test --group=rate-limit
 
   # ============================================================
@@ -153,12 +148,31 @@ jobs:
           LARAVEL_BYPASS_ENV_CHECK: '1'
 
   # ============================================================
-  # E2E TESTS (Playwright)
+  # E2E TESTS — 3 SHARD (chromium | firefox | webkit)
+  #
+  # Setiap shard:
+  # - Browser berbeda
+  # - DB berbeda (titiktemu_db_testing_w{shard})
+  # - Port berbeda (8000 + shard)
+  # - Jalan PARALEL di runner berbeda
+  #
+  # TIDAK ADA race condition karena DB terpisah.
   # ============================================================
   test-e2e:
-    name: E2E Tests (Playwright)
+    name: E2E (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chromium
+            shard: 0
+          - browser: firefox
+            shard: 1
+          - browser: webkit
+            shard: 2
 
     services:
       postgres:
@@ -203,8 +217,8 @@ jobs:
       - run: composer install --prefer-dist --no-progress --no-interaction
       - run: bun install --frozen-lockfile
 
-      - name: Install Playwright Browser
-        run: bunx playwright install --with-deps
+      - name: Install Playwright Browser (${{ matrix.browser }})
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
 
       - name: Prepare environment
         run: |
@@ -215,13 +229,32 @@ jobs:
         run: bun run build
 
       # --------------------------------------------------------
-      # STEP 1: Test Fungsional
+      # Buat database shard (titiktemu_db_testing_w{shard})
+      # --------------------------------------------------------
+      - name: Create shard database
+        env:
+          PGPASSWORD: titiktemu04!
+        run: |
+          psql -h 127.0.0.1 -p 5432 -U titiktemu_dev -d postgres \
+            -c "CREATE DATABASE titiktemu_db_testing_w${{ matrix.shard }} OWNER titiktemu_dev;" || true
+
+      # --------------------------------------------------------
+      # STEP 1: E2E Fungsional (browser sesuai shard)
+      #
+      # PENTING: E2E_APP_PORT dan E2E_APP_URL TIDAK di-set.
+      # `e2e/config.ts` akan hitung otomatis:
+      #   APP_PORT = 8000 + SHARD_INDEX
+      #   APP_URL = http://127.0.0.1:{APP_PORT}
+      #
+      # E2E_DB_DATABASE di-set ke BASE name (tanpa suffix).
+      # `e2e/config.ts` akan append `_w{SHARD_INDEX}` karena
+      # TOTAL_SHARDS > 1.
       # --------------------------------------------------------
       - name: Run E2E tests (functional)
         env:
           CI: true
-          E2E_APP_PORT: 8000
-          E2E_APP_URL: http://127.0.0.1:8000
+          SHARD_INDEX: ${{ matrix.shard }}
+          TOTAL_SHARDS: 3
           E2E_DB_CONNECTION: pgsql
           E2E_DB_HOST: 127.0.0.1
           E2E_DB_PORT: 5432
@@ -243,16 +276,17 @@ jobs:
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
           # ✅ CONTACT THROTTLE — OVERRIDE LONGGAR UNTUK E2E
           AUTH_THROTTLE_CONTACT_TEST_OVERRIDE: 1000
-        run: bun run test:e2e
+        run: bun run test:e2e -- --project=${{ matrix.browser }}
 
       # --------------------------------------------------------
-      # STEP 2: Test Rate Limiting
+      # STEP 2: E2E Rate Limit (hanya di shard 0 — chromium)
       # --------------------------------------------------------
       - name: Run E2E tests (rate limit)
+        if: matrix.shard == 0
         env:
           CI: true
-          E2E_APP_PORT: 8000
-          E2E_APP_URL: http://127.0.0.1:8000
+          SHARD_INDEX: ${{ matrix.shard }}
+          TOTAL_SHARDS: 3
           E2E_DB_CONNECTION: pgsql
           E2E_DB_HOST: 127.0.0.1
           E2E_DB_PORT: 5432
@@ -280,7 +314,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 7
 
@@ -288,7 +322,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-${{ matrix.browser }}
           path: test-results/
           retention-days: 7
 
@@ -322,4 +356,4 @@ jobs:
         run: bun run types:check
 
       - name: Run PHPStan
-        run: ./vendor/bin/phpstan analyse --no-progress
+        run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=512M
