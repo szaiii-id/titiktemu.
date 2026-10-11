@@ -2,34 +2,45 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Carbon;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
- * @property int $id
- * @property string $name
- * @property string $email
- * @property Carbon|null $email_verified_at
- * @property string $password
- * @property string|null $remember_token
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @use HasFactory<UserFactory>
  */
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
-     * Get the attributes that should be cast.
+     * Atribut yang dapat diisi secara massal (mass assignable).
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'name',
+        'username',
+        'email',
+        'password',
+        'google_id',
+        'role',
+    ];
+
+    /**
+     * Atribut yang disembunyikan saat model diubah menjadi array/JSON (dikirim ke Svelte).
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Penyesuaian tipe data atribut (casting).
      *
      * @return array<string, string>
      */
@@ -39,5 +50,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Fungsi bantuan untuk mengecek apakah user adalah Admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Fungsi bantuan untuk mengecek apakah user adalah Mitra
+     */
+    public function isMitra(): bool
+    {
+        return $this->role === 'mitra';
+    }
+
+    /**
+     * Fungsi bantuan untuk mengecek apakah user adalah Client
+     */
+    public function isClient(): bool
+    {
+        return $this->role === 'client';
     }
 }

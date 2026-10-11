@@ -43,6 +43,12 @@ export default defineConfig({
             ],
         },
     },
+    test: {
+        environment: 'jsdom',
+        globals: true,
+        setupFiles: ['./vitest-setup.ts'],
+        include: ['resources/js/**/*.{test,spec}.{ts,js}'],
+    },
     lint: {
         ignorePatterns: [
             'vendor/**',
@@ -77,5 +83,8 @@ export default defineConfig({
             functions: ['clsx', 'cn', 'cva'],
             stylesheet: 'resources/css/app.css',
         },
+    },
+    resolve: {
+        conditions: ['browser'],
     },
 });

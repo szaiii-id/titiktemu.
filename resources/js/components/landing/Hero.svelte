@@ -41,7 +41,7 @@
 
                 <!-- Tombol Aksi (Sisa 1 tombol) -->
                 <div class="flex justify-center lg:justify-start">
-                    <a href="/login" class="bg-blue text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-purple transition-all shadow-xl hover:shadow-blue/30 transform hover:-translate-y-1 text-center">
+                    <a href="/register" class="bg-blue text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-purple transition-all shadow-xl hover:shadow-blue/30 transform hover:-translate-y-1 text-center">
                         Daftar Sekarang
                     </a>
                 </div>

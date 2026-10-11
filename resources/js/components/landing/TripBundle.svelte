@@ -207,7 +207,7 @@
 
                 <div class="mb-5">
                     <span
-                        class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-500 shadow-sm"
+                        class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-600 shadow-sm"
                     >
 
                         <span
@@ -290,7 +290,7 @@
                     <div>
 
                         <p
-                            class="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-400"
+                            class="text-[9px] font-bold uppercase tracking-[0.16em] text-gray-600"
                         >
                             Featured Package
                         </p>
@@ -352,6 +352,8 @@
 
             <div
                 class="relative z-10"
+                role="region"
+                aria-label="Galeri paket perjalanan"
                 onmouseenter={() => {
                     isHovering = true;
                 }}

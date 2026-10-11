@@ -8,12 +8,19 @@
         "dev": "vp dev",
         "check": "vp check",
         "check:fix": "vp check --fix",
-        "types:check": "svelte-check --tsconfig ./tsconfig.json"
+        "types:check": "svelte-check --tsconfig ./tsconfig.json",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:ui": "vitest --ui",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:debug": "playwright test --debug",
+        "test:e2e:rate-limit": "AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5 playwright test e2e/rate-limit/"
     },
     "dependencies": {
         "@inertiajs/svelte": "^3.0.0",
         "@inertiajs/vite": "^3.0.0",
-        "@sveltejs/vite-plugin-svelte": "^7.0.0",
+        "@sveltejs/vite-plugin-svelte": "^7.3.1",
         "@tailwindcss/vite": "^4.1.11",
         "clsx": "^2.1.1",
         "concurrently": "^10.0.3",
@@ -25,10 +32,18 @@
         "vite": "^8.0.0"
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.13.0",
         "@laravel/vite-plugin-wayfinder": "^0.1.3",
+        "@playwright/test": "^1.64.0",
+        "@testing-library/jest-dom": "^7.0.1",
+        "@testing-library/svelte": "^5.4.2",
         "@types/node": "^22.13.5",
+        "@vitest/ui": "^5.0.3",
+        "dotenv": "^18.0.6",
+        "jsdom": "^30.1.2",
         "svelte-check": "^4.1.4",
-        "vite-plus": "0.3.0"
+        "vite-plus": "0.3.0",
+        "vitest": "^5.0.3"
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1",

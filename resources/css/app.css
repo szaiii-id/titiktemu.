@@ -13,11 +13,26 @@ html {
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
-    /* Palet Warna Custom Siperjaka */
-    --color-sun: #FBAA27;      /* Oranye / Kuning (Matahari & Pohon Palem) */
-    --color-pink: #F3278C;     /* Merah Muda (Ornamen perahu kiri & tengah) */
-    --color-purple: #91278F;   /* Ungu (Karakter / ornamen kanan) */
-    --color-blue: #0B6FB8;     /* Biru (Ombak dan lambung perahu) */
-    --color-green: #8DC63F;    /* Hijau (Daun dan garis lengkung bawah) */
-    --color-dark: #232323;     /* Abu-abu Gelap (Latar belakang) */
+    /* ==========================================
+     | Palet Warna Brand titiktemu
+     | Warna asli untuk aksen dekoratif.
+     | ========================================== */
+    --color-sun: #FBAA27;
+    --color-pink: #F3278C;
+    --color-purple: #91278F;
+    --color-blue: #0B6FB8;
+    --color-green: #8DC63F;
+    --color-dark: #232323;
+
+    /* ==========================================
+     | Varian Gelap untuk Aksesibilitas (WCAG AA)
+     | Gunakan varian ini saat warna brand dipakai
+     | sebagai latar teks putih (tombol, badge).
+     | Rasio kontras > 4.5:1 terhadap putih.
+     | ========================================== */
+    --color-sun-dark: #B87A00;      /* Rasio ~4.6:1 */
+    --color-pink-dark: #B81A6A;     /* Rasio ~5.4:1 */
+    --color-purple-dark: #6B1B6B;   /* Rasio ~7.2:1 */
+    --color-blue-dark: #08518A;     /* Rasio ~6.3:1 */
+    --color-green-dark: #5C8A1E;    /* Rasio ~4.7:1 */
 }

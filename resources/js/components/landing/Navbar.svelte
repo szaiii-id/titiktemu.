@@ -1,5 +1,6 @@
 <script>
     import { onMount } from 'svelte';
+    import { inertia } from '@inertiajs/svelte';
 
     let isMobileMenuOpen = $state(false);
     let activeSection = $state('beranda');
@@ -77,15 +78,21 @@
             </a>
         </nav>
 
-        <!-- BAGIAN KANAN: Tombol Login & Hamburger (Mobile) -->
-        <div class="flex-1 flex justify-end items-center gap-4">
+        <!-- BAGIAN KANAN: Tombol Register, Login & Hamburger (Mobile) -->
+        <div class="flex-1 flex justify-end items-center gap-3">
             
-            <a href="/login" class="hidden md:inline-flex bg-pink text-white px-8 py-3 rounded-full text-base font-bold hover:bg-sun transition-all shadow-md hover:shadow-lg hover:shadow-pink/30 transform hover:-translate-y-0.5">
+            <!-- Tombol Daftar (Desktop) -->
+            <a href="/register" use:inertia class="hidden md:inline-flex bg-pink-dark text-white px-6 py-2.5 rounded-full text-base font-bold hover:bg-sun-dark transition-all shadow-md hover:shadow-lg hover:shadow-pink/30 transform hover:-translate-y-0.5">
+                Daftar
+            </a>
+
+            <!-- Tombol Login (Desktop) -->
+            <a href="/login" use:inertia class="hidden md:inline-flex bg-pink-dark text-white px-8 py-2.5 rounded-full text-base font-bold hover:bg-sun-dark transition-all shadow-md hover:shadow-lg hover:shadow-pink/30 transform hover:-translate-y-0.5">
                 Login
             </a>
 
             <!-- Tombol Hamburger (Hanya tampil di HP) -->
-            <button on:click={toggleMenu} class="md:hidden text-gray-300 hover:text-sun focus:outline-none p-1">
+            <button onclick={toggleMenu} class="md:hidden text-gray-300 hover:text-sun focus:outline-none p-1" aria-label="Buka menu navigasi">
                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     {#if isMobileMenuOpen}
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -105,8 +112,12 @@
             <a href="#visimisi" class="block px-4 py-3 rounded-xl font-bold {activeSection === 'visimisi' ? 'text-sun bg-white/10' : 'text-gray-300 hover:bg-white/10'} transition-colors">Visi Misi</a>
             <a href="#contact" class="block px-4 py-3 rounded-xl font-bold {activeSection === 'contact' ? 'text-sun bg-white/10' : 'text-gray-300 hover:bg-white/10'} transition-colors">Kontak</a>
             
-            <div class="pt-4 mt-2 border-t border-gray-700/50">
-                <a href="/login" class="block text-center w-full bg-pink text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-sun transition-all">
+            <!-- Area Tombol Register & Login (Mobile) -->
+            <div class="pt-4 mt-2 border-t border-gray-700/50 flex flex-col gap-3">
+                <a href="/register" use:inertia class="block text-center w-full bg-pink-dark text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-sun-dark transition-all">
+                    Daftar Akun
+                </a>
+                <a href="/login" use:inertia class="block text-center w-full bg-pink-dark text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-sun-dark transition-all">
                     Login
                 </a>
             </div>
