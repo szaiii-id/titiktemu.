@@ -2,22 +2,56 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
 
 uses(RefreshDatabase::class);
 uses()->group('rate-limit');
 
+/*
+|==========================================================================
+| HELPER — Robust Session Error Accessor
+|==========================================================================
+*/
+
+/**
+ * Ambil pesan error pertama dari session, handle ViewErrorBag atau array.
+ */
+function firstSessionError($response, string $key): ?string
+{
+    $errors = $response->getSession()->get('errors');
+
+    if ($errors instanceof ViewErrorBag) {
+        $messages = $errors->getBag('default')->get($key);
+
+        return $messages[0] ?? null;
+    }
+
+    if ($errors instanceof MessageBag) {
+        $messages = $errors->get($key);
+
+        return $messages[0] ?? null;
+    }
+
+    if (is_array($errors) && isset($errors[$key])) {
+        $messages = is_array($errors[$key]) ? $errors[$key] : [$errors[$key]];
+
+        return $messages[0] ?? null;
+    }
+
+    return null;
+}
+
+/*
+|==========================================================================
+| SETUP
+|==========================================================================
+*/
+
 beforeEach(function () {
-    // ============================================================
-    // PENTING: Paksa `test_override` menjadi null agar `max_attempts`
-    // dari config yang digunakan, BUKAN dari env
-    // `AUTH_THROTTLE_*_TEST_OVERRIDE` yang mungkin di-set ke 1000.
-    //
-    // Ini penting karena test ini ingin MEMVERIFIKASI bahwa rate
-    // limit BEKERJA, jadi kita perlu limit yang KECIL.
-    // ============================================================
+    // Paksa `test_override` = null agar max_attempts dari config yang dipakai
     config([
         'auth-throttle.login.max_attempts' => 5,
         'auth-throttle.login.test_override' => null,
@@ -28,30 +62,37 @@ beforeEach(function () {
         'auth-throttle.reset-password.max_attempts' => 5,
         'auth-throttle.reset-password.test_override' => null,
     ]);
-    Cache::flush();
+
+    // Clear rate limiter key spesifik (lebih aman dari Cache::flush)
+    RateLimiter::clear('budi@example.com|127.0.0.1');
+    RateLimiter::clear('andi@example.com|127.0.0.1');
+    RateLimiter::clear('duplikat@example.com|127.0.0.1');
+    RateLimiter::clear('tidak-ada@example.com|127.0.0.1');
 });
 
 /*
-|--------------------------------------------------------------------------
-| Login Rate Limiting
-|--------------------------------------------------------------------------
+|==========================================================================
+| LOGIN RATE LIMITING
+|==========================================================================
 */
 
 it('memblokir login setelah 5 percobaan gagal', function () {
-    $user = User::factory()->create([
+    User::factory()->client()->create([
         'email' => 'budi@example.com',
         'password' => Hash::make('password123'),
     ]);
 
-    // 5 percobaan pertama — semuanya gagal karena password salah
+    RateLimiter::clear('budi@example.com|127.0.0.1');
+
+    // 5 percobaan gagal
     for ($i = 0; $i < 5; $i++) {
-        $this->from('/login')->post('/login', [
+        $this->post('/login', [
             'identitas' => 'budi@example.com',
             'password' => 'password-salah',
         ]);
     }
 
-    // Percobaan ke-6 — harus diblokir oleh throttle
+    // Percobaan ke-6 → diblokir throttle
     $response = $this->from('/login')->post('/login', [
         'identitas' => 'budi@example.com',
         'password' => 'password-salah',
@@ -60,16 +101,20 @@ it('memblokir login setelah 5 percobaan gagal', function () {
     $response->assertRedirect('/login');
     $response->assertSessionHasErrors('identitas');
 
-    // Pesan error harus mengandung "Terlalu banyak percobaan"
-    $errors = session('errors')->get('identitas');
-    expect($errors[0])->toContain('Terlalu banyak percobaan login');
+    $message = firstSessionError($response, 'identitas');
+    expect($message)->not->toBeNull();
+    expect($message)->toContain('Terlalu banyak percobaan login');
+
+    $this->assertGuest();
 });
 
 it('menyertakan retry_after di flash session saat terblokir', function () {
-    User::factory()->create([
+    User::factory()->client()->create([
         'email' => 'budi@example.com',
         'password' => Hash::make('password123'),
     ]);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
 
     for ($i = 0; $i < 5; $i++) {
         $this->post('/login', [
@@ -84,20 +129,23 @@ it('menyertakan retry_after di flash session saat terblokir', function () {
     ]);
 
     $response->assertSessionHas('retry_after');
-    $retryAfter = session('retry_after');
+    $retryAfter = $response->getSession()->get('retry_after');
     expect($retryAfter)->toBeInt();
     expect($retryAfter)->toBeGreaterThan(0);
 });
 
 it('memblokir login per kombinasi identitas + IP', function () {
-    User::factory()->create([
+    User::factory()->client()->create([
         'email' => 'budi@example.com',
         'password' => Hash::make('password123'),
     ]);
-    User::factory()->create([
+    User::factory()->client()->create([
         'email' => 'andi@example.com',
         'password' => Hash::make('password123'),
     ]);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
+    RateLimiter::clear('andi@example.com|127.0.0.1');
 
     // Blokir budi dengan 6 percobaan
     for ($i = 0; $i < 6; $i++) {
@@ -107,7 +155,7 @@ it('memblokir login per kombinasi identitas + IP', function () {
         ]);
     }
 
-    // Andi masih bisa login karena key berbeda
+    // Andi masih bisa login karena key rate limiter berbeda
     $response = $this->post('/login', [
         'identitas' => 'andi@example.com',
         'password' => 'password123',
@@ -117,10 +165,12 @@ it('memblokir login per kombinasi identitas + IP', function () {
 });
 
 it('login yang berhasil setelah 4 kali gagal tetap diizinkan', function () {
-    $user = User::factory()->create([
+    $user = User::factory()->client()->create([
         'email' => 'budi@example.com',
         'password' => Hash::make('password123'),
     ]);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
 
     // 4 kali gagal
     for ($i = 0; $i < 4; $i++) {
@@ -130,7 +180,7 @@ it('login yang berhasil setelah 4 kali gagal tetap diizinkan', function () {
         ]);
     }
 
-    // Percobaan ke-5 — berhasil
+    // Percobaan ke-5 — berhasil (belum hit limit 5)
     $response = $this->post('/login', [
         'identitas' => 'budi@example.com',
         'password' => 'password123',
@@ -141,16 +191,17 @@ it('login yang berhasil setelah 4 kali gagal tetap diizinkan', function () {
 });
 
 /*
-|--------------------------------------------------------------------------
-| Register Rate Limiting
-|--------------------------------------------------------------------------
+|==========================================================================
+| REGISTER RATE LIMITING
+|==========================================================================
 */
 
 it('memblokir register setelah 3 percobaan', function () {
-    // Gunakan email yang SAMA di semua iterasi agar key rate limit konsisten
+    RateLimiter::clear('duplikat@example.com|127.0.0.1');
+
     $sameEmail = 'duplikat@example.com';
 
-    // 3 percobaan pertama — semua gagal karena password pendek
+    // 3 percobaan pertama (gagal validasi, tapi tetap hit rate limiter)
     for ($i = 0; $i < 3; $i++) {
         $this->post('/register', [
             'name' => 'Budi',
@@ -161,7 +212,7 @@ it('memblokir register setelah 3 percobaan', function () {
         ]);
     }
 
-    // Percobaan ke-4 — harus diblokir throttle
+    // Percobaan ke-4 → diblokir throttle
     $response = $this->from('/register')->post('/register', [
         'name' => 'Budi',
         'username' => 'budi4',
@@ -173,18 +224,21 @@ it('memblokir register setelah 3 percobaan', function () {
     $response->assertRedirect('/register');
     $response->assertSessionHasErrors('email');
 
-    $errors = session('errors')->get('email');
-    expect($errors[0])->toContain('Terlalu banyak percobaan pendaftaran');
+    $message = firstSessionError($response, 'email');
+    expect($message)->not->toBeNull();
+    expect($message)->toContain('Terlalu banyak percobaan pendaftaran');
 });
 
 /*
-|--------------------------------------------------------------------------
-| Forgot Password Rate Limiting
-|--------------------------------------------------------------------------
+|==========================================================================
+| FORGOT PASSWORD RATE LIMITING
+|==========================================================================
 */
 
 it('memblokir forgot password setelah 3 percobaan', function () {
-    User::factory()->create(['email' => 'budi@example.com']);
+    User::factory()->client()->create(['email' => 'budi@example.com']);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
 
     for ($i = 0; $i < 3; $i++) {
         $this->post('/forgot-password', [
@@ -199,18 +253,21 @@ it('memblokir forgot password setelah 3 percobaan', function () {
     $response->assertRedirect('/forgot-password');
     $response->assertSessionHasErrors('email');
 
-    $errors = session('errors')->get('email');
-    expect($errors[0])->toContain('Terlalu banyak permintaan reset password');
+    $message = firstSessionError($response, 'email');
+    expect($message)->not->toBeNull();
+    expect($message)->toContain('Terlalu banyak permintaan reset password');
 });
 
 /*
-|--------------------------------------------------------------------------
-| Reset Password Rate Limiting
-|--------------------------------------------------------------------------
+|==========================================================================
+| RESET PASSWORD RATE LIMITING
+|==========================================================================
 */
 
 it('memblokir reset password setelah 5 percobaan', function () {
-    User::factory()->create(['email' => 'budi@example.com']);
+    User::factory()->client()->create(['email' => 'budi@example.com']);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
 
     for ($i = 0; $i < 5; $i++) {
         $this->post('/reset-password', [
@@ -228,24 +285,27 @@ it('memblokir reset password setelah 5 percobaan', function () {
         'password_confirmation' => 'password123',
     ]);
 
-    $response->assertRedirect();
+    $response->assertStatus(302);
     $response->assertSessionHasErrors('email');
 
-    $errors = session('errors')->get('email');
-    expect($errors[0])->toContain('Terlalu banyak percobaan reset password');
+    $message = firstSessionError($response, 'email');
+    expect($message)->not->toBeNull();
+    expect($message)->toContain('Terlalu banyak percobaan reset password');
 });
 
 /*
-|--------------------------------------------------------------------------
-| Rate Limiter Reset
-|--------------------------------------------------------------------------
+|==========================================================================
+| RATE LIMITER RESET (DECAY)
+|==========================================================================
 */
 
 it('rate limiter ter-reset setelah decay', function () {
-    User::factory()->create([
+    User::factory()->client()->create([
         'email' => 'budi@example.com',
         'password' => Hash::make('password123'),
     ]);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
 
     // Blokir
     for ($i = 0; $i < 6; $i++) {
@@ -256,8 +316,7 @@ it('rate limiter ter-reset setelah decay', function () {
     }
 
     // Reset rate limiter secara manual (simulasi waktu berlalu)
-    $key = 'budi@example.com|127.0.0.1';
-    RateLimiter::clear($key);
+    RateLimiter::clear('budi@example.com|127.0.0.1');
 
     // Sekarang harus bisa login lagi
     $response = $this->post('/login', [
@@ -266,4 +325,66 @@ it('rate limiter ter-reset setelah decay', function () {
     ]);
 
     $response->assertRedirect(route('client.dashboard'));
+    $this->assertAuthenticated();
+});
+
+/*
+|==========================================================================
+| BOUNDARY VALUE ANALYSIS
+|==========================================================================
+*/
+
+it('login ke-5 masih diizinkan (boundary bawah limit)', function () {
+    // BVA: limit = 5 → request ke-5 masih boleh
+    $user = User::factory()->client()->create([
+        'email' => 'budi@example.com',
+        'password' => Hash::make('password123'),
+    ]);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
+
+    // 4x gagal
+    for ($i = 0; $i < 4; $i++) {
+        $this->post('/login', [
+            'identitas' => 'budi@example.com',
+            'password' => 'password-salah',
+        ]);
+    }
+
+    // Request ke-5: masih diizinkan (limit 5)
+    $response = $this->post('/login', [
+        'identitas' => 'budi@example.com',
+        'password' => 'password123',
+    ]);
+
+    $response->assertRedirect(route('client.dashboard'));
+});
+
+it('login ke-6 diblokir (boundary atas limit)', function () {
+    // BVA: limit = 5 → request ke-6 diblokir
+    User::factory()->client()->create([
+        'email' => 'budi@example.com',
+        'password' => Hash::make('password123'),
+    ]);
+
+    RateLimiter::clear('budi@example.com|127.0.0.1');
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->post('/login', [
+            'identitas' => 'budi@example.com',
+            'password' => 'password-salah',
+        ]);
+    }
+
+    $response = $this->from('/login')->post('/login', [
+        'identitas' => 'budi@example.com',
+        'password' => 'password123', // ← password BENAR, tapi tetap diblokir
+    ]);
+
+    $response->assertRedirect('/login');
+    $response->assertSessionHasErrors('identitas');
+
+    $message = firstSessionError($response, 'identitas');
+    expect($message)->toContain('Terlalu banyak percobaan login');
+    $this->assertGuest();
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Models\User;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,12 +42,17 @@ class AuthController extends Controller
 
     /**
      * Proses pendaftaran Client secara manual.
+     *
+     * Client register mandiri → langsung login → dashboard client.
+     * (Client tidak punya must_change_password karena password dipilih sendiri.)
      */
     public function register(RegisterRequest $request): RedirectResponse
     {
-        $this->authService->registerClient($request->validated());
+        $user = $this->authService->registerClient($request->validated());
 
-        return redirect()->route('client.dashboard');
+        $redirect = $this->authService->resolveRedirectAfterLogin($user);
+
+        return redirect()->to($redirect['url']);
     }
 
     /**
@@ -60,7 +66,7 @@ class AuthController extends Controller
             $request->boolean('remember')
         );
 
-        return $this->redirectBasedOnRole($user->role);
+        return $this->redirectAfterLogin($user);
     }
 
     /**
@@ -86,7 +92,7 @@ class AuthController extends Controller
 
         $user = $this->authService->handleGoogleLogin($googleUser);
 
-        return $this->redirectBasedOnRole($user->role);
+        return $this->redirectAfterLogin($user);
     }
 
     /**
@@ -100,14 +106,12 @@ class AuthController extends Controller
     }
 
     /**
-     * Fungsi Helper untuk mengarahkan pengguna berdasarkan Role.
+     * Redirect setelah login berdasarkan role & status wajib ganti password.
      */
-    private function redirectBasedOnRole(string $role): RedirectResponse
+    private function redirectAfterLogin(User $user): RedirectResponse
     {
-        return match ($role) {
-            'admin' => redirect()->route('admin.dashboard'),
-            'mitra' => redirect()->route('mitra.dashboard'),
-            default => redirect()->route('client.dashboard'),
-        };
+        $redirect = $this->authService->resolveRedirectAfterLogin($user);
+
+        return redirect()->to($redirect['url']);
     }
 }

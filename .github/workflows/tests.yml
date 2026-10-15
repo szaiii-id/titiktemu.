@@ -151,11 +151,16 @@ jobs:
   # - Jalan PARALEL
   #
   # TIDAK ADA race condition karena DB terpisah.
+  #
+  # TIMEOUT BERBEDA PER BROWSER:
+  # - chromium: 30 menit
+  # - firefox: 30 menit
+  # - webkit: 50 menit (webkit engine lebih lambat ~40 menit)
   # ============================================================
   test-e2e-functional:
     name: E2E Functional (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.timeout }}
 
     strategy:
       fail-fast: false
@@ -163,10 +168,13 @@ jobs:
         include:
           - browser: chromium
             shard: 0
+            timeout: 30
           - browser: firefox
             shard: 1
+            timeout: 30
           - browser: webkit
             shard: 2
+            timeout: 50
 
     services:
       postgres:

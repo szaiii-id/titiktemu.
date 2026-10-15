@@ -39,6 +39,7 @@
 /blob-report/
 /playwright/.cache/
 /coverage/
+*.log  
 
 # ==========================================
 # Homestead (Laravel)

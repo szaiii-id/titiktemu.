@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password')->nullable();
             $table->string('google_id')->unique()->nullable();
             $table->enum('role', ['admin', 'mitra', 'client'])->default('client');
+            $table->boolean('must_change_password')->default(false);
             $table->rememberToken();
             $table->timestamps();
         });
