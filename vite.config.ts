@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig, lazyPlugins } from 'vite-plus';
+import path from 'path';
+import tsconfigPaths from 'vite-tsconfig-paths'; // <-- 1. Import plugin-nya
 
 const isSvelteCheck = process.argv.some((argument) =>
     argument.includes('svelte-check'),
@@ -16,6 +18,7 @@ if (isSvelteCheck) {
 
 export default defineConfig({
     plugins: lazyPlugins(() => [
+        tsconfigPaths(), // <-- 2. Masukkan ke dalam array plugins
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.ts'],
             refresh: true,
@@ -48,6 +51,12 @@ export default defineConfig({
         globals: true,
         setupFiles: ['./vitest-setup.ts'],
         include: ['resources/js/**/*.{test,spec}.{ts,js}'],
+        alias: [
+                    {
+                        find: '@',
+                        replacement: path.resolve(__dirname, './resources/js'),
+                    },
+                ],
     },
     lint: {
         ignorePatterns: [
@@ -86,5 +95,8 @@ export default defineConfig({
     },
     resolve: {
         conditions: ['browser'],
+        alias: {
+            '@': path.resolve(__dirname, './resources/js'),
+        },
     },
 });

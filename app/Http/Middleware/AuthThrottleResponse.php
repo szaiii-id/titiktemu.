@@ -33,13 +33,23 @@ class AuthThrottleResponse
      */
     protected function resolveKey(Request $request, string $limiterName): string
     {
-        return match ($limiterName) {
-            'login' => mb_strtolower((string) $request->input('identitas')).'|'.$request->ip(),
-            'register' => mb_strtolower((string) $request->input('email')).'|'.$request->ip(),
-            'forgot-password' => mb_strtolower((string) $request->input('email')).'|'.$request->ip(),
-            'reset-password' => mb_strtolower((string) $request->input('email')).'|'.$request->ip(),
-            default => $request->ip(),
+        $input = match ($limiterName) {
+            'login' => $request->input('identitas'),
+            'register' => $request->input('email'),
+            'forgot-password' => $request->input('email'),
+            'reset-password' => $request->input('email'),
+            default => null,
         };
+
+        // Cast ke string + fallback '' kalau gagal.
+        $normalized = match (true) {
+            is_array($input) => (string) json_encode($input),
+            is_object($input) => (string) json_encode($input),
+            is_scalar($input) => (string) $input,
+            default => '',
+        };
+
+        return mb_strtolower($normalized).'|'.$request->ip();
     }
 
     /**

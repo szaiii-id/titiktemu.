@@ -91,6 +91,34 @@ class AuthService
     }
 
     /**
+     * Tentukan URL redirect setelah login berdasarkan role & status wajib ganti password.
+     *
+     * @return array{url: string, must_change_password: bool}
+     */
+    public function resolveRedirectAfterLogin(User $user): array
+    {
+        // Prioritas: wajib ganti password
+        if ($user->must_change_password) {
+            return [
+                'url' => route('password.change'),
+                'must_change_password' => true,
+            ];
+        }
+
+        // ✅ FIX PHPStan: kolom `role` adalah ENUM('admin','mitra','client').
+        // Semua nilai sudah di-handle oleh 3 arm di bawah — `default` arm
+        // TIDAK diperlukan dan akan dianggap "always true" oleh PHPStan.
+        return [
+            'url' => match ($user->role) {
+                'admin' => route('admin.dashboard'),
+                'mitra' => route('mitra.dashboard'),
+                'client' => route('client.dashboard'),
+            },
+            'must_change_password' => false,
+        ];
+    }
+
+    /**
      * Logika Logout & menghapus sesi beserta cookie "remember me".
      *
      * Menghapus cookie remember_web_* sangat penting karena

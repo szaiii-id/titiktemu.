@@ -1,14 +1,24 @@
 <?php
 
+use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
+use App\Http\Controllers\Client\ProfileController as ClientProfileController;
 use App\Http\Controllers\LandingPage\ContactController;
+use App\Http\Controllers\Mitra\DashboardController as MitraDashboardController;
+use App\Http\Controllers\Mitra\PasswordController as MitraPasswordController;
+use App\Http\Controllers\Mitra\ProfileController as MitraProfileController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Halaman Landing Utama
+// ==========================================
+// HALAMAN LANDING UTAMA
+// ==========================================
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
@@ -56,48 +66,88 @@ Route::middleware('guest')->group(function () {
 // RUTE AUTH (Hanya untuk yang SUDAH login)
 // ==========================================
 Route::middleware('auth')->group(function () {
+
+    // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Dashboard Admin
-    Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Admin/Dashboard');
-        })->name('admin.dashboard');
-    });
+    // --------------------------------------
+    // Rute Ganti Password (Shared - semua role)
+    // --------------------------------------
+    // Tidak pakai middleware 'password.changed' agar user bisa akses halaman ini
+    // meskipun must_change_password = true.
+    Route::get('/change-password', [ChangePasswordController::class, 'edit'])
+        ->name('password.change');
+    Route::put('/change-password', [ChangePasswordController::class, 'update'])
+        ->name('password.change.update');
 
-    // Dashboard Mitra
-    Route::middleware('role:mitra')->prefix('mitra')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Mitra/Dashboard');
-        })->name('mitra.dashboard');
-    });
+    // --------------------------------------
+    // Rute Admin
+    // --------------------------------------
+    Route::middleware(['password.changed', 'role:admin'])
+        ->prefix('admin')
+        ->name('admin.')
+        ->group(function () {
+            Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+                ->name('dashboard');
 
-    // Dashboard Client
-    Route::middleware('role:client')->prefix('client')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Client/Dashboard');
-        })->name('client.dashboard');
-    });
+            // Manajemen User (admin + mitra)
+            Route::get('/users', [AdminUserController::class, 'index'])
+                ->name('users.index');
+            Route::get('/users/create', [AdminUserController::class, 'create'])
+                ->name('users.create');
+            Route::post('/users', [AdminUserController::class, 'store'])
+                ->name('users.store');
+            Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])
+                ->name('users.edit');
+            Route::put('/users/{user}', [AdminUserController::class, 'update'])
+                ->name('users.update');
+            Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])
+                ->name('users.destroy');
+            Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])
+                ->name('users.reset-password');
+
+            // Daftar Client (read-only)
+            Route::get('/clients', [ClientController::class, 'index'])
+                ->name('clients.index');
+        });
+
+    // --------------------------------------
+    // Rute Mitra
+    // --------------------------------------
+    Route::middleware(['password.changed', 'role:mitra'])
+        ->prefix('mitra')
+        ->name('mitra.')
+        ->group(function () {
+            Route::get('/dashboard', [MitraDashboardController::class, 'index'])
+                ->name('dashboard');
+
+            // Profile
+            Route::get('/profile', [MitraProfileController::class, 'edit'])
+                ->name('profile.edit');
+            Route::put('/profile', [MitraProfileController::class, 'update'])
+                ->name('profile.update');
+
+            // Ganti Password (dengan verifikasi password lama)
+            Route::get('/password', [MitraPasswordController::class, 'edit'])
+                ->name('password.edit');
+            Route::put('/password', [MitraPasswordController::class, 'update'])
+                ->name('password.update');
+        });
+
+    // --------------------------------------
+    // Rute Client
+    // --------------------------------------
+    Route::middleware(['password.changed', 'role:client'])
+        ->prefix('client')
+        ->name('client.')
+        ->group(function () {
+            Route::get('/dashboard', [ClientDashboardController::class, 'index'])
+                ->name('dashboard');
+
+            Route::get('/profile', [ClientProfileController::class, 'edit'])
+                ->name('profile');
+
+            Route::put('/profile', [ClientProfileController::class, 'update'])
+                ->name('profile.update');
+        });
 });
-
-// ==========================================
-// TEST-ONLY ROUTES
-// ==========================================
-if (app()->environment('testing')) {
-    Route::post('/_test/clear-throttle', function (Request $request) {
-        $limiter = $request->input('limiter');
-        $key = $request->input('key');
-
-        if (! $limiter || ! $key) {
-            return response()->json(['error' => 'Missing limiter or key'], 400);
-        }
-
-        RateLimiter::clear($key);
-
-        if ($limiter === 'contact') {
-            RateLimiter::clear($request->ip());
-        }
-
-        return response()->noContent();
-    })->name('test.clear-throttle');
-}
