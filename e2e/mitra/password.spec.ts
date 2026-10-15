@@ -1,4 +1,5 @@
 import { test, expect, SEED_USERS } from '../fixtures/auth';
+import { APP_URL } from '../config';
 
 /**
  * Mitra — Ganti Password
@@ -95,7 +96,6 @@ test.describe('Mitra — Ganti Password', () => {
         });
 
         test('menampilkan heading "Ganti Password"', async ({ page }) => {
-            // ✅ FIX: pakai locator spesifik untuk h1 utama (bukan topbar)
             await expect(page.locator('h1.text-2xl')).toHaveText(/Ganti Password/);
         });
 
@@ -125,7 +125,6 @@ test.describe('Mitra — Ganti Password', () => {
 
         test('menampilkan card header info user', async ({ page }) => {
             await expect(page.getByText(/KEAMANAN AKUN/i)).toBeVisible();
-            // ✅ FIX: pakai .first() karena email muncul di 3 tempat
             await expect(page.getByText(SEED_USERS.mitra.email).first()).toBeVisible();
         });
     });
@@ -438,6 +437,10 @@ test.describe('Mitra — Ganti Password', () => {
 |
 | Semua test yang butuh password lama HARUS JALAN SEBELUM section ini.
 | Kita taruh di describe terpisah di paling akhir file.
+|
+| ✅ FIX: Semua URL sekarang pakai APP_URL (bukan hardcode 127.0.0.1:8000).
+| Alasan: Firefox/Webkit shard pakai port berbeda (8000 + shard_index).
+| Hardcode 8000 gagal di shard firefox/webkit (ECONNREFUSED).
 */
 
 test.describe.serial('Mitra — Ganti Password (Happy Path)', () => {
@@ -465,7 +468,8 @@ test.describe.serial('Mitra — Ganti Password (Happy Path)', () => {
             return match ? decodeURIComponent(match[1]) : '';
         });
 
-        await page.request.post('http://127.0.0.1:8000/logout', {
+        // ✅ FIX: pakai APP_URL (bukan hardcode 127.0.0.1:8000)
+        await page.request.post(`${APP_URL}/logout`, {
             headers: { 'X-XSRF-TOKEN': csrfToken },
             failOnStatusCode: false,
         });
@@ -477,8 +481,9 @@ test.describe.serial('Mitra — Ganti Password (Happy Path)', () => {
             return match ? decodeURIComponent(match[1]) : '';
         });
 
+        // ✅ FIX: pakai APP_URL
         const response = await page.context().request.post(
-            'http://127.0.0.1:8000/login',
+            `${APP_URL}/login`,
             {
                 form: {
                     identitas: SEED_USERS.mitra.email,
@@ -506,7 +511,8 @@ test.describe.serial('Mitra — Ganti Password (Happy Path)', () => {
             return match ? decodeURIComponent(match[1]) : '';
         });
 
-        await page.request.post('http://127.0.0.1:8000/logout', {
+        // ✅ FIX: pakai APP_URL
+        await page.request.post(`${APP_URL}/logout`, {
             headers: { 'X-XSRF-TOKEN': csrfToken },
             failOnStatusCode: false,
         });
@@ -518,8 +524,9 @@ test.describe.serial('Mitra — Ganti Password (Happy Path)', () => {
             return match ? decodeURIComponent(match[1]) : '';
         });
 
+        // ✅ FIX: pakai APP_URL
         const response = await page.context().request.post(
-            'http://127.0.0.1:8000/login',
+            `${APP_URL}/login`,
             {
                 form: {
                     identitas: SEED_USERS.mitra.email,
