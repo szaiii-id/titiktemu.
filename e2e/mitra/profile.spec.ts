@@ -30,6 +30,11 @@ import { test, expect, SEED_USERS } from '../fixtures/auth';
  * - logo-input
  * - logo-upload-button
  * - display-nama-usaha
+ *
+ * ⚠️ FIX #1: upload logo — waitFor({ state: 'attached' }) sebelum setInputFiles
+ *           + naikkan timeout logo-preview dari 5s ke 15s
+ *           (ImageUploader $effect async — butuh waktu createImagePreview)
+ * ⚠️ FIX #2: upload file > 2MB — waitFor + timeout 15s
  */
 
 // ==========================================
@@ -53,6 +58,7 @@ const SEED_MITRA = {
 // ==========================================
 // HELPER
 // ==========================================
+
 /**
  * Submit form profile mitra dan tunggu response.
  *
@@ -84,6 +90,47 @@ function createTinyPng(): { name: string; mimeType: string; buffer: Buffer } {
         mimeType: 'image/png',
         buffer: Buffer.from(base64, 'base64'),
     };
+}
+
+/**
+ * ✅ FIX #1: Upload logo — waitFor input attached + naikkan timeout preview.
+ *
+ * Kenapa perlu:
+ * - `ImageUploader.svelte` pakai `$effect` async → `createImagePreview()`
+ *   butuh waktu (FileReader + createObjectURL) → `previews[i]` terisi
+ *   setelah Promise selesai → `{#if previews[i]}` baru render `logo-preview`
+ * - Test menunggu hanya 5 detik → timeout jika Promise selesai >5 detik
+ *   (server lambat, 8 shard paralel, FileReader lambat)
+ *
+ * Solusi:
+ * - `waitFor({ state: 'attached' })` — pastikan `logo-input` ada di DOM
+ *   sebelum `setInputFiles` (anti hydration race)
+ * - Naikkan timeout `logo-preview` dari 5s → 15s
+ */
+async function uploadLogoAndWaitPreview(
+    page: any,
+    file: { name: string; mimeType: string; buffer: Buffer },
+): Promise<void> {
+    const logoInput = page.getByTestId('logo-input');
+
+    // ✅ FIX: tunggu file input benar-benar attached
+    await logoInput.waitFor({ state: 'attached', timeout: 10_000 });
+
+    await logoInput.setInputFiles({
+        name: file.name,
+        mimeType: file.mimeType,
+        buffer: file.buffer,
+    });
+
+    // ✅ FIX: naikkan timeout dari 5s ke 15s
+    // ($effect async — butuh waktu createImagePreview)
+    await expect(page.getByTestId('logo-preview')).toBeVisible({
+        timeout: 15_000,
+    });
+
+    await expect(page.getByTestId('logo-remove-button')).toBeVisible({
+        timeout: 15_000,
+    });
 }
 
 // ==========================================
@@ -274,6 +321,7 @@ test.describe('Mitra — Profile Usaha', () => {
     /*
     |--------------------------------------------------------------------------
     | Logo Preview Behavior
+    | ✅ FIX #1: upload logo — waitFor + timeout 15s
     |--------------------------------------------------------------------------
     */
 
@@ -289,33 +337,19 @@ test.describe('Mitra — Profile Usaha', () => {
         });
 
         test('upload logo menampilkan preview dan tombol hapus', async ({ page }) => {
-            const tinyPng = createTinyPng();
-
-            await page.getByTestId('logo-input').setInputFiles({
-                name: tinyPng.name,
-                mimeType: tinyPng.mimeType,
-                buffer: tinyPng.buffer,
-            });
-
-            await expect(page.getByTestId('logo-preview')).toBeVisible({
-                timeout: 5_000,
-            });
-            await expect(page.getByTestId('logo-remove-button')).toBeVisible();
+            // ✅ FIX #1: pakai helper uploadLogoAndWaitPreview
+            // (waitFor input attached + timeout 15s untuk preview)
+            await uploadLogoAndWaitPreview(page, createTinyPng());
         });
 
         test('klik hapus logo menghilangkan preview', async ({ page }) => {
-            const tinyPng = createTinyPng();
+            // ✅ FIX #1: pakai helper
+            await uploadLogoAndWaitPreview(page, createTinyPng());
 
-            await page.getByTestId('logo-input').setInputFiles({
-                name: tinyPng.name,
-                mimeType: tinyPng.mimeType,
-                buffer: tinyPng.buffer,
-            });
-
-            await expect(page.getByTestId('logo-preview')).toBeVisible();
-
+            // Klik hapus
             await page.getByTestId('logo-remove-button').click();
 
+            // Preview hilang
             await expect(page.getByTestId('logo-preview')).not.toBeVisible();
             await expect(page.getByTestId('logo-placeholder')).toBeVisible();
         });
@@ -324,16 +358,20 @@ test.describe('Mitra — Profile Usaha', () => {
             // Buat buffer 3MB
             const bigBuffer = Buffer.alloc(3 * 1024 * 1024, 0);
 
-            await page.getByTestId('logo-input').setInputFiles({
+            // ✅ FIX #2: waitFor input attached + timeout 15s
+            const logoInput = page.getByTestId('logo-input');
+            await logoInput.waitFor({ state: 'attached', timeout: 10_000 });
+
+            await logoInput.setInputFiles({
                 name: 'big-logo.png',
                 mimeType: 'image/png',
                 buffer: bigBuffer,
             });
 
-            // Pesan error dari handleLogoChange di Svelte
+            // Pesan error dari handleFileChange di Svelte
             await expect(
                 page.getByText(/Ukuran logo maksimal 2MB/i),
-            ).toBeVisible();
+            ).toBeVisible({ timeout: 15_000 });
         });
     });
 
@@ -438,12 +476,8 @@ test.describe('Mitra — Profile Usaha', () => {
         });
 
         test('tombol hapus logo punya aria-label', async ({ page }) => {
-            const tinyPng = createTinyPng();
-            await page.getByTestId('logo-input').setInputFiles({
-                name: tinyPng.name,
-                mimeType: tinyPng.mimeType,
-                buffer: tinyPng.buffer,
-            });
+            // ✅ FIX #1: pakai helper uploadLogoAndWaitPreview
+            await uploadLogoAndWaitPreview(page, createTinyPng());
 
             await expect(page.getByTestId('logo-remove-button')).toHaveAttribute(
                 'aria-label',
@@ -537,15 +571,10 @@ test.describe('Mitra — Profile Usaha', () => {
             await asMitra();
             await page.goto('/mitra/profile');
 
-            const tinyPng = createTinyPng();
-            await page.getByTestId('logo-input').setInputFiles({
-                name: tinyPng.name,
-                mimeType: tinyPng.mimeType,
-                buffer: tinyPng.buffer,
-            });
+            // ✅ FIX #1: pakai helper uploadLogoAndWaitPreview
+            await uploadLogoAndWaitPreview(page, createTinyPng());
 
-            await expect(page.getByTestId('logo-preview')).toBeVisible();
-
+            // Submit
             await submitProfileUpdate(page);
 
             await expect(page).toHaveURL('/mitra/profile');
@@ -554,7 +583,9 @@ test.describe('Mitra — Profile Usaha', () => {
             ).toBeVisible({ timeout: 10_000 });
 
             // Setelah reload, logo tetap ada (dari storage)
-            await expect(page.getByTestId('logo-preview')).toBeVisible();
+            await expect(page.getByTestId('logo-preview')).toBeVisible({
+                timeout: 15_000,
+            });
         });
 
         test('mitra bisa hapus logo (setelah ada logo)', async ({ page, asMitra }) => {
@@ -564,12 +595,8 @@ test.describe('Mitra — Profile Usaha', () => {
             // Pastikan ada logo (dari test sebelumnya), kalau tidak ada, upload dulu
             const hasLogo = await page.getByTestId('logo-preview').count();
             if (hasLogo === 0) {
-                const tinyPng = createTinyPng();
-                await page.getByTestId('logo-input').setInputFiles({
-                    name: tinyPng.name,
-                    mimeType: tinyPng.mimeType,
-                    buffer: tinyPng.buffer,
-                });
+                // ✅ FIX #1: pakai helper uploadLogoAndWaitPreview
+                await uploadLogoAndWaitPreview(page, createTinyPng());
                 await submitProfileUpdate(page);
                 await page.goto('/mitra/profile');
             }

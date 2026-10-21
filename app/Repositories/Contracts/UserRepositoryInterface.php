@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface
 {
@@ -91,4 +92,14 @@ interface UserRepositoryInterface
      * Cek apakah username sudah dipakai.
      */
     public function usernameExists(string $username, ?int $exceptUserId = null): bool;
+
+    /**
+     * Cari user berdasarkan role (untuk autocomplete).
+     *
+     * @param  string  $role  Role yang dicari (misal: 'mitra').
+     * @param  string  $search  Kata kunci (nama, email, username).
+     * @param  int  $limit  Jumlah maksimal hasil.
+     * @return Collection<int, User>
+     */
+    public function searchByRole(string $role, string $search, int $limit = 10): Collection;
 }

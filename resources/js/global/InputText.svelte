@@ -30,7 +30,6 @@
     } = $props();
 </script>
 
-<!-- ... sisanya sama ... -->
 
 <div>
     {#if label}

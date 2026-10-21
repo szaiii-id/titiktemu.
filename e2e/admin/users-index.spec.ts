@@ -1,4 +1,4 @@
-import { test, expect, SEED_USERS, uniqueEmail, uniqueUsername } from '../fixtures/auth';
+import { test, expect, SEED_USERS, uniqueEmail, uniqueUsername, resetUser } from '../fixtures/auth';
 
 /**
  * Admin — Manajemen User (Index)
@@ -32,6 +32,11 @@ import { test, expect, SEED_USERS, uniqueEmail, uniqueUsername } from '../fixtur
  * - Assertion yang spesifik menyebut `Ani Wijaya` (SEED_MITRA_2) juga
  *   dibuat relatif, karena user ini bisa DIHAPUS oleh file test lain
  *   (`users-edit.spec.ts` — happy path delete).
+ *
+ * ⚠️ FIX #1: performSearch — 4 lapis tunggu (anti race hydration)
+ * ⚠️ FIX #2: resetUser di beforeEach — anti state leak dari users-edit
+ *           (users-edit happy path mengubah nama admin "Administrator Utama"
+ *           → "Admin Utama E2E", yang bisa mempengaruhi test seed di sini).
  */
 
 // ==========================================
@@ -55,20 +60,71 @@ const SEED_MITRA_1 = {
 // ==========================================
 // HELPER
 // ==========================================
+
 /**
- * Isi search field dan tunggu response Inertia selesai.
+ * ✅ FIX #1: performSearch — anti race hydration.
+ *
+ * Kenapa: `page.fill()` bisa jalan SEBELUM Svelte hydration selesai.
+ * Akibatnya nilai terisi di DOM, tapi handler `input`/`keydown` belum
+ * terpasang → URL di-update dengan query kosong (`Received: ""`).
+ *
+ * Solusi:
+ * 1. Tunggu networkidle (hydration selesai)
+ * 2. Tunggu input visible & enabled
+ * 3. Isi input + VERIFIKASI nilai benar-benar masuk
+ * 4. Baru polling URL
  */
 async function performSearch(page: any, query: string): Promise<void> {
-    await Promise.all([
-        page.waitForResponse(
-            (resp: any) =>
-                resp.url().includes('/admin/users') &&
-                resp.request().method() === 'GET' &&
-                resp.url().includes('search='),
-            { timeout: 15_000 },
-        ),
-        page.fill('input[placeholder*="Cari"]', query),
-    ]);
+    // ✅ 1. Tunggu halaman stabil (hydration selesai)
+    await page.waitForLoadState('networkidle', { timeout: 15_000 });
+
+    const input = page.locator('input[placeholder*="Cari"]');
+
+    // ✅ 2. Tunggu input visible & enabled
+    await input.waitFor({ state: 'visible', timeout: 10_000 });
+    await expect(input).toBeEnabled({ timeout: 5_000 });
+
+    // ✅ 3. Isi input, lalu VERIFIKASI nilai benar-benar masuk
+    await input.fill(query);
+    await expect(input).toHaveValue(query, { timeout: 5_000 });
+
+    // ✅ 4. Tunggu handler search men-trigger perubahan URL
+    await expect
+        .poll(
+            () => new URL(page.url()).searchParams.get('search') ?? '',
+            { timeout: 15_000, intervals: [100, 200, 500] },
+        )
+        .toBe(query);
+}
+
+/**
+ * ✅ FIX #2: resetState — reset admin user + login sebagai admin.
+ *
+ * Kenapa: `users-edit.spec.ts` (happy path) mengubah:
+ * - Nama admin: "Administrator Utama" → "Admin Utama E2E"
+ * - Email mitra 2: "ani@gmail.com" → uniqueEmail
+ * - Hapus mitra 2: Ani Wijaya
+ *
+ * Test di file ini yang assert `SEED_ADMIN.name` akan gagal jika
+ * `users-edit` jalan duluan. Reset di sini mengembalikan:
+ * - Nama admin → "Administrator Utama"
+ * - Email admin → "admin@titiktemu.test"
+ * - Username admin → "admin"
+ *
+ * Yang TIDAK bisa di-reset: user mitra 2 yang sudah DIHAPUS. Test
+ * yang assert "Ani Wijaya" sudah dibuat relatif (minimal 1 mitra).
+ */
+async function resetAdminAndLogin(page: any): Promise<void> {
+    // ✅ Reset nama admin ke seed (jika diubah oleh users-edit)
+    await resetUser(page, SEED_USERS.admin.email, {
+        name: SEED_ADMIN.name,
+        username: SEED_ADMIN.username,
+        password: SEED_USERS.admin.password,
+    });
+
+    // ✅ Login sebagai admin
+    const { loginViaUI } = await import('../fixtures/auth');
+    await loginViaUI(page, 'admin');
 }
 
 // ==========================================
@@ -152,13 +208,13 @@ test.describe('Admin — Manajemen User', () => {
 
         test('menampilkan 3 tab filter: Semua, Admin, Mitra', async ({ page }) => {
             await expect(
-                page.getByRole('button', { name: /^Semua/i }),
+                page.getByRole('tab', { name: /^Semua/i }),
             ).toBeVisible();
             await expect(
-                page.getByRole('button', { name: /^Admin/i }),
+                page.getByRole('tab', { name: /^Admin/i }),
             ).toBeVisible();
             await expect(
-                page.getByRole('button', { name: /^Mitra/i }),
+                page.getByRole('tab', { name: /^Mitra/i }),
             ).toBeVisible();
         });
 
@@ -177,18 +233,23 @@ test.describe('Admin — Manajemen User', () => {
 
     /*
     |--------------------------------------------------------------------------
-    | Data Initialization
+    | Data Initialization — ✅ FIX #2: pakai resetAdminAndLogin
     |--------------------------------------------------------------------------
+    |
+    | Kenapa perlu reset?
+    | `users-edit.spec.ts` (happy path) mengubah nama admin
+    | "Administrator Utama" → "Admin Utama E2E". Test di sini yang
+    | assert `SEED_ADMIN.name` akan gagal jika file lain jalan duluan.
     */
 
     test.describe('Data Initialization', () => {
-        test.beforeEach(async ({ page, asAdmin }) => {
-            await asAdmin();
+        test.beforeEach(async ({ page }) => {
+            // ✅ FIX #2: reset admin ke seed + login
+            await resetAdminAndLogin(page);
             await page.goto('/admin/users');
         });
 
         test('menampilkan seed admin', async ({ page }) => {
-            // Scope ke tbody: nama admin juga muncul di sidebar
             const tableBody = page.locator('tbody');
 
             await expect(
@@ -211,9 +272,6 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('menampilkan minimal 1 mitra di tabel', async ({ page }) => {
-            // ✅ FIX: tidak assert spesifik "Ani Wijaya" (SEED_MITRA_2),
-            // karena user ini bisa DIHAPUS oleh test lain (`users-edit`).
-            // Cukup pastikan ada minimal 1 badge mitra di tabel.
             const tableBody = page.locator('tbody');
             const mitraBadges = tableBody.getByText(/^\s*Mitra\s*$/);
             expect(await mitraBadges.count()).toBeGreaterThanOrEqual(1);
@@ -230,7 +288,6 @@ test.describe('Admin — Manajemen User', () => {
         test('menampilkan badge role "Admin" dan "Mitra"', async ({ page }) => {
             const tableBody = page.locator('tbody');
 
-            // Assertion RELATIF (bukan hardcoded count)
             await expect(
                 tableBody.getByText(/^\s*Admin\s*$/).first(),
             ).toBeVisible();
@@ -240,8 +297,6 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('TIDAK menampilkan user role=client', async ({ page }) => {
-            // Client tidak muncul di halaman ini (role=client read-only
-            // punya halaman sendiri di /admin/clients)
             const tableBody = page.locator('tbody');
             await expect(
                 tableBody.getByText(SEED_USERS.client.email),
@@ -249,8 +304,6 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('menampilkan minimal 2 row (admin + minimal 1 mitra)', async ({ page }) => {
-            // ✅ FIX: assertion RELATIF — minimal 2 (bukan exact 3),
-            // karena user bisa ditambah/dihapus oleh test lain.
             const rows = page.locator('tbody tr');
             const count = await rows.count();
             expect(count).toBeGreaterThanOrEqual(2);
@@ -270,53 +323,46 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('tab "Semua" aktif secara default', async ({ page }) => {
-            const semuaTab = page.getByRole('button', { name: /^Semua/i });
-            // Tab yang aktif punya class bg-white
+            const semuaTab = page.getByRole('tab', { name: /^Semua/i });
             await expect(semuaTab).toHaveClass(/bg-white/);
         });
 
         test('klik tab "Admin" menampilkan hanya admin', async ({ page }) => {
-            await page.getByRole('button', { name: /^Admin/i }).click();
+            await page.getByRole('tab', { name: /^Admin/i }).click();
 
             const tableBody = page.locator('tbody');
 
-            // Admin muncul
             await expect(
                 tableBody.getByText(SEED_ADMIN.name, { exact: true }),
             ).toBeVisible();
 
-            // Mitra TIDAK muncul
             await expect(
                 tableBody.getByText(SEED_MITRA_1.name, { exact: true }),
             ).not.toBeVisible();
         });
 
         test('klik tab "Mitra" menampilkan hanya mitra', async ({ page }) => {
-            await page.getByRole('button', { name: /^Mitra/i }).click();
+            await page.getByRole('tab', { name: /^Mitra/i }).click();
 
             const tableBody = page.locator('tbody');
 
-            // ✅ FIX: minimal 1 mitra (bukan assert "Budi Santoso" DAN "Ani Wijaya")
             const mitraBadges = tableBody.getByText(/^\s*Mitra\s*$/);
             expect(await mitraBadges.count()).toBeGreaterThanOrEqual(1);
 
-            // Admin TIDAK muncul di tabel
             await expect(
                 tableBody.getByText(SEED_ADMIN.name, { exact: true }),
             ).not.toBeVisible();
         });
 
         test('klik tab "Semua" menampilkan semua user', async ({ page }) => {
-            // Pindah ke Admin dulu
-            await page.getByRole('button', { name: /^Admin/i }).click();
+            await page.getByRole('tab', { name: /^Admin/i }).click();
 
             const tableBody = page.locator('tbody');
             await expect(
                 tableBody.getByText(SEED_MITRA_1.name, { exact: true }),
             ).not.toBeVisible();
 
-            // Kembali ke Semua
-            await page.getByRole('button', { name: /^Semua/i }).click();
+            await page.getByRole('tab', { name: /^Semua/i }).click();
             await expect(
                 tableBody.getByText(SEED_ADMIN.name, { exact: true }),
             ).toBeVisible();
@@ -326,9 +372,7 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('tab menampilkan jumlah count yang benar', async ({ page }) => {
-            // Assertion RELATIF — cek konsistensi tab Semua
-            // dengan jumlah row di tabel (bukan hardcoded).
-            const semuaTab = page.getByRole('button', { name: /^Semua/i });
+            const semuaTab = page.getByRole('tab', { name: /^Semua/i });
             const semuaText = await semuaTab.textContent();
             const tabCount = Number(semuaText?.match(/\d+/)?.[0] ?? 0);
 
@@ -448,11 +492,9 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('search + tab filter bisa dikombinasikan', async ({ page }) => {
-            // Search "Budi" → hasil: Budi Santoso (mitra)
             await performSearch(page, 'Budi');
 
-            // Klik tab "Admin" → seharusnya kosong (karena Budi = mitra)
-            await page.getByRole('button', { name: /^Admin/i }).click();
+            await page.getByRole('tab', { name: /^Admin/i }).click();
 
             const tableBody = page.locator('tbody');
             await expect(
@@ -482,7 +524,6 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('setiap row punya tombol Edit', async ({ page }) => {
-            // Assertion RELATIF — jumlah tombol Edit = jumlah row
             const rowCount = await page.locator('tbody tr').count();
             const editButtons = page.getByLabel('Edit user');
             await expect(editButtons).toHaveCount(rowCount);
@@ -503,7 +544,6 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('setiap row punya tombol Reset Password', async ({ page }) => {
-            // Assertion RELATIF
             const rowCount = await page.locator('tbody tr').count();
             const resetButtons = page.getByLabel('Reset password');
             await expect(resetButtons).toHaveCount(rowCount);
@@ -516,7 +556,6 @@ test.describe('Admin — Manajemen User', () => {
 
             await adminRow.getByLabel('Reset password').click();
 
-            // Modal muncul
             await expect(
                 page.getByRole('heading', { name: /Reset Password\?/i }),
             ).toBeVisible();
@@ -528,8 +567,6 @@ test.describe('Admin — Manajemen User', () => {
         test('tombol Hapus muncul untuk user LAIN (bukan diri sendiri)', async ({
             page,
         }) => {
-            // Admin yang login = admin@titiktemu.test
-            // Row mitra harus punya tombol Hapus
             const mitraRow = page
                 .locator('tbody tr')
                 .filter({ hasText: SEED_MITRA_1.email });
@@ -540,8 +577,6 @@ test.describe('Admin — Manajemen User', () => {
         });
 
         test('tombol Hapus TIDAK muncul di row diri sendiri', async ({ page }) => {
-            // Admin yang login = admin@titiktemu.test
-            // Row admin sendiri tidak boleh punya tombol Hapus
             const adminRow = page
                 .locator('tbody tr')
                 .filter({ hasText: SEED_ADMIN.email });
@@ -576,12 +611,10 @@ test.describe('Admin — Manajemen User', () => {
                 page.getByRole('heading', { name: /Hapus User\?/i }),
             ).toBeVisible();
 
-            // Klik Batal
             await page
                 .getByRole('button', { name: /^Batal$/i })
                 .click();
 
-            // Modal hilang
             await expect(
                 page.getByRole('heading', { name: /Hapus User\?/i }),
             ).not.toBeVisible();
@@ -614,7 +647,6 @@ test.describe('Admin — Manajemen User', () => {
             await asAdmin();
             await page.goto('/admin/users');
 
-            // Dengan seed user sedikit, pagination tidak muncul
             await expect(
                 page.getByText(/Menampilkan \d+–\d+ dari \d+ user/i),
             ).not.toBeVisible();
@@ -632,8 +664,7 @@ test.describe('Admin — Manajemen User', () => {
             await asAdmin();
             await page.goto('/admin/users');
 
-            // Tab Semua harus menampilkan count = jumlah row di tabel
-            const allTab = page.getByRole('button', { name: /^Semua/i });
+            const allTab = page.getByRole('tab', { name: /^Semua/i });
             const tabText = await allTab.textContent();
             const count = Number(tabText?.match(/\d+/)?.[0] ?? 0);
 
@@ -670,7 +701,6 @@ test.describe('Admin — Manajemen User', () => {
         test('tombol icon punya aria-label', async ({ page }) => {
             await expect(page.getByLabel('Edit user').first()).toBeVisible();
             await expect(page.getByLabel('Reset password').first()).toBeVisible();
-            // Hapus button hanya ada di row mitra
             await expect(page.getByLabel('Hapus user').first()).toBeVisible();
         });
 
@@ -691,7 +721,6 @@ test.describe('Admin — Manajemen User', () => {
 
             await mitraRow.getByLabel('Hapus user').click();
 
-            // Backdrop punya role button + aria-label
             await expect(
                 page.getByLabel('Tutup modal'),
             ).toBeVisible();
@@ -712,12 +741,10 @@ test.describe('Admin — Manajemen User', () => {
             await asAdmin();
             await page.goto('/admin/users');
 
-            // Ambil semua email di tabel
             const emails = await page
                 .locator('tbody tr td p.text-xs')
                 .allTextContents();
 
-            // Tidak boleh ada email client
             for (const email of emails) {
                 expect(email.trim()).not.toBe(SEED_USERS.client.email);
             }

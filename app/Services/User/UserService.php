@@ -171,13 +171,29 @@ class UserService
      */
     public function deleteUser(User $user): void
     {
-        Log::warning('User dihapus', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role,
-        ]);
+        DB::transaction(function () use ($user) {   // ✅ Transaction atomic
+            // 1. Hapus relasi RESTRICT (wajib manual)
+            $user->payouts()->delete();
+            $user->tripMitras()->delete();
+            $user->mitraWallet()?->delete();
 
-        $this->userRepository->deleteUser($user);
+            // 2. Hapus relasi non-cascade
+            $user->dailyReports()->each(function ($report) {
+                $report->media()->delete();
+                $report->delete();
+            });
+
+            // 3. Hapus user
+            $this->userRepository->deleteUser($user);
+
+            // 4. Log SETELAH sukses
+            Log::info('User dihapus oleh admin', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'role' => $user->role,
+                'admin_id' => auth()->id(),
+            ]);
+        });
     }
 
     /**

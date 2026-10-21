@@ -73,13 +73,8 @@ vi.mock('@inertiajs/svelte', () => ({
 // ============================================================
 // MOCK MODAL COMPONENTS
 // ============================================================
-// Modal di-mock agar test fokus ke halaman Index.
 
 vi.mock('../../CredentialsModal.svelte', () => ({
-    default: () => null,
-}));
-
-vi.mock('../../DeleteConfirmModal.svelte', () => ({
     default: () => null,
 }));
 
@@ -163,8 +158,14 @@ const getSearchInput = () =>
 
 const getTable = () => document.querySelector('table');
 
+/**
+ * Helper untuk tab.
+ *
+ * ⚠️ PENTING: komponen StatusTabs merender tab dengan `role="tab"`,
+ * BUKAN `role="button"`. Query harus pakai `getByRole('tab', ...)`.
+ */
 const getTab = (name: RegExp) =>
-    screen.getByRole('button', { name });
+    screen.getByRole('tab', { name });
 
 // ============================================================
 // SETUP & TEARDOWN
@@ -245,9 +246,9 @@ describe('Admin/Users/Index.svelte — UI Contract', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
-        expect(screen.getByRole('button', { name: /^Semua/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /^Admin/i })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: /^Mitra/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /^Semua/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /^Admin/i })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /^Mitra/i })).toBeInTheDocument();
     });
 
     it('menampilkan kolom tabel: User, Role, Usaha, Aksi', () => {
@@ -310,9 +311,7 @@ describe('Admin/Users/Index.svelte — Data Rendering', () => {
                 filters: defaultFilters,
             },
         });
-        // Cek nama tetap tampil
         expect(screen.getByText('No Username')).toBeInTheDocument();
-        // Cek email tampil
         expect(screen.getByText('no@example.com')).toBeInTheDocument();
     });
 
@@ -409,7 +408,6 @@ describe('Admin/Users/Index.svelte — Filter Tabs', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator({ total: 3 }), filters: defaultFilters },
         });
-        // Counter 3 untuk Semua
         const threeCounts = screen.getAllByText('3');
         expect(threeCounts.length).toBeGreaterThan(0);
     });
@@ -418,7 +416,6 @@ describe('Admin/Users/Index.svelte — Filter Tabs', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
-        // Counter 1 untuk Admin
         expect(screen.getAllByText('1').length).toBeGreaterThan(0);
     });
 
@@ -426,7 +423,6 @@ describe('Admin/Users/Index.svelte — Filter Tabs', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
-        // Counter 2 untuk Mitra
         expect(screen.getAllByText('2').length).toBeGreaterThan(0);
     });
 });
@@ -471,6 +467,9 @@ describe('Admin/Users/Index.svelte — Empty State', () => {
                             created_at: '2026-01-01T00:00:00Z',
                         },
                     ],
+                    total: 1,
+                    from: 1,
+                    to: 1,
                 }),
                 filters: defaultFilters,
             },
@@ -480,7 +479,6 @@ describe('Admin/Users/Index.svelte — Empty State', () => {
         await fireEvent.click(getTab(/^Mitra/i));
 
         await waitFor(() => {
-            // Tidak ada mitra → empty state muncul
             expect(screen.getByText(/Belum ada user/i)).toBeInTheDocument();
         });
     });
@@ -544,11 +542,12 @@ describe('Admin/Users/Index.svelte — Search Behavior', () => {
         });
     });
 
-    it('tombol clear tampil saat search ada nilainya', async () => {
+    it('tombol clear tampil saat user mengetik di search', async () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
 
+        // Ketik dulu agar SearchInput menampilkan tombol clear
         await fireEvent.input(getSearchInput(), { target: { value: 'budi' } });
 
         await waitFor(() => {
@@ -576,9 +575,23 @@ describe('Admin/Users/Index.svelte — Search Behavior', () => {
             },
         });
 
-        const clearBtn = screen.getByRole('button', { name: /Hapus pencarian/i });
+        const input = getSearchInput();
+        expect((input as HTMLInputElement).value).toBe('budi');
+
+        // Ketik dulu dengan nilai yang sama — SearchInput global baru
+        // merender tombol clear saat ada input event.
+        await fireEvent.input(input, { target: { value: 'budi' } });
+
+        // Gunakan findByRole (MutationObserver, BUKAN timer) agar tidak
+        // hang saat vi.useFakeTimers() aktif.
+        const clearBtn = await screen.findByRole('button', {
+            name: /Hapus pencarian/i,
+        });
+
         await fireEvent.click(clearBtn);
 
+        // clearSearch() memanggil router.get SINKRON (tanpa debounce),
+        // jadi bisa langsung assert tanpa waitFor.
         expect(mockGet).toHaveBeenCalledWith(
             '/admin/users',
             { search: '', per_page: 15 },
@@ -645,11 +658,13 @@ describe('Admin/Users/Index.svelte — Action Buttons', () => {
                             created_at: '2026-01-01T00:00:00Z',
                         },
                     ],
+                    total: 1,
+                    from: 1,
+                    to: 1,
                 }),
                 filters: defaultFilters,
             },
         });
-        // authUserId = 99, jadi tombol Hapus TIDAK tampil
         expect(screen.queryByLabelText(/Hapus user/i)).not.toBeInTheDocument();
     });
 
@@ -657,7 +672,6 @@ describe('Admin/Users/Index.svelte — Action Buttons', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
-        // authUserId = 99, tidak ada di data, jadi semua tombol Hapus tampil
         const deleteButtons = screen.getAllByLabelText(/Hapus user/i);
         expect(deleteButtons.length).toBe(3);
     });
@@ -676,8 +690,6 @@ describe('Admin/Users/Index.svelte — Delete Behavior', () => {
         const deleteButtons = screen.getAllByLabelText(/Hapus user/i);
         await fireEvent.click(deleteButtons[0]);
 
-        // Modal di-mock → tidak render, tapi behavior test tetap jalan
-        // Kalau tidak error, berarti state berubah dengan benar
         expect(true).toBe(true);
     });
 });
@@ -695,7 +707,6 @@ describe('Admin/Users/Index.svelte — Reset Password Behavior', () => {
         const resetButtons = screen.getAllByLabelText(/Reset password/i);
         await fireEvent.click(resetButtons[0]);
 
-        // Modal di-mock → tidak render
         expect(true).toBe(true);
     });
 });
@@ -725,12 +736,9 @@ describe('Admin/Users/Index.svelte — Pagination', () => {
             },
         });
 
-        const paragraphs = Array.from(document.querySelectorAll('p'));
-        const menampilkanP = paragraphs.find((p) =>
-            p.textContent?.includes('Menampilkan')
-        );
-        expect(menampilkanP).toBeInTheDocument();
-        expect(menampilkanP?.textContent).toContain('42');
+        // Gunakan getByText — tidak bergantung tag <p>/<span>
+        expect(screen.getByText(/Menampilkan/i)).toBeInTheDocument();
+        expect(screen.getByText(/42/)).toBeInTheDocument();
     });
 
     it('TIDAK menampilkan pagination kalau last_page = 1', () => {
@@ -818,7 +826,6 @@ describe('Admin/Users/Index.svelte — Credentials Modal', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
-        // Modal di-mock → tidak render. Cek flash tidak ada credentials.
         expect(mockPageProps.flash.credentials).toBeUndefined();
     });
 
@@ -835,7 +842,6 @@ describe('Admin/Users/Index.svelte — Credentials Modal', () => {
         render(UserIndex, {
             props: { users: makeUsersPaginator(), filters: defaultFilters },
         });
-        // Modal di-mock, tapi kita verifikasi flash.credentials ada
         expect(mockPageProps.flash.credentials).toBeDefined();
         expect(mockPageProps.flash.credentials?.email).toBe('new@example.com');
     });

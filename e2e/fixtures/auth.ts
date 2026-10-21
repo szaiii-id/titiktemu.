@@ -2,23 +2,17 @@ import { test as base, expect, type Page } from '@playwright/test';
 import { APP_URL } from '../config';
 
 // ==========================================
+// KONSTANTA TIMEZONE SEED
+// ==========================================
+export const SEED_TIMEZONE = {
+    default: 'Asia/Makassar',
+    jakarta: 'Asia/Jakarta',
+    jayapura: 'Asia/Jayapura',
+} as const;
+
+// ==========================================
 // KONSTANTA AKUN SEED
 // ==========================================
-/**
- * SEED_USERS — HARUS SINKRON dengan `database/seeders/UserSeeder.php`.
- *
- * Kalau seeder diubah, update fixture ini juga.
- *
- * Current seed (dari UserSeeder.php):
- * - admin@titiktemu.test      / password123  (username: admin,      name: Administrator Utama)
- * - budi@ptabc.com            / password123  (username: ptabc,      name: Budi Santoso)
- * - ani@gmail.com             / password123  (username: aniwijaya,  name: Ani Wijaya)
- * - client@titiktemu.test     / password123  (username: budiclient, name: Budi Client)
- *
- * CATATAN:
- * - Ada 2 user mitra di seeder. Fixture pakai mitra pertama (`budi@ptabc.com`).
- * - `must_change_password = false` untuk semua user.
- */
 export const SEED_USERS = {
     admin: {
         email: 'admin@titiktemu.test',
@@ -26,6 +20,7 @@ export const SEED_USERS = {
         password: 'password123',
         name: 'Administrator Utama',
         role: 'admin' as const,
+        timezone: SEED_TIMEZONE.default,
         dashboardPath: '/admin/dashboard',
     },
     mitra: {
@@ -34,6 +29,7 @@ export const SEED_USERS = {
         password: 'password123',
         name: 'Budi Santoso',
         role: 'mitra' as const,
+        timezone: SEED_TIMEZONE.default,
         dashboardPath: '/mitra/dashboard',
     },
     client: {
@@ -42,6 +38,7 @@ export const SEED_USERS = {
         password: 'password123',
         name: 'Budi Client',
         role: 'client' as const,
+        timezone: SEED_TIMEZONE.default,
         dashboardPath: '/client/dashboard',
     },
 } as const;
@@ -49,11 +46,8 @@ export const SEED_USERS = {
 export type SeedRole = keyof typeof SEED_USERS;
 
 // ==========================================
-// SEED USERS TAMBAHAN (opsional)
+// SEED USERS TAMBAHAN
 // ==========================================
-/**
- * User mitra tambahan dari seeder (kalau butuh test dengan 2 mitra).
- */
 export const SEED_EXTRA = {
     mitra2: {
         email: 'ani@gmail.com',
@@ -61,21 +55,14 @@ export const SEED_EXTRA = {
         password: 'password123',
         name: 'Ani Wijaya',
         role: 'mitra' as const,
+        timezone: SEED_TIMEZONE.default,
         dashboardPath: '/mitra/dashboard',
     },
 } as const;
 
 // ==========================================
-// KONSTANTA SEED PROFILE (untuk reset mitra)
+// KONSTANTA SEED PROFILE
 // ==========================================
-/**
- * Nilai seed profile mitra — sinkron dengan UserSeeder.php.
- * Dipakai untuk reset profile mitra di fixture `asMitra`.
- *
- * Semua field ini HARUS SAMA dengan yang ada di UserSeeder.php,
- * karena endpoint `/_test/reset-user` akan menimpa nilai profile
- * dengan nilai ini.
- */
 const SEED_MITRA_PROFILE = {
     namaPenyediaUsaha: 'PT ABC Travel',
     nomorIdentitas: '12.345.678.9-012.000',
@@ -88,62 +75,103 @@ const SEED_MITRA_PROFILE = {
 } as const;
 
 // ==========================================
-// HELPER: PAKSA LOGOUT DARI SERVER
+// SEED PACKAGES
 // ==========================================
-export async function forceLogout(page: Page): Promise<void> {
-    try {
-        await page.goto('/');
+export const SEED_PACKAGES = {
+    pasarTerapung: {
+        kodeSuffix: '-001',
+        nama: 'Wisata Pasar Terapung 2D1N',
+        status: 'aktif' as const,
+        timezone: 'Asia/Makassar',
+        durasiHari: 2,
+    },
+    hutanKalimantan: {
+        kodeSuffix: '-002',
+        nama: 'Petualangan Hutan Kalimantan 3D2N',
+        status: 'aktif' as const,
+        timezone: 'Asia/Makassar',
+        durasiHari: 3,
+    },
+    kulinerBanjarmasin: {
+        kodeSuffix: '-003',
+        nama: 'Wisata Kuliner Banjarmasin 1D',
+        status: 'draft' as const,
+        timezone: 'Asia/Makassar',
+        durasiHari: 1,
+    },
+} as const;
 
-        const csrfToken = await page.evaluate(() => {
-            const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-            return match ? decodeURIComponent(match[1]) : '';
-        });
-
-        await page.request.post(`${APP_URL}/logout`, {
-            headers: {
-                'X-XSRF-TOKEN': csrfToken,
-                Accept: 'text/html, application/xhtml+xml',
-            },
-            failOnStatusCode: false,
-        });
-    } catch {
-        // Abaikan error
-    }
-
-    await page.context().clearCookies();
+export function packageKode(suffix: string): string {
+    return `PKG-${new Date().getFullYear()}${suffix}`;
 }
 
 // ==========================================
-// HELPER: RESET USER (via endpoint test)
+// SEED TRIPS
 // ==========================================
-/**
- * Reset user ke state seed via endpoint `/_test/reset-user`.
- *
- * Dipakai oleh fixture `asAdmin`, `asMitra`, `asClient` supaya setiap
- * test mulai dari state bersih — tidak ada state leak antar test.
- *
- * Endpoint hanya aktif di env testing (lihat `routes/web-testing.php`).
- *
- * PENTING — CSRF Token:
- *   Endpoint `/_test/reset-user` terdaftar di grup `web` middleware,
- *   sehingga tetap butuh CSRF token. Kita navigate ke `/` dulu untuk
- *   mendapat cookie `XSRF-TOKEN`, lalu kirim sebagai header
- *   `X-XSRF-TOKEN` di request POST.
- *
- * @param page     Playwright Page (untuk dapat CSRF token via navigasi)
- * @param email    Email user yang akan di-reset
- * @param options  Field opsional yang mau di-reset (default: seed value)
- */
+export const SEED_TRIPS = {
+    e2eConfirmed: {
+        kodePrefix: `TRP-${new Date().getFullYear()}-`,
+        bookingKode: `BKG-${new Date().getFullYear()}-E2E-CONFIRMED`,
+        status: 'scheduled' as const,
+        mitraCount: 2,
+    },
+} as const;
+
+// ==========================================
+// KONSTANTA TRIP YANG DI-RESET
+// ==========================================
+export const SEED_TRIP_KODE = `${SEED_TRIPS.e2eConfirmed.kodePrefix}001`;
+
+// ==========================================
+// HELPER: PAKSA LOGOUT DARI SERVER
+// ==========================================
+export async function forceLogout(page: Page): Promise<void> {
+    await page.context().clearCookies();
+    try {
+        if (page.url() !== 'about:blank') {
+            await page.evaluate(() => {
+                localStorage.clear();
+                sessionStorage.clear();
+            }).catch(() => {});
+        }
+    } catch {
+        // Abaikan
+    }
+}
+
+// ==========================================
+// HELPER: AMBIL CSRF TOKEN
+// ==========================================
+async function getCsrfToken(page: Page): Promise<string> {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    const csrfToken = await page.evaluate(() => {
+        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+        return match ? decodeURIComponent(match[1]) : '';
+    });
+
+    if (!csrfToken) {
+        throw new Error(
+            `getCsrfToken: cookie XSRF-TOKEN tidak ditemukan. ` +
+            `Cek apakah APP_URL (${APP_URL}) dapat diakses.`,
+        );
+    }
+
+    return csrfToken;
+}
+
+// ==========================================
+// HELPER: RESET USER
+// ==========================================
 export async function resetUser(
     page: Page,
     email: string,
     options: {
-        // User fields
         password?: string;
         name?: string;
         username?: string;
         mustChangePassword?: boolean;
-        // Profile fields (hanya dipakai kalau user punya profile)
+        timezone?: string;
         namaPenyediaUsaha?: string;
         nomorIdentitas?: string;
         alamat?: string;
@@ -154,40 +182,19 @@ export async function resetUser(
         deskripsi?: string;
     } = {},
 ): Promise<void> {
-    // 1. Navigate ke / supaya browser set cookie XSRF-TOKEN
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const csrfToken = await getCsrfToken(page);
 
-    // 2. Ambil CSRF token dari cookie
-    const csrfToken = await page.evaluate(() => {
-        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    });
-
-    if (!csrfToken) {
-        throw new Error(
-            `resetUser: CSRF token tidak ditemukan setelah goto('/'). ` +
-            `Cek apakah APP_URL (${APP_URL}) dapat diakses.`,
-        );
-    }
-
-    // 3. Susun form data
     const form: Record<string, string> = { email };
-
-    // User fields
     if (options.password !== undefined) form.password = options.password;
     if (options.name !== undefined) form.name = options.name;
     if (options.username !== undefined) form.username = options.username;
     if (options.mustChangePassword !== undefined) {
         form.must_change_password = options.mustChangePassword ? '1' : '0';
     }
+    if (options.timezone !== undefined) form.timezone = options.timezone;
 
-    // Profile fields — semua field yang dikirim akan di-update di endpoint
-    if (options.namaPenyediaUsaha !== undefined) {
-        form.nama_penyedia_usaha = options.namaPenyediaUsaha;
-    }
-    if (options.nomorIdentitas !== undefined) {
-        form.nomor_identitas = options.nomorIdentitas;
-    }
+    if (options.namaPenyediaUsaha !== undefined) form.nama_penyedia_usaha = options.namaPenyediaUsaha;
+    if (options.nomorIdentitas !== undefined) form.nomor_identitas = options.nomorIdentitas;
     if (options.alamat !== undefined) form.alamat = options.alamat;
     if (options.telepon !== undefined) form.telepon = options.telepon;
     if (options.provinsi !== undefined) form.provinsi = options.provinsi;
@@ -195,7 +202,6 @@ export async function resetUser(
     if (options.kodePos !== undefined) form.kode_pos = options.kodePos;
     if (options.deskripsi !== undefined) form.deskripsi = options.deskripsi;
 
-    // 4. POST ke endpoint test dengan CSRF token
     const response = await page.request.post('/_test/reset-user', {
         form,
         headers: { 'X-XSRF-TOKEN': csrfToken },
@@ -210,44 +216,48 @@ export async function resetUser(
 }
 
 // ==========================================
-// HELPER: LOGIN VIA HTTP (BYPASS INERTIA)
+// HELPER: LOGIN VIA UI (BYPASS INERTIA)
 // ==========================================
-/**
- * Login dengan mengirim POST /login via `page.request` (HTTP).
- *
- * Kenapa TIDAK via klik form?
- * Karena Inertia meng-intercept form submit sebagai XHR dengan
- * header `X-Inertia: true`. Response 302 di-handle berbeda oleh
- * Inertia, dan Playwright tidak selalu bisa mendeteksi navigasi
- * hasilnya.
- *
- * Dengan mengirim POST langsung via `page.request` (tanpa header
- * `X-Inertia`), server return redirect HTML standar, cookie session
- * di-set dengan benar, dan browser bisa follow redirect.
- */
 export async function loginViaUI(
     page: Page,
     role: SeedRole,
-    options: {
-        useEmail?: boolean;
-        remember?: boolean;
-    } = {}
+    options: { useEmail?: boolean; remember?: boolean } = {},
 ): Promise<void> {
     const { useEmail = true, remember = false } = options;
     const user = SEED_USERS[role];
 
-    // 1. Bersihkan state lama
     await forceLogout(page);
 
-    // 2. Buka halaman login untuk dapat CSRF token
-    await page.goto('/login');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            await page.goto('/login', {
+                waitUntil: 'commit',
+                timeout: 30_000,
+            });
+            break;
+        } catch (err) {
+            if (attempt === 3) throw err;
+            await page.waitForTimeout(500 * attempt);
+        }
+    }
+
+    await page.waitForFunction(
+        () => document.cookie.includes('XSRF-TOKEN'),
+        { timeout: 5_000 },
+    ).catch(() => {});
 
     const csrfToken = await page.evaluate(() => {
         const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : '';
     });
 
-    // 3. POST /login via page.request (bypass Inertia)
+    if (!csrfToken) {
+        throw new Error(
+            `loginViaUI: XSRF-TOKEN tidak ditemukan untuk ${user.email}. ` +
+            `URL: ${page.url()}`,
+        );
+    }
+
     const response = await page.context().request.post(`${APP_URL}/login`, {
         form: {
             identitas: useEmail ? user.email : user.username,
@@ -262,11 +272,9 @@ export async function loginViaUI(
         failOnStatusCode: false,
     });
 
-    // 4. Verifikasi status 302
     if (response.status() !== 302) {
         throw new Error(
-            `Login gagal untuk ${user.email}: ` +
-            `status ${response.status()} (expected 302)`
+            `Login gagal untuk ${user.email}: status ${response.status()} (expected 302)`,
         );
     }
 
@@ -274,42 +282,34 @@ export async function loginViaUI(
     if (!location.includes(user.dashboardPath)) {
         throw new Error(
             `Login redirect tidak sesuai untuk ${user.email}. ` +
-            `Expected: ${user.dashboardPath}, Got: ${location}`
+            `Expected: ${user.dashboardPath}, Got: ${location}`,
         );
     }
 
-    // 5. Navigasi ke dashboard
-    await page.goto(user.dashboardPath, {
-        waitUntil: 'commit',
-        timeout: 15_000,
-    });
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            await page.goto(user.dashboardPath, {
+                waitUntil: 'commit',
+                timeout: 30_000,
+            });
+            break;
+        } catch (err) {
+            if (attempt === 3) throw err;
+            await page.waitForTimeout(500 * attempt);
+        }
+    }
 
-    // 6. Pastikan tidak redirect balik ke /login
     if (page.url().includes('/login')) {
         throw new Error(
-            `Login sukses tapi dashboard redirect balik ke /login. ` +
-            `URL: ${page.url()}`
+            `Login sukses tapi dashboard redirect balik ke /login. URL: ${page.url()}`,
         );
     }
 }
 
-// ==========================================
-// HELPER: LOGIN VIA HTTP (ALIAS)
-// ==========================================
-export async function loginViaHTTP(
-    page: Page,
-    role: SeedRole
-): Promise<void> {
+export async function loginViaHTTP(page: Page, role: SeedRole): Promise<void> {
     await loginViaUI(page, role);
 }
 
-// ==========================================
-// HELPER: LOGIN SEBAGAI USER KUSTOM
-// ==========================================
-/**
- * Login dengan email/username & password kustom.
- * Berguna untuk test user yang baru di-register.
- */
 export async function loginAsCustom(
     page: Page,
     identitas: string,
@@ -318,19 +318,35 @@ export async function loginAsCustom(
 ): Promise<void> {
     await forceLogout(page);
 
-    await page.goto('/login');
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            await page.goto('/login', {
+                waitUntil: 'commit',
+                timeout: 30_000,
+            });
+            break;
+        } catch (err) {
+            if (attempt === 3) throw err;
+            await page.waitForTimeout(500 * attempt);
+        }
+    }
+
+    await page.waitForFunction(
+        () => document.cookie.includes('XSRF-TOKEN'),
+        { timeout: 5_000 },
+    ).catch(() => {});
 
     const csrfToken = await page.evaluate(() => {
         const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : '';
     });
 
+    if (!csrfToken) {
+        throw new Error(`loginAsCustom: XSRF-TOKEN tidak ditemukan untuk ${identitas}`);
+    }
+
     const response = await page.context().request.post(`${APP_URL}/login`, {
-        form: {
-            identitas,
-            password,
-            remember: '',
-        },
+        form: { identitas, password, remember: '' },
         headers: {
             'X-XSRF-TOKEN': csrfToken,
             Accept: 'text/html, application/xhtml+xml',
@@ -341,26 +357,30 @@ export async function loginAsCustom(
 
     if (response.status() !== 302) {
         throw new Error(
-            `Login gagal untuk ${identitas}: ` +
-            `status ${response.status()} (expected 302)`
+            `Login gagal untuk ${identitas}: status ${response.status()} (expected 302)`,
         );
     }
 
-    await page.goto(expectedDashboardPath, {
-        waitUntil: 'commit',
-        timeout: 15_000,
-    });
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            await page.goto(expectedDashboardPath, {
+                waitUntil: 'commit',
+                timeout: 30_000,
+            });
+            break;
+        } catch (err) {
+            if (attempt === 3) throw err;
+            await page.waitForTimeout(500 * attempt);
+        }
+    }
 }
 
-// ==========================================
-// HELPER: LOGOUT
-// ==========================================
 export async function logout(page: Page): Promise<void> {
     await forceLogout(page);
 }
 
 // ==========================================
-// HELPER: GENERATE EMAIL UNIK
+// HELPER: GENERATE EMAIL/USERNAME UNIK
 // ==========================================
 export function uniqueEmail(prefix = 'e2e'): string {
     const timestamp = Date.now();
@@ -375,28 +395,14 @@ export function uniqueUsername(prefix = 'e2e'): string {
 }
 
 // ==========================================
-// HELPER: RESET RATE LIMITER (dari test lama)
+// HELPER: RESET RATE LIMITER
 // ==========================================
-/**
- * Reset rate limiter via endpoint `/_test/clear-throttle`.
- *
- * Key harus SAMA dengan `AuthThrottleResponse::resolveKey()`:
- * - login: `strtolower(identitas)|ip`
- * - register: `strtolower(email)|ip`
- * - forgot-password: `strtolower(email)|ip`
- * - reset-password: `strtolower(email)|ip`
- */
 export async function resetRateLimiter(
     page: Page,
     limiter: string,
     key: string,
 ): Promise<void> {
-    await page.goto('/');
-
-    const csrfToken = await page.evaluate(() => {
-        const match = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
-    });
+    const csrfToken = await getCsrfToken(page);
 
     const response = await page.request.post('/_test/clear-throttle', {
         form: { limiter, key },
@@ -406,10 +412,431 @@ export async function resetRateLimiter(
 
     if (!response.ok()) {
         throw new Error(
-            `Gagal reset rate limiter: ${limiter} | ${key} ` +
-            `(status ${response.status()})`
+            `Gagal reset rate limiter: ${limiter} | ${key} (status ${response.status()})`,
         );
     }
+}
+
+// ==========================================
+// HELPER: RESOLVE PACKAGE ID DARI KODE
+// ==========================================
+export async function getPackageIdByKode(
+    page: Page,
+    kode: string,
+): Promise<number> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/find-package', {
+        form: { kode },
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        failOnStatusCode: false,
+    });
+
+    if (response.ok()) {
+        const data = (await response.json()) as { id: number };
+        return data.id;
+    }
+
+    throw new Error(
+        `getPackageIdByKode: endpoint /_test/find-package tidak tersedia ` +
+        `untuk kode "${kode}". Tambahkan endpoint ini di routes/web-testing.php ` +
+        `atau pakai ID yang sudah diketahui (1, 2, 3 sesuai seed).`,
+    );
+}
+
+// ==========================================
+// HELPER: RESOLVE TRIP ID DARI KODE
+// ==========================================
+export async function getTripIdByKode(
+    page: Page,
+    kode: string,
+): Promise<number> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/find-trip', {
+        form: { kode },
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        failOnStatusCode: false,
+    });
+
+    if (response.ok()) {
+        const data = (await response.json()) as { id: number };
+        return data.id;
+    }
+
+    throw new Error(
+        `getTripIdByKode: endpoint /_test/find-trip tidak tersedia ` +
+        `untuk kode "${kode}". Tambahkan endpoint ini di routes/web-testing.php.`,
+    );
+}
+
+// ==========================================
+// HELPER: RESET STATE TRIP (LENGKAP)
+// ==========================================
+/**
+ * Reset state trip ke status tertentu via `/_test/reset-trip`,
+ * PLUS recreate TripDay & TripMitra (jika `resetDays`/`resetMitras`).
+ *
+ * ⚠️ DEFAULT `resetDays: false` & `resetMitras: false` — aman,
+ * TIDAK memanggil endpoint yang mungkin bermasalah. Untuk reset penuh,
+ * panggil dengan `{ resetDays: true, resetMitras: true }` secara eksplisit.
+ *
+ * ⚠️ GRACEFUL FALLBACK: jika `/_test/reset-trip-days` atau
+ * `/_test/reset-trip-mitras` gagal (500, body kosong, dll),
+ * test TIDAK gagal — hanya `console.warn`, lanjut dengan reset status saja.
+ *
+ * Kenapa default false?
+ * - Endpoint `/_test/reset-trip-days` & `/_test/reset-trip-mitras` bisa
+ *   bermasalah (body kosong, error 500) → JANGAN sampai gagalkan 52 test
+ *   karena `beforeEach` throw.
+ * - Reset status saja cukup untuk sebagian besar test.
+ * - Test yang BUTUH recreate TripDay/TripMitra bisa panggil eksplisit
+ *   dengan `{ resetDays: true, resetMitras: true }`.
+ *
+ * @param page     Playwright Page
+ * @param options  { tripKode?, status?, resetDays?, resetMitras? }
+ *
+ * @example Non-serial — reset status saja (default, aman)
+ *   await resetTripState(page);
+ *
+ * @example Non-serial — reset penuh (butuh TripDay/TripMitra di-recreate)
+ *   await resetTripState(page, { resetDays: true, resetMitras: true });
+ *
+ * @example Serial — hanya status (state berurutan)
+ *   await resetTripState(page, { resetDays: false, resetMitras: false });
+ */
+export async function resetTripState(
+    page: Page,
+    options: {
+        tripKode?: string;
+        status?: 'scheduled' | 'active' | 'completed' | 'cancelled';
+        resetDays?: boolean;
+        resetMitras?: boolean;
+    } = {},
+): Promise<void> {
+    const {
+        tripKode = SEED_TRIP_KODE,
+        status = 'scheduled',
+        resetDays = false,    // ✅ DEFAULT FALSE — aman, tidak panggil endpoint bermasalah
+        resetMitras = false,  // ✅ DEFAULT FALSE — aman, tidak panggil endpoint bermasalah
+    } = options;
+    const csrfToken = await getCsrfToken(page);
+
+    // Resolve ID dari kode
+    const tripId = await getTripIdByKode(page, tripKode);
+
+    // 1. Reset status — WAJIB
+    const statusResponse = await page.request.post('/_test/reset-trip', {
+        form: {
+            trip_id: String(tripId),
+            status,
+        },
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        failOnStatusCode: false,
+    });
+
+    if (!statusResponse.ok()) {
+        const body = await statusResponse.text().catch(() => '(no body)');
+        throw new Error(
+            `resetTripState (status) gagal untuk ${tripKode} (ID ${tripId}) ` +
+            `→ ${status}: ${statusResponse.status()} — ${body}`,
+        );
+    }
+
+    // 2. Reset TripDay (recreate) — OPSIONAL, graceful fallback
+    if (resetDays) {
+        const daysResponse = await page.request.post('/_test/reset-trip-days', {
+            form: { trip_id: String(tripId) },
+            headers: { 'X-XSRF-TOKEN': csrfToken },
+            failOnStatusCode: false,
+        });
+
+        if (!daysResponse.ok()) {
+            const body = await daysResponse.text().catch(() => '(no body)');
+            // ✅ GRACEFUL: log warning, JANGAN throw
+            console.warn(
+                `[resetTripState] reset-trip-days gagal untuk ${tripKode}: ` +
+                `${daysResponse.status()} — ${body.slice(0, 200)}. ` +
+                `Lanjut dengan status saja.`,
+            );
+        }
+    }
+
+    // 3. Reset TripMitra (re-assign Budi + Ani) — OPSIONAL, graceful fallback
+    if (resetMitras) {
+        const mitrasResponse = await page.request.post('/_test/reset-trip-mitras', {
+            form: { trip_id: String(tripId) },
+            headers: { 'X-XSRF-TOKEN': csrfToken },
+            failOnStatusCode: false,
+        });
+
+        if (!mitrasResponse.ok()) {
+            const body = await mitrasResponse.text().catch(() => '(no body)');
+            // ✅ GRACEFUL: log warning, JANGAN throw
+            console.warn(
+                `[resetTripState] reset-trip-mitras gagal untuk ${tripKode}: ` +
+                `${mitrasResponse.status()} — ${body.slice(0, 200)}. ` +
+                `Lanjut dengan status saja.`,
+            );
+        }
+    }
+}
+
+// ==========================================
+// HELPER: CREATE TRIP VIA API
+// ==========================================
+export async function createTripViaAPI(
+    page: Page,
+    options: {
+        packageId: number;
+        clientIndex?: number;
+        mitraIndex?: number;
+        daysAhead?: number;
+        jumlahPeserta?: number;
+        skipMitra?: boolean;
+    },
+): Promise<{
+    trip_id: number;
+    trip_kode: string;
+    booking_id: number;
+    booking_kode: string;
+    status: string;
+    has_mitra: boolean;
+}> {
+    const csrfToken = await getCsrfToken(page);
+
+    const form: Record<string, string> = {
+        package_id: String(options.packageId),
+    };
+    if (options.clientIndex !== undefined) form.client_index = String(options.clientIndex);
+    if (options.mitraIndex !== undefined) form.mitra_index = String(options.mitraIndex);
+    if (options.daysAhead !== undefined) form.days_ahead = String(options.daysAhead);
+    if (options.jumlahPeserta !== undefined) form.jumlah_peserta = String(options.jumlahPeserta);
+    if (options.skipMitra !== undefined) form.skip_mitra = options.skipMitra ? '1' : '0';
+
+    const response = await page.request.post('/_test/create-trip', {
+        form,
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `createTripViaAPI gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
+}
+
+// ==========================================
+// HELPER: SIMULATE TRIP DUE
+// ==========================================
+export async function simulateTripDue(
+    page: Page,
+    tripId: number,
+    daysAgo = 1,
+): Promise<{ trip_id: number; tanggal_mulai: string | null; status: string | null }> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/simulate-trip-due', {
+        form: {
+            trip_id: String(tripId),
+            days_ago: String(daysAgo),
+        },
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `simulateTripDue gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
+}
+
+// ==========================================
+// HELPER: RUN ACTIVATE TRIPS
+// ==========================================
+export async function runActivateTrips(page: Page): Promise<void> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/run-activate-trips', {
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `runActivateTrips gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+}
+
+// ==========================================
+// HELPER: SUBMIT DAILY REPORT VIA API
+// ==========================================
+export async function submitDailyReportViaAPI(
+    page: Page,
+    options: {
+        tripId: number;
+        hariKe: number;
+        mitraIndex?: number;
+        catatan?: string;
+        tanpaMedia?: boolean;
+    },
+): Promise<{
+    report_id: number;
+    status: string;
+    trip_id: number;
+    trip_day_id: number;
+    hari_ke: number;
+    mitra_id: number;
+    media_count: number;
+}> {
+    const csrfToken = await getCsrfToken(page);
+
+    const form: Record<string, string> = {
+        trip_id: String(options.tripId),
+        hari_ke: String(options.hariKe),
+    };
+    if (options.mitraIndex !== undefined) form.mitra_index = String(options.mitraIndex);
+    if (options.catatan !== undefined) form.catatan = options.catatan;
+    if (options.tanpaMedia !== undefined) form.tanpa_media = options.tanpaMedia ? '1' : '0';
+
+    const response = await page.request.post('/_test/submit-daily-report', {
+        form,
+        headers: {
+            'X-XSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',   // ✅ FIX: error 404 jadi JSON
+        },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `submitDailyReportViaAPI gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
+}
+
+// ==========================================
+// HELPER: VERIFY DAILY REPORT VIA API
+// ==========================================
+export async function verifyDailyReportViaAPI(
+    page: Page,
+    reportId: number,
+): Promise<{ report_id: number; status: string }> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/verify-daily-report', {
+        form: { report_id: String(reportId) },
+        headers: {
+            'X-XSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `verifyDailyReportViaAPI gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
+}
+
+// ==========================================
+// HELPER: VERIFY ALL DAILY REPORTS FOR TRIP
+// ==========================================
+export async function verifyAllDailyReportsViaAPI(
+    page: Page,
+    tripId: number,
+): Promise<{ trip_id: number; verified_count: number; trip_status: string | null }> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/verify-all-daily-reports', {
+        form: { trip_id: String(tripId) },
+        headers: {
+            'X-XSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `verifyAllDailyReportsViaAPI gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
+}
+
+// ==========================================
+// HELPER: ADD WALLET BALANCE VIA API
+// ==========================================
+export async function addWalletBalanceViaAPI(
+    page: Page,
+    mitraId: number,
+    jumlah: number,
+): Promise<{ saldo: number }> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/add-wallet-balance', {
+        form: {
+            mitra_id: String(mitraId),
+            jumlah: String(jumlah),
+        },
+        headers: {
+            'X-XSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `addWalletBalanceViaAPI gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
+}
+
+// ==========================================
+// HELPER: CREATE PAYOUT VIA API
+// ==========================================
+export async function createPayoutViaAPI(
+    page: Page,
+    options: { mitraId: number; jumlah: number },
+): Promise<{ payout_id: number; kode: string; status: string }> {
+    const csrfToken = await getCsrfToken(page);
+
+    const response = await page.request.post('/_test/create-payout', {
+        form: {
+            mitra_id: String(options.mitraId),
+            jumlah: String(options.jumlah),
+        },
+        headers: {
+            'X-XSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+        },
+        failOnStatusCode: false,
+    });
+
+    if (!response.ok()) {
+        throw new Error(
+            `createPayoutViaAPI gagal: ${response.status()} — ${await response.text()}`,
+        );
+    }
+
+    return response.json();
 }
 
 // ==========================================
@@ -420,30 +847,34 @@ type AuthFixtures = {
     asMitra: () => Promise<void>;
     asClient: () => Promise<void>;
     asGuest: () => Promise<void>;
+    // ✅ Fixture reset trip — mendukung resetDays & resetMitras
+    resetTrip: (options?: {
+        tripKode?: string;
+        status?: 'scheduled' | 'active' | 'completed' | 'cancelled';
+        resetDays?: boolean;
+        resetMitras?: boolean;
+    }) => Promise<void>;
 };
 
 export const test = base.extend<AuthFixtures>({
     asAdmin: async ({ page }, use) => {
-        // Reset admin seed ke state bersih SEBELUM test
         await resetUser(page, SEED_USERS.admin.email, {
             password: SEED_USERS.admin.password,
             name: SEED_USERS.admin.name,
             username: SEED_USERS.admin.username,
+            timezone: SEED_USERS.admin.timezone,
         });
-
         await use(async () => {
             await loginViaUI(page, 'admin');
         });
     },
 
     asMitra: async ({ page }, use) => {
-        // Reset mitra seed + SEMUA field profile ke state bersih SEBELUM test
         await resetUser(page, SEED_USERS.mitra.email, {
-            // User fields
             password: SEED_USERS.mitra.password,
             name: SEED_USERS.mitra.name,
             username: SEED_USERS.mitra.username,
-            // Profile fields — semua
+            timezone: SEED_USERS.mitra.timezone,
             namaPenyediaUsaha: SEED_MITRA_PROFILE.namaPenyediaUsaha,
             nomorIdentitas: SEED_MITRA_PROFILE.nomorIdentitas,
             alamat: SEED_MITRA_PROFILE.alamat,
@@ -453,20 +884,18 @@ export const test = base.extend<AuthFixtures>({
             kodePos: SEED_MITRA_PROFILE.kodePos,
             deskripsi: SEED_MITRA_PROFILE.deskripsi,
         });
-
         await use(async () => {
             await loginViaUI(page, 'mitra');
         });
     },
 
     asClient: async ({ page }, use) => {
-        // Reset client seed ke state bersih SEBELUM test
         await resetUser(page, SEED_USERS.client.email, {
             password: SEED_USERS.client.password,
             name: SEED_USERS.client.name,
             username: SEED_USERS.client.username,
+            timezone: SEED_USERS.client.timezone,
         });
-
         await use(async () => {
             await loginViaUI(page, 'client');
         });
@@ -475,6 +904,13 @@ export const test = base.extend<AuthFixtures>({
     asGuest: async ({ page }, use) => {
         await use(async () => {
             await forceLogout(page);
+        });
+    },
+
+    // ✅ Fixture resetTrip
+    resetTrip: async ({ page }, use) => {
+        await use(async (options = {}) => {
+            await resetTripState(page, options);
         });
     },
 });

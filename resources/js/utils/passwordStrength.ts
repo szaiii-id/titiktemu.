@@ -25,3 +25,27 @@ export function calculatePasswordStrength(password: string): PasswordStrength {
 export function isPasswordMismatch(password: string, confirmation: string): boolean {
     return confirmation.length > 0 && password !== confirmation;
 }
+
+/**
+ * Cek kriteria password (untuk checklist UI).
+ *
+ * @example
+ *   const c = checkPasswordCriteria('Abc123!@');
+ *   c.minLength  // true
+ *   c.hasLetter  // true
+ *   c.hasNumber  // true
+ *   c.hasSymbol  // true
+ */
+export function checkPasswordCriteria(password: string): {
+    minLength: boolean;
+    hasLetter: boolean;
+    hasNumber: boolean;
+    hasSymbol: boolean;
+} {
+    return {
+        minLength: password.length >= 8,
+        hasLetter: /[a-zA-Z]/.test(password),
+        hasNumber: /\d/.test(password),
+        hasSymbol: /[^a-zA-Z0-9]/.test(password),
+    };
+}

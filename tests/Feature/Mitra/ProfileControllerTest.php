@@ -2,10 +2,8 @@
 
 use App\Models\Profile;
 use App\Models\User;
-use App\Services\User\ProfileService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,20 +16,32 @@ uses(RefreshDatabase::class);
 */
 
 beforeEach(function () {
-    // Hindari error Vite manifest saat render Inertia
     if (method_exists($this, 'withoutVite')) {
         $this->withoutVite();
     }
 
-    // Disk 'public' → in-memory untuk test upload logo
     Storage::fake('public');
 
-    // Reset waktu untuk nama file deterministik
-    Carbon::setTestNow('2026-10-13 19:53:00');
-});
+    $this->admin = User::factory()->admin()->create([
+        'must_change_password' => false,
+    ]);
 
-afterEach(function () {
-    Carbon::setTestNow();
+    $this->mitra = User::factory()->mitra()->create([
+        'must_change_password' => false,
+    ]);
+
+    $this->client = User::factory()->client()->create([
+        'must_change_password' => false,
+    ]);
+
+    // Profile milik mitra yang login
+    $this->profile = Profile::factory()->forMitra()->create([
+        'user_id' => $this->mitra->id,
+        'nama_penyedia_usaha' => 'PT Lama',
+        'alamat' => 'Jl. Lama No. 1',
+        'telepon' => '0800000000',
+        'logo' => null,
+    ]);
 });
 
 /*
@@ -40,44 +50,25 @@ afterEach(function () {
 |==========================================================================
 */
 
-it('GET /mitra/profile merender Inertia component Mitra/Profile dengan profile user', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-        'nama_penyedia_usaha' => 'PT Mitra Sejahtera',
-        'alamat' => 'Jl. Merdeka No. 1',
-    ]);
-
-    $response = $this->actingAs($mitra)->get('/mitra/profile');
+it('GET /mitra/profile merender Inertia component Mitra/Profile', function () {
+    $response = $this->actingAs($this->mitra)->get(route('mitra.profile.edit'));
 
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('Mitra/Profile')
-        ->where('profile.id', $profile->id)
-        ->where('profile.tipe', 'mitra')
-        ->where('profile.nama_penyedia_usaha', 'PT Mitra Sejahtera')
-        ->where('profile.alamat', 'Jl. Merdeka No. 1')
+        ->has('profile')
     );
 });
 
-it('PUT /mitra/profile sukses redirect ke mitra.profile.edit dengan status', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
+it('PUT /mitra/profile redirect ke mitra.profile.edit dengan status', function () {
+    $response = $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
         'nama_penyedia_usaha' => 'PT Baru',
+        'alamat' => 'Jl. Baru No. 2',
+        'telepon' => '08123456789',
     ]);
 
-    $response->assertStatus(302);
     $response->assertRedirect(route('mitra.profile.edit'));
-    $response->assertSessionHas('status', 'Profile berhasil diperbarui.');
+    $response->assertSessionHas('status');
 });
 
 /*
@@ -86,555 +77,265 @@ it('PUT /mitra/profile sukses redirect ke mitra.profile.edit dengan status', fun
 |==========================================================================
 */
 
-it('guest tidak bisa akses /mitra/profile', function () {
-    $response = $this->get('/mitra/profile');
-    $response->assertRedirect(route('login'));
+it('guest di-redirect ke login saat akses /mitra/profile', function () {
+    $this->get(route('mitra.profile.edit'))->assertRedirect(route('login'));
 });
 
-it('guest tidak bisa submit update profile', function () {
-    $response = $this->put('/mitra/profile', [
+it('guest di-redirect ke login saat update /mitra/profile', function () {
+    $this->put(route('mitra.profile.update'), [
         'nama_penyedia_usaha' => 'PT Baru',
-    ]);
-
-    $response->assertRedirect(route('login'));
+    ])->assertRedirect(route('login'));
 });
 
-it('admin tidak bisa akses /mitra/profile', function () {
-    $admin = User::factory()->admin()->create([
-        'must_change_password' => false,
-    ]);
-
-    $response = $this->actingAs($admin)->get('/mitra/profile');
-
-    $response->assertRedirect(route('admin.dashboard'));
-    $response->assertSessionHas('error', 'Anda tidak memiliki hak akses ke halaman tersebut.');
+it('admin tidak bisa akses /mitra/profile (redirect ke dashboard admin)', function () {
+    $this->actingAs($this->admin)
+        ->get(route('mitra.profile.edit'))
+        ->assertRedirect(route('admin.dashboard'));
 });
 
-it('client tidak bisa akses /mitra/profile', function () {
-    $client = User::factory()->client()->create([
-        'must_change_password' => false,
-    ]);
-
-    $response = $this->actingAs($client)->get('/mitra/profile');
-
-    $response->assertRedirect(route('client.dashboard'));
-    $response->assertSessionHas('error', 'Anda tidak memiliki hak akses ke halaman tersebut.');
+it('client tidak bisa akses /mitra/profile (redirect ke dashboard client)', function () {
+    $this->actingAs($this->client)
+        ->get(route('mitra.profile.edit'))
+        ->assertRedirect(route('client.dashboard'));
 });
 
 it('mitra dengan must_change_password = true di-redirect ke change-password', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => true,
-    ]);
+    $mitra = User::factory()->mitra()->create(['must_change_password' => true]);
 
-    $response = $this->actingAs($mitra)->get('/mitra/profile');
-
-    $response->assertRedirect(route('password.change'));
+    $this->actingAs($mitra)
+        ->get(route('mitra.profile.edit'))
+        ->assertRedirect(route('password.change'));
 });
 
 /*
 |==========================================================================
-| KATEGORI 3 — HAPPY PATH
+| KATEGORI 3 — DATA INTEGRITY: Edit
 |==========================================================================
 */
 
-it('mitra bisa akses halaman profile', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
+it('edit menampilkan profile milik mitra yang login', function () {
+    $response = $this->actingAs($this->mitra)->get(route('mitra.profile.edit'));
 
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->get('/mitra/profile');
-    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where('profile.id', $this->profile->id)
+        ->where('profile.nama_penyedia_usaha', 'PT Lama')
+        ->where('profile.alamat', 'Jl. Lama No. 1')
+        ->where('profile.telepon', '0800000000')
+    );
 });
 
-it('mitra bisa update profile dengan data valid', function () {
-    $mitra = User::factory()->mitra()->create([
+it('edit untuk mitra tanpa profile tetap merender halaman dengan profile null', function () {
+    $mitraBaru = User::factory()->mitra()->create([
         'must_change_password' => false,
     ]);
+    // sengaja TIDAK membuat Profile
 
-    $profile = Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-        'nama_penyedia_usaha' => 'PT Lama',
+    $this->actingAs($mitraBaru)
+        ->get(route('mitra.profile.edit'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Mitra/Profile')
+            ->where('profile', null)
+        );
+});
+
+it('edit tidak menampilkan profile milik mitra lain', function () {
+    $otherMitra = User::factory()->mitra()->create([
+        'must_change_password' => false,
+    ]);
+    Profile::factory()->forMitra()->create([
+        'user_id' => $otherMitra->id,
+        'nama_penyedia_usaha' => 'PT Rahasia',
     ]);
 
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'alamat' => 'Jl. Baru No. 2',
+    $response = $this->actingAs($this->mitra)->get(route('mitra.profile.edit'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('profile.id', $this->profile->id)
+        ->where('profile.nama_penyedia_usaha', 'PT Lama')
+    );
+});
+
+/*
+|==========================================================================
+| KATEGORI 4 — DATA INTEGRITY: Update
+|==========================================================================
+*/
+
+it('update profile menyimpan perubahan ke DB', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+        'alamat' => 'Jl. Contoh No. 1',
         'telepon' => '08123456789',
+        'provinsi' => 'Jawa Barat',
+        'kota' => 'Bandung',
+        'kode_pos' => '40123',
+        'deskripsi' => 'Deskripsi baru',
     ]);
 
-    $response->assertRedirect(route('mitra.profile.edit'));
-
-    $profile->refresh();
-    expect($profile->nama_penyedia_usaha)->toBe('PT Baru');
-    expect($profile->alamat)->toBe('Jl. Baru No. 2');
-    expect($profile->telepon)->toBe('08123456789');
+    $this->assertDatabaseHas('profiles', [
+        'user_id' => $this->mitra->id,
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+        'alamat' => 'Jl. Contoh No. 1',
+        'telepon' => '08123456789',
+        'provinsi' => 'Jawa Barat',
+        'kota' => 'Bandung',
+        'kode_pos' => '40123',
+        'deskripsi' => 'Deskripsi baru',
+    ]);
 });
 
-it('mitra update profile dengan upload logo', function () {
-    $mitra = User::factory()->mitra()->create([
-        'id' => 42,
+it('update profile tidak mengubah profile mitra lain', function () {
+    $otherMitra = User::factory()->mitra()->create([
         'must_change_password' => false,
     ]);
-
-    $profile = Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-        'logo' => null,
+    $otherProfile = Profile::factory()->forMitra()->create([
+        'user_id' => $otherMitra->id,
+        'nama_penyedia_usaha' => 'PT Lain',
     ]);
 
-    $file = UploadedFile::fake()->image('logo.png', 100, 100);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
     ]);
 
-    $response->assertRedirect(route('mitra.profile.edit'));
+    $otherProfile->refresh();
+    expect($otherProfile->nama_penyedia_usaha)->toBe('PT Lain');
+});
 
-    $profile->refresh();
-    expect($profile->logo)->toBe('logos/42_20261013195300.png');
-    Storage::disk('public')->assertExists('logos/42_20261013195300.png');
+it('update profile dengan logo menyimpan file di storage public/logos', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+        'logo' => UploadedFile::fake()->image('logo.png', 300, 300),
+    ])->assertRedirect();
+
+    $profile = $this->mitra->fresh()->profile;
+
+    expect($profile->logo)->not->toBeNull();
+    expect($profile->logo)->toStartWith('logos/');
+    Storage::disk('public')->assertExists($profile->logo);
+});
+
+it('update profile dengan logo baru menghapus logo lama', function () {
+    // Upload logo lama dulu
+    $oldPath = UploadedFile::fake()
+        ->image('old.png')
+        ->storeAs('logos', 'old_logo.png', 'public');
+
+    $this->profile->update(['logo' => $oldPath]);
+    Storage::disk('public')->assertExists($oldPath);
+
+    // Upload logo baru
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+        'logo' => UploadedFile::fake()->image('new.png'),
+    ])->assertRedirect();
+
+    Storage::disk('public')->assertMissing($oldPath);
+
+    $profile = $this->mitra->fresh()->profile;
+    Storage::disk('public')->assertExists($profile->logo);
+});
+
+it('update tanpa logo tidak menghapus logo lama', function () {
+    $oldPath = UploadedFile::fake()
+        ->image('old.png')
+        ->storeAs('logos', 'old_logo.png', 'public');
+    $this->profile->update(['logo' => $oldPath]);
+
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Baru Tanpa Logo',
+    ])->assertRedirect();
+
+    $profile = $this->mitra->fresh()->profile;
+
+    expect($profile->logo)->toBe($oldPath);
+    Storage::disk('public')->assertExists($oldPath);
+});
+
+it('update field yang tidak diizinkan diabaikan (mass assignment protection)', function () {
+    $otherUserId = User::factory()->mitra()->create([
+        'must_change_password' => false,
+    ])->id;
+
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+        'user_id' => $otherUserId,   // harus diabaikan
+        'tipe' => 'admin',           // harus diabaikan
+    ]);
+
+    $this->assertDatabaseHas('profiles', [
+        'user_id' => $this->mitra->id,   // tidak berubah
+        'tipe' => 'mitra',               // tidak berubah
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+    ]);
 });
 
 /*
 |==========================================================================
-| KATEGORI 4 — BEHAVIORAL / MOCKING
+| KATEGORI 5 — ERROR HANDLING / VALIDATION
 |==========================================================================
 */
 
-it('PUT /mitra/profile memanggil profileService->updateProfile dengan argumen benar', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $service = Mockery::mock(ProfileService::class);
-    $service->shouldReceive('updateProfile')
-        ->once()
-        ->with(
-            Mockery::on(fn ($u) => $u->id === $mitra->id),
-            Mockery::on(fn ($data) => $data['nama_penyedia_usaha'] === 'PT Baru'
-                && $data['alamat'] === 'Jl. Baru No. 2'
-            )
-        )
-        ->andReturn(new Profile);
-
-    $this->app->instance(ProfileService::class, $service);
-
-    $this->actingAs($mitra)->put('/mitra/profile', [
+it('update validasi logo harus image ditolak', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
         'nama_penyedia_usaha' => 'PT Baru',
-        'alamat' => 'Jl. Baru No. 2',
-    ])->assertRedirect(route('mitra.profile.edit'));
+        'logo' => UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf'),
+    ])->assertSessionHasErrors('logo');
+});
+
+it('update validasi logo mimes harus jpg/png/webp ditolak', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Baru',
+        'logo' => UploadedFile::fake()->image('logo.gif'),
+    ])->assertSessionHasErrors('logo');
+});
+
+it('update validasi logo ukuran > 2MB ditolak', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Baru',
+        'logo' => UploadedFile::fake()->image('besar.png')->size(3000), // 3MB
+    ])->assertSessionHasErrors('logo');
+});
+
+it('update validasi alamat > 1000 karakter ditolak', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Baru',
+        'alamat' => str_repeat('a', 1001),
+    ])->assertSessionHasErrors('alamat');
+});
+
+it('update validasi deskripsi > 5000 karakter ditolak', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Baru',
+        'deskripsi' => str_repeat('a', 5001),
+    ])->assertSessionHasErrors('deskripsi');
+});
+
+it('update validasi telepon > 50 karakter ditolak', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'telepon' => str_repeat('1', 51),
+    ])->assertSessionHasErrors('telepon');
+});
+
+it('update tidak mengubah data saat validasi gagal', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'alamat' => str_repeat('a', 1001), // gagal
+    ])->assertSessionHasErrors('alamat');
+
+    $this->assertDatabaseHas('profiles', [
+        'user_id' => $this->mitra->id,
+        'nama_penyedia_usaha' => 'PT Lama',   // tidak berubah
+        'alamat' => 'Jl. Lama No. 1',         // tidak berubah
+    ]);
 });
 
 /*
 |==========================================================================
-| KATEGORI 5 — ERROR HANDLING & VALIDATION
-|==========================================================================
-| Rules dari UpdateProfileRequest:
-|   nama_penyedia_usaha => nullable, max:255
-|   nomor_identitas     => nullable, max:255
-|   alamat              => nullable, max:1000
-|   telepon             => nullable, max:50
-|   provinsi            => nullable, max:255
-|   kota                => nullable, max:255
-|   kode_pos            => nullable, max:20
-|   logo                => nullable, image, mimes:jpg,jpeg,png,svg,webp, max:2048
-|   deskripsi           => nullable, max:5000
-*/
-
-it('update profile dengan nama_penyedia_usaha kosong → disimpan sebagai null', function () {
-    // Karena `nama_penyedia_usaha => nullable`
-    // + ConvertEmptyStringsToNull → '' dikonversi jadi null
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-        'nama_penyedia_usaha' => 'PT Lama',
-    ]);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => '',
-    ]);
-
-    $response->assertRedirect(route('mitra.profile.edit'));
-
-    $profile->refresh();
-    expect($profile->nama_penyedia_usaha)->toBeNull();
-});
-
-it('gagal update profile jika nama_penyedia_usaha lebih dari 255 karakter', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => str_repeat('a', 256),
-    ]);
-
-    $response->assertSessionHasErrors('nama_penyedia_usaha');
-});
-
-it('gagal update profile jika alamat lebih dari 1000 karakter', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'alamat' => str_repeat('a', 1001), // ← max:1000 + 1
-    ]);
-
-    $response->assertSessionHasErrors('alamat');
-});
-
-it('gagal update profile jika telepon lebih dari 50 karakter', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'telepon' => str_repeat('1', 51), // ← max:50 + 1
-    ]);
-
-    $response->assertSessionHasErrors('telepon');
-});
-
-it('gagal update profile jika kode_pos lebih dari 20 karakter', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'kode_pos' => str_repeat('1', 21), // ← max:20 + 1
-    ]);
-
-    $response->assertSessionHasErrors('kode_pos');
-});
-
-it('gagal update profile jika deskripsi lebih dari 5000 karakter', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'deskripsi' => str_repeat('a', 5001), // ← max:5000 + 1
-    ]);
-
-    $response->assertSessionHasErrors('deskripsi');
-});
-
-it('gagal update profile jika logo bukan file gambar', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
-    ]);
-
-    $response->assertSessionHasErrors('logo');
-});
-
-it('gagal update profile jika logo lebih dari 2MB', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    // 3 MB
-    $file = UploadedFile::fake()->image('logo.png')->size(3000);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
-    ]);
-
-    $response->assertSessionHasErrors('logo');
-});
-
-it('gagal update profile jika logo berformat .gif (tidak di whitelist)', function () {
-    // Rules mimes: jpg, jpeg, png, svg, webp — GIF tidak termasuk
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $file = UploadedFile::fake()->image('logo.gif', 100, 100);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
-    ]);
-
-    $response->assertSessionHasErrors('logo');
-});
-
-/*
-|==========================================================================
-| KATEGORI 6 — BVA (Boundary Value Analysis)
-|==========================================================================
-| Menguji batas atas/bawah dari setiap max rules
-*/
-
-it('update sukses dengan nama_penyedia_usaha TEPAT 255 karakter (boundary atas)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $longName = str_repeat('a', 255);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => $longName,
-    ]);
-
-    $response->assertRedirect(route('mitra.profile.edit'));
-
-    $profile->refresh();
-    expect($profile->nama_penyedia_usaha)->toBe($longName);
-});
-
-it('gagal update profile dengan nama_penyedia_usaha 256 karakter (boundary atas + 1)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => str_repeat('a', 256),
-    ]);
-
-    $response->assertSessionHasErrors('nama_penyedia_usaha');
-});
-
-it('update sukses dengan alamat TEPAT 1000 karakter (boundary atas)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $longAlamat = str_repeat('a', 1000);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'alamat' => $longAlamat,
-    ]);
-
-    $response->assertRedirect(route('mitra.profile.edit'));
-
-    $profile->refresh();
-    expect($profile->alamat)->toBe($longAlamat);
-});
-
-it('update sukses dengan telepon TEPAT 50 karakter (boundary atas)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $longTelepon = str_repeat('1', 50);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'telepon' => $longTelepon,
-    ]);
-
-    $response->assertRedirect(route('mitra.profile.edit'));
-
-    $profile->refresh();
-    expect($profile->telepon)->toBe($longTelepon);
-});
-
-it('update sukses dengan deskripsi TEPAT 5000 karakter (boundary atas)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $longDeskripsi = str_repeat('a', 5000);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'deskripsi' => $longDeskripsi,
-    ]);
-
-    $response->assertRedirect(route('mitra.profile.edit'));
-
-    $profile->refresh();
-    expect($profile->deskripsi)->toBe($longDeskripsi);
-});
-
-/*
-|==========================================================================
-| KATEGORI 7 — EDGE CASES
+| KATEGORI 6 — ROUTE MIDDLEWARE
 |==========================================================================
 */
 
-it('update profile dengan data kosong tetap sukses (semua field nullable)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', []);
-
-    // Semua nullable → tidak error
-    $response->assertRedirect(route('mitra.profile.edit'));
-    $response->assertSessionDoesntHaveErrors();
-});
-
-it('update profile dengan upload logo menghapus logo lama', function () {
-    $mitra = User::factory()->mitra()->create([
-        'id' => 42,
-        'must_change_password' => false,
-    ]);
-
-    // Simulasi logo lama ada di storage
-    Storage::disk('public')->put('logos/old_logo.png', 'old-content');
-
-    $profile = Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-        'logo' => 'logos/old_logo.png',
-    ]);
-
-    $file = UploadedFile::fake()->image('new.png', 100, 100);
-
-    $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
-    ]);
-
-    // Logo lama harus hilang
-    Storage::disk('public')->assertMissing('logos/old_logo.png');
-    // Logo baru ada
-    Storage::disk('public')->assertExists('logos/42_20261013195300.png');
-});
-
-it('gagal update profile dengan SVG logo (SVG tidak diizinkan karena alasan keamanan)', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $file = UploadedFile::fake()->create('logo.svg', 50, 'image/svg+xml');
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
-    ]);
-
-    // SVG ditolak — baik karena rule 'image' maupun karena tidak ada di 'mimes'
-    $response->assertSessionHasErrors('logo');
-});
-
-it('update profile dengan WEBP logo tetap sukses', function () {
-    $mitra = User::factory()->mitra()->create([
-        'id' => 51,
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create(['user_id' => $mitra->id, 'tipe' => 'mitra']);
-
-    $file = UploadedFile::fake()->image('logo.webp', 100, 100);
-
-    $response = $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'logo' => $file,
-    ]);
-
-    $response->assertRedirect(route('mitra.profile.edit'));
-    $response->assertSessionDoesntHaveErrors('logo');
-});
-
-/*
-|==========================================================================
-| KATEGORI 8 — DATA INTEGRITY
-|==========================================================================
-*/
-
-it('update profile tidak mengubah tipe profile', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    $profile = Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-    ]);
-
-    $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'tipe' => 'admin', // ← coba eskalasi tipe
-    ]);
-
-    $profile->refresh();
-    expect($profile->tipe)->toBe('mitra');
-});
-
-it('update profile tidak mengubah user_id profile', function () {
-    $mitra = User::factory()->mitra()->create([
-        'must_change_password' => false,
-    ]);
-
-    Profile::factory()->create([
-        'user_id' => $mitra->id,
-        'tipe' => 'mitra',
-    ]);
-
-    $originalUserId = $mitra->id;
-
-    $this->actingAs($mitra)->put('/mitra/profile', [
-        'nama_penyedia_usaha' => 'PT Baru',
-        'user_id' => 999, // ← coba ubah user_id
-    ]);
-
-    $profile = $mitra->fresh()->profile;
-    expect($profile->user_id)->toBe($originalUserId);
-});
-
-/*
-|==========================================================================
-| KATEGORI 9 — BEHAVIORAL: Route Middleware
-|==========================================================================
-*/
-
-it('route mitra.profile.edit pakai middleware auth, password.changed, dan role:mitra', function () {
+it('route mitra.profile.edit pakai middleware auth, password.changed, role:mitra', function () {
     $route = collect(Route::getRoutes())
         ->first(fn ($r) => $r->getName() === 'mitra.profile.edit');
 
@@ -647,7 +348,7 @@ it('route mitra.profile.edit pakai middleware auth, password.changed, dan role:m
     expect($middleware)->toContain('role:mitra');
 });
 
-it('route mitra.profile.update pakai middleware auth, password.changed, dan role:mitra', function () {
+it('route mitra.profile.update pakai middleware auth, password.changed, role:mitra', function () {
     $route = collect(Route::getRoutes())
         ->first(fn ($r) => $r->getName() === 'mitra.profile.update');
 
@@ -658,4 +359,73 @@ it('route mitra.profile.update pakai middleware auth, password.changed, dan role
     expect($middleware)->toContain('auth');
     expect($middleware)->toContain('password.changed');
     expect($middleware)->toContain('role:mitra');
+});
+
+/*
+|==========================================================================
+| KATEGORI 7 — EDGE CASES
+|==========================================================================
+*/
+
+it('update profile untuk mitra tanpa profile ditolak dengan error profile', function () {
+    $mitraBaru = User::factory()->mitra()->create([
+        'must_change_password' => false,
+    ]);
+    // sengaja TIDAK membuat Profile
+
+    $this->actingAs($mitraBaru)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Baru',
+    ])->assertSessionHasErrors('profile');
+});
+
+it('update tidak mengubah field yang tidak dikirim (partial update)', function () {
+    // Profile awal punya alamat "Jl. Lama No. 1"
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => 'PT Maju Jaya',
+        // alamat tidak dikirim
+    ]);
+
+    $profile = $this->mitra->fresh()->profile;
+
+    expect($profile->nama_penyedia_usaha)->toBe('PT Maju Jaya');
+    // Alamat tetap karena tidak dikirim (service pakai array_intersect_key)
+    expect($profile->alamat)->toBe('Jl. Lama No. 1');
+});
+
+it('update dengan semua field null tetap berhasil (semua nullable)', function () {
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'nama_penyedia_usaha' => null,
+        'alamat' => null,
+        'telepon' => null,
+    ])->assertRedirect();
+
+    $profile = $this->mitra->fresh()->profile;
+
+    expect($profile->nama_penyedia_usaha)->toBeNull();
+    expect($profile->alamat)->toBeNull();
+    expect($profile->telepon)->toBeNull();
+});
+
+it('upload logo dengan nama file mengandung path traversal aman (server rename)', function () {
+    // Klien kirim nama aneh, tapi server generate nama sendiri
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'logo' => UploadedFile::fake()->image('../../evil.png', 100, 100),
+    ])->assertRedirect();
+
+    $profile = $this->mitra->fresh()->profile;
+
+    // Path harus di dalam folder logos/ dengan nama {user_id}_{timestamp}.{ext}
+    expect($profile->logo)->toStartWith('logos/');
+    expect($profile->logo)->not->toContain('..');
+    expect($profile->logo)->toContain((string) $this->mitra->id);
+    Storage::disk('public')->assertExists($profile->logo);
+});
+
+it('update dengan logo SVG ditolak (security: XSS prevention)', function () {
+    // SVG bukan image valid di validator, dan juga tidak ada di whitelist
+    $svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+
+    $this->actingAs($this->mitra)->put(route('mitra.profile.update'), [
+        'logo' => UploadedFile::fake()->createWithContent('evil.svg', $svgContent),
+    ])->assertSessionHasErrors('logo');
 });

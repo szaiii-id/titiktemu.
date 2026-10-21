@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 
 /**
- * Accessibility (a11y) Test
+ * Accessibility (a11y) Test — Comprehensive
  *
  * Memindai halaman-halaman utama dengan axe-core untuk mendeteksi
  * pelanggaran WCAG (Web Content Accessibility Guidelines).
@@ -12,12 +12,14 @@ import type { Page } from '@playwright/test';
  * - Helper `scanPage()` untuk DRY: 1 fungsi, semua halaman.
  * - `PUBLIC_PAGES` — halaman tanpa login.
  * - `CLIENT_PAGES`, `MITRA_PAGES`, `ADMIN_PAGES` — halaman authenticated.
+ * - `NOTIFICATIONS_PAGES` — halaman shared `/notifications` (sidebar beda per role).
  * - Setiap halaman: assert TIDAK ADA pelanggaran `critical` atau `serious`.
  * - `moderate`/`minor` di-log tapi tidak gagalkan test.
  *
- * Referensi:
- * - https://www.deque.com/axe/core-documentation/api-documentation/
- * - https://www.w3.org/WAI/WCAG21/quickref/
+ * ⚠️ FIX #1: scanPage — tunggu halaman stabil (networkidle + domcontentloaded +
+ *           timeout) SEBELUM analyze, anti "Execution context was destroyed".
+ * ⚠️ FIX #2: scanPage — retry analyze() jika kena Execution context destroyed
+ *           (race Inertia re-render / hydration).
  */
 
 // ==========================================
@@ -25,11 +27,9 @@ import type { Page } from '@playwright/test';
 // ==========================================
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] as const;
 
-// Rules yang di-disable karena Svelte + Tailwind sering tidak comply
-// dan bukan prioritas (bisa diaktifkan nanti setelah refactor besar).
 const DISABLED_RULES = [
-    'region',              // Halaman SPA sering tidak punya <main> explicit
-    'landmark-one-main',   // Sama
+    'region',
+    'landmark-one-main',
 ] as const;
 
 const CRITICAL_IMPACTS = ['critical', 'serious'] as const;
@@ -40,17 +40,12 @@ const CRITICAL_IMPACTS = ['critical', 'serious'] as const;
 type PageDefinition = {
     path: string;
     name: string;
-    /**
-     * Kalau true, halaman skip scan (mis. butuh data dinamis).
-     * Pakai untuk sementara sampai test-nya siap.
-     */
     skip?: boolean;
-    /** Rule axe yang di-disable khusus halaman ini. */
     disableRules?: string[];
 };
 
 // ==========================================
-// DAFTAR HALAMAN
+// DAFTAR HALAMAN — PUBLIC
 // ==========================================
 const PUBLIC_PAGES: PageDefinition[] = [
     { path: '/', name: 'Landing Page' },
@@ -59,36 +54,80 @@ const PUBLIC_PAGES: PageDefinition[] = [
     { path: '/forgot-password', name: 'Lupa Password' },
 ];
 
+// ==========================================
+// DAFTAR HALAMAN — CLIENT
+// ==========================================
 const CLIENT_PAGES: PageDefinition[] = [
     { path: '/client/dashboard', name: 'Client Dashboard' },
     { path: '/client/profile', name: 'Client Profile' },
     { path: '/change-password', name: 'Change Password (Client)' },
+    { path: '/client/catalog', name: 'Client Catalog' },
+    { path: '/client/bookings', name: 'Client Bookings Index' },
 ];
 
+// ==========================================
+// DAFTAR HALAMAN — MITRA
+// ==========================================
 const MITRA_PAGES: PageDefinition[] = [
     { path: '/mitra/dashboard', name: 'Mitra Dashboard' },
     { path: '/mitra/profile', name: 'Mitra Profile' },
     { path: '/mitra/password', name: 'Mitra Ganti Password' },
     { path: '/change-password', name: 'Change Password (Mitra)' },
+    { path: '/mitra/trips', name: 'Mitra Trips Index' },
+    { path: '/mitra/daily-reports', name: 'Mitra Daily Reports Index' },
+    { path: '/mitra/wallet', name: 'Mitra Wallet' },
+    { path: '/mitra/payouts', name: 'Mitra Payouts Index' },
+    { path: '/mitra/payouts/create', name: 'Mitra Payouts Create' },
 ];
 
+// ==========================================
+// DAFTAR HALAMAN — ADMIN
+// ==========================================
 const ADMIN_PAGES: PageDefinition[] = [
     { path: '/admin/dashboard', name: 'Admin Dashboard' },
     { path: '/admin/users', name: 'Admin Users Index' },
     { path: '/admin/users/create', name: 'Admin Users Create' },
     { path: '/admin/clients', name: 'Admin Clients' },
+    { path: '/admin/packages', name: 'Admin Packages Index' },
+    { path: '/admin/packages/create', name: 'Admin Packages Create' },
+    { path: '/admin/bookings', name: 'Admin Bookings Index' },
+    { path: '/admin/trips', name: 'Admin Trips Index' },
+    { path: '/admin/daily-reports', name: 'Admin Daily Reports Index' },
+    { path: '/admin/payouts', name: 'Admin Payouts Index' },
     { path: '/change-password', name: 'Change Password (Admin)' },
+];
+
+// ==========================================
+// DAFTAR HALAMAN — NOTIFICATIONS (SHARED)
+// ==========================================
+const NOTIFICATIONS_PAGES: Array<{
+    role: 'client' | 'mitra' | 'admin';
+    name: string;
+}> = [
+    { role: 'client', name: 'Notifications (Client)' },
+    { role: 'mitra', name: 'Notifications (Mitra)' },
+    { role: 'admin', name: 'Notifications (Admin)' },
 ];
 
 // ==========================================
 // HELPER: SCAN PAGE
 // ==========================================
+
 /**
- * Scan satu halaman dengan axe-core.
+ * ✅ FIX #1 + #2: scanPage — anti "Execution context was destroyed".
  *
- * @param page       Playwright Page
- * @param def        Definisi halaman (path, name, disableRules)
- * @param login      Fungsi async untuk login (opsional, untuk halaman auth)
+ * Kenapa perlu:
+ * - `waitForLoadState('networkidle')` kadang TIDAK CUKUP karena Inertia
+ *   bisa trigger navigasi setelah networkidle (lazy load component,
+ *   hydration re-render, toast animation, dll).
+ * - Saat `analyze()` jalan, frame bisa di-destroy karena ada navigasi
+ *   yang belum selesai → error "Execution context was destroyed".
+ *
+ * Solusi:
+ * 1. Tunggu `domcontentloaded` + `networkidle` + timeout kecil
+ *    (biarkan hydration & animation settle).
+ * 2. Retry `analyze()` jika kena error "Execution context was destroyed"
+ *    (maksimal 3x dengan delay).
  */
 async function scanPage(
     page: Page,
@@ -97,13 +136,15 @@ async function scanPage(
 ): Promise<void> {
     if (login) await login();
 
-    await page.goto(def.path);
-    await page.waitForLoadState('networkidle');
+    // ✅ FIX #1: 3 lapis tunggu sebelum analyze
+    await page.goto(def.path, { waitUntil: 'domcontentloaded' });
+    await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+    // ✅ Beri waktu hydration + animasi settle (Inertia re-render)
+    await page.waitForTimeout(300);
 
     // Build axe scanner
     let builder = new AxeBuilder({ page }).withTags([...WCAG_TAGS]);
 
-    // Gabung disabled rules: default + per-halaman
     const disabledRules = [
         ...DISABLED_RULES,
         ...(def.disableRules ?? []),
@@ -113,11 +154,43 @@ async function scanPage(
         builder = builder.disableRules(disabledRules);
     }
 
-    const results = await builder.analyze();
+    // ✅ FIX #2: retry analyze() — anti race "Execution context was destroyed"
+    let results;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            results = await builder.analyze();
+            lastError = null;
+            break;
+        } catch (err) {
+            lastError = err as Error;
+
+            // Hanya retry untuk error navigasi / context destroyed
+            const isNavigationRace =
+                lastError.message.includes('Execution context was destroyed') ||
+                lastError.message.includes('Target closed') ||
+                lastError.message.includes('navigation');
+
+            if (!isNavigationRace || attempt === 3) {
+                throw lastError;
+            }
+
+            // Tunggu sebentar lalu retry — halaman mungkin re-render
+            await page.waitForTimeout(500 * attempt);
+            await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
+        }
+    }
+
+    if (!results) {
+        throw lastError ?? new Error('analyze() gagal tanpa hasil');
+    }
 
     // Log semua violations supaya mudah debug
     if (results.violations.length > 0) {
-        console.log(`\n[${def.name}] ${results.violations.length} pelanggaran WCAG:`);
+        console.log(
+            `\n[${def.name}] ${results.violations.length} pelanggaran WCAG:`,
+        );
         for (const violation of results.violations) {
             console.log(`  - ${violation.id}: ${violation.help}`);
             console.log(`    Dampak: ${violation.impact}`);
@@ -128,7 +201,6 @@ async function scanPage(
         }
     }
 
-    // Hanya gagalkan untuk `critical` atau `serious`
     const critical = results.violations.filter((v) =>
         (CRITICAL_IMPACTS as readonly string[]).includes(v.impact ?? ''),
     );
@@ -140,7 +212,7 @@ async function scanPage(
 }
 
 // ==========================================
-// TEST SUITE
+// TEST SUITE — PUBLIC
 // ==========================================
 test.describe('Accessibility — Halaman Publik', () => {
     for (const def of PUBLIC_PAGES) {
@@ -152,6 +224,9 @@ test.describe('Accessibility — Halaman Publik', () => {
     }
 });
 
+// ==========================================
+// TEST SUITE — CLIENT
+// ==========================================
 test.describe('Accessibility — Halaman Client', () => {
     for (const def of CLIENT_PAGES) {
         test(`${def.name} tidak memiliki pelanggaran WCAG kritis`, async ({
@@ -163,6 +238,9 @@ test.describe('Accessibility — Halaman Client', () => {
     }
 });
 
+// ==========================================
+// TEST SUITE — MITRA
+// ==========================================
 test.describe('Accessibility — Halaman Mitra', () => {
     for (const def of MITRA_PAGES) {
         test(`${def.name} tidak memiliki pelanggaran WCAG kritis`, async ({
@@ -174,6 +252,9 @@ test.describe('Accessibility — Halaman Mitra', () => {
     }
 });
 
+// ==========================================
+// TEST SUITE — ADMIN
+// ==========================================
 test.describe('Accessibility — Halaman Admin', () => {
     for (const def of ADMIN_PAGES) {
         test(`${def.name} tidak memiliki pelanggaran WCAG kritis`, async ({
@@ -186,12 +267,41 @@ test.describe('Accessibility — Halaman Admin', () => {
 });
 
 // ==========================================
+// TEST SUITE — NOTIFICATIONS (SHARED, PER ROLE)
+// ==========================================
+test.describe('Accessibility — Halaman Notifikasi', () => {
+    for (const { role, name } of NOTIFICATIONS_PAGES) {
+        test(`${name} tidak memiliki pelanggaran WCAG kritis`, async ({
+            page,
+            asClient,
+            asMitra,
+            asAdmin,
+        }) => {
+            const login =
+                role === 'client'
+                    ? asClient
+                    : role === 'mitra'
+                      ? asMitra
+                      : asAdmin;
+
+            await scanPage(
+                page,
+                { path: '/notifications', name },
+                login,
+            );
+        });
+    }
+});
+
+// ==========================================
 // SPECIFIC CHECKS — Halaman Login
 // ==========================================
 
 test.describe('Accessibility — Login: Detail', () => {
     test('semua input punya label yang terasosiasi', async ({ page }) => {
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+        await page.waitForTimeout(300);
 
         const results = await new AxeBuilder({ page })
             .withTags(['wcag2a', 'wcag2aa'])
@@ -207,7 +317,9 @@ test.describe('Accessibility — Login: Detail', () => {
     });
 
     test('struktur heading berurutan (tidak skip level)', async ({ page }) => {
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+        await page.waitForTimeout(300);
 
         const results = await new AxeBuilder({ page })
             .withTags(['best-practice'])
@@ -222,7 +334,9 @@ test.describe('Accessibility — Login: Detail', () => {
     });
 
     test('kontras warna memadai (max 3 pelanggaran)', async ({ page }) => {
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+        await page.waitForTimeout(300);
 
         const results = await new AxeBuilder({ page })
             .withTags(['wcag2aa'])
@@ -234,7 +348,9 @@ test.describe('Accessibility — Login: Detail', () => {
         );
 
         if (contrastViolations.length > 0) {
-            console.warn(`\n[Login] ${contrastViolations.length} pelanggaran kontras warna:`);
+            console.warn(
+                `\n[Login] ${contrastViolations.length} pelanggaran kontras warna:`,
+            );
             for (const violation of contrastViolations) {
                 for (const node of violation.nodes) {
                     console.warn(`  - ${node.html.slice(0, 100)}`);
@@ -243,12 +359,11 @@ test.describe('Accessibility — Login: Detail', () => {
             }
         }
 
-        // Threshold 3 — desain ada yang intentionally kontras rendah
         expect(contrastViolations.length).toBeLessThanOrEqual(3);
     });
 
     test('memiliki bahasa dokumen yang valid', async ({ page }) => {
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
 
         const lang = await page.evaluate(() => document.documentElement.lang);
 
@@ -265,7 +380,8 @@ test.describe('Accessibility — Navigasi Keyboard', () => {
     test('semua elemen form di halaman login bisa diakses dengan Tab', async ({
         page,
     }) => {
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 
         await page.keyboard.press('Tab');
 
@@ -285,7 +401,8 @@ test.describe('Accessibility — Navigasi Keyboard', () => {
     });
 
     test('tombol submit bisa di-submit dengan Enter', async ({ page }) => {
-        await page.goto('/login');
+        await page.goto('/login', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
 
         await page.fill('input#identitas', 'test@titiktemu.test');
         await page.fill('input#password', 'password123');
@@ -305,16 +422,16 @@ test.describe('Accessibility — Modal', () => {
         asAdmin,
     }) => {
         await asAdmin();
-        await page.goto('/admin/users');
+        await page.goto('/admin/users', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+        await page.waitForTimeout(300);
 
-        // Buka modal hapus (row Budi Santoso = mitra, tombol Hapus muncul)
         const mitraRow = page
             .locator('tbody tr')
             .filter({ hasText: SEED_USERS.mitra.email });
 
         await mitraRow.getByLabel('Hapus user').click();
 
-        // Modal muncul
         const modal = page.locator('[role="dialog"]');
         await expect(modal).toBeVisible();
         await expect(modal).toHaveAttribute('aria-modal', 'true');
@@ -325,7 +442,9 @@ test.describe('Accessibility — Modal', () => {
         asAdmin,
     }) => {
         await asAdmin();
-        await page.goto('/admin/users');
+        await page.goto('/admin/users', { waitUntil: 'domcontentloaded' });
+        await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+        await page.waitForTimeout(300);
 
         const mitraRow = page
             .locator('tbody tr')
@@ -334,10 +453,25 @@ test.describe('Accessibility — Modal', () => {
         await mitraRow.getByLabel('Hapus user').click();
         await expect(page.locator('[role="dialog"]')).toBeVisible();
 
-        const results = await new AxeBuilder({ page })
-            .include('[role="dialog"]')
-            .withTags([...WCAG_TAGS])
-            .analyze();
+        // ✅ FIX #2: retry analyze untuk modal (anti race)
+        let results;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                results = await new AxeBuilder({ page })
+                    .include('[role="dialog"]')
+                    .withTags([...WCAG_TAGS])
+                    .analyze();
+                break;
+            } catch (err) {
+                const isRace = (err as Error).message.includes('Execution context was destroyed');
+                if (!isRace || attempt === 3) throw err;
+                await page.waitForTimeout(500 * attempt);
+            }
+        }
+
+        if (!results) {
+            throw new Error('analyze() gagal untuk modal');
+        }
 
         const critical = results.violations.filter((v) =>
             (CRITICAL_IMPACTS as readonly string[]).includes(v.impact ?? ''),

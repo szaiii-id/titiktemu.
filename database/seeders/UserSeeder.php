@@ -16,6 +16,16 @@ class UserSeeder extends Seeder
         $defaultPassword = 'password123';
 
         // ==========================================
+        // TIMEZONE PER SEED USER
+        // ==========================================
+        // Timezone disesuaikan dengan lokasi operasional:
+        // - Admin  : pusat operasi (default)
+        // - Mitra  : lokasi usaha masing-masing
+        // - Client : netral (default)
+        $tzDefault = User::DEFAULT_TIMEZONE;      // Asia/Makassar
+        $tzJakarta = 'Asia/Jakarta';
+
+        // ==========================================
         // 1. ADMIN UTAMA
         // ==========================================
         $admin = User::updateOrCreate(
@@ -25,6 +35,7 @@ class UserSeeder extends Seeder
                 'username' => 'admin',
                 'password' => $defaultPassword,
                 'role' => 'admin',
+                'timezone' => $tzDefault,
                 'must_change_password' => false, // seeder: tidak wajib ganti
             ]
         );
@@ -39,7 +50,7 @@ class UserSeeder extends Seeder
         );
 
         // ==========================================
-        // 2. MITRA PERUSAHAAN
+        // 2. MITRA PERUSAHAAN (Banjarmasin → WITA)
         // ==========================================
         $mitraPerusahaan = User::updateOrCreate(
             ['email' => 'budi@ptabc.com'],
@@ -48,6 +59,7 @@ class UserSeeder extends Seeder
                 'username' => 'ptabc',
                 'password' => $defaultPassword,
                 'role' => 'mitra',
+                'timezone' => $tzDefault, // WITA — Banjarmasin
                 'must_change_password' => false,
             ]
         );
@@ -69,7 +81,7 @@ class UserSeeder extends Seeder
         );
 
         // ==========================================
-        // 3. MITRA PERORANGAN
+        // 3. MITRA PERORANGAN (Denpasar → WITA)
         // ==========================================
         $mitraPerorangan = User::updateOrCreate(
             ['email' => 'ani@gmail.com'],
@@ -78,6 +90,7 @@ class UserSeeder extends Seeder
                 'username' => 'aniwijaya',
                 'password' => $defaultPassword,
                 'role' => 'mitra',
+                'timezone' => $tzDefault, // WITA — Denpasar, Bali
                 'must_change_password' => false,
             ]
         );
@@ -108,6 +121,7 @@ class UserSeeder extends Seeder
                 'username' => 'budiclient',
                 'password' => $defaultPassword,
                 'role' => 'client',
+                'timezone' => $tzDefault,
                 'must_change_password' => false,
             ]
         );
@@ -124,9 +138,9 @@ class UserSeeder extends Seeder
         // LOG
         // ==========================================
         $this->command->info('✅ Seeder selesai:');
-        $this->command->info('   Admin  : admin@titiktemu.test / password123');
-        $this->command->info('   Mitra 1: budi@ptabc.com / password123 (PT ABC Travel)');
-        $this->command->info('   Mitra 2: ani@gmail.com / password123 (Ani Wijaya)');
-        $this->command->info('   Client : client@titiktemu.test / password123');
+        $this->command->info("   Admin  : admin@titiktemu.test / password123 ({$tzDefault})");
+        $this->command->info("   Mitra 1: budi@ptabc.com / password123 (PT ABC Travel, {$tzDefault})");
+        $this->command->info("   Mitra 2: ani@gmail.com / password123 (Ani Wijaya, {$tzDefault})");
+        $this->command->info("   Client : client@titiktemu.test / password123 ({$tzDefault})");
     }
 }

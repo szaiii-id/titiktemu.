@@ -32,6 +32,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'google_id' => null,
             'role' => 'client',
+            'timezone' => User::DEFAULT_TIMEZONE,
             'remember_token' => Str::random(10),
         ];
     }
