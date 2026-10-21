@@ -17,14 +17,10 @@ env:
   DB_PASSWORD: 'titiktemu04!'
 
 jobs:
-  # ============================================================
-  # PHP TESTS (Pest)
-  # ============================================================
   test-php:
     name: PHP Tests (Pest)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     services:
       postgres:
         image: postgres:16
@@ -39,42 +35,33 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, bcmath, pdo_pgsql, gd, zip, intl
           coverage: none
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
-
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}
           restore-keys: bun-
-
       - run: composer install --prefer-dist --no-progress --no-interaction
       - run: bun install --frozen-lockfile
-
       - name: Prepare environment
         run: |
           cp .env.example .env
           php artisan key:generate
-
       - run: bun run build
-
       - name: Run migrations
         env:
           DB_CONNECTION: pgsql
@@ -84,7 +71,6 @@ jobs:
           DB_USERNAME: titiktemu_dev
           DB_PASSWORD: titiktemu04!
         run: php artisan migrate --force
-
       - name: Run Pest tests (functional)
         env:
           DB_CONNECTION: pgsql
@@ -106,7 +92,6 @@ jobs:
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
         run: php artisan test --exclude-group=rate-limit
-
       - name: Run Pest tests (rate limit)
         env:
           DB_CONNECTION: pgsql
@@ -117,54 +102,45 @@ jobs:
           DB_PASSWORD: titiktemu04!
         run: php artisan test --group=rate-limit
 
-  # ============================================================
-  # JAVASCRIPT TESTS (Vitest)
-  # ============================================================
   test-js:
     name: JavaScript Tests (Vitest)
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}
           restore-keys: bun-
-
       - run: bun install --frozen-lockfile
       - run: bun run test
         env:
           LARAVEL_BYPASS_ENV_CHECK: '1'
 
-  # ============================================================
-  # E2E FUNCTIONAL TESTS — 3 SHARD (chromium | firefox | webkit)
-  # ============================================================
   test-e2e-functional:
     name: E2E Functional (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: ${{ matrix.timeout }}
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - browser: chromium
             shard: 0
+            playwright_shard: 1
             timeout: 30
           - browser: firefox
             shard: 1
+            playwright_shard: 2
             timeout: 30
           - browser: webkit
             shard: 2
+            playwright_shard: 3
             timeout: 50
-
     services:
       postgres:
         image: postgres:16
@@ -179,53 +155,42 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, bcmath, pdo_pgsql, gd, zip, intl
           coverage: none
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
-
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}
           restore-keys: bun-
-
       - run: composer install --prefer-dist --no-progress --no-interaction
       - run: bun install --frozen-lockfile
-
       - name: Install Playwright Browser (${{ matrix.browser }})
         run: bunx playwright install --with-deps ${{ matrix.browser }}
-
       - name: Prepare environment
         run: |
           cp .env.example .env
           php artisan key:generate
-
       - name: Build frontend assets
         run: bun run build
-
       - name: Create shard database
         env:
           PGPASSWORD: titiktemu04!
         run: |
           psql -h 127.0.0.1 -p 5432 -U titiktemu_dev -d postgres \
             -c "CREATE DATABASE titiktemu_db_testing_w${{ matrix.shard }} OWNER titiktemu_dev;" || true
-
       - name: Run E2E tests (functional)
         env:
           CI: true
@@ -250,8 +215,7 @@ jobs:
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 1000
           AUTH_THROTTLE_CONTACT_TEST_OVERRIDE: 1000
-        run: bun run test:e2e -- --project=${{ matrix.browser }} --shard=${{ matrix.shard + 1 }}/3
-
+        run: bun run test:e2e -- --project=${{ matrix.browser }} --shard=${{ matrix.playwright_shard }}/3
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -259,7 +223,6 @@ jobs:
           name: playwright-report-functional-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 7
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -268,25 +231,23 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # ============================================================
-  # E2E RATE LIMIT TESTS — 3 SHARD (chromium | firefox | webkit)
-  # ============================================================
   test-e2e-rate-limit:
     name: E2E Rate Limit (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - browser: chromium
             shard: 0
+            playwright_shard: 1
           - browser: firefox
             shard: 1
+            playwright_shard: 2
           - browser: webkit
             shard: 2
-
+            playwright_shard: 3
     services:
       postgres:
         image: postgres:16
@@ -301,53 +262,42 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, bcmath, pdo_pgsql, gd, zip, intl
           coverage: none
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
-
       - uses: actions/cache@v4
         with:
           path: ~/.bun/install/cache
           key: bun-${{ hashFiles('bun.lock') }}
           restore-keys: bun-
-
       - run: composer install --prefer-dist --no-progress --no-interaction
       - run: bun install --frozen-lockfile
-
       - name: Install Playwright Browser (${{ matrix.browser }})
         run: bunx playwright install --with-deps ${{ matrix.browser }}
-
       - name: Prepare environment
         run: |
           cp .env.example .env
           php artisan key:generate
-
       - name: Build frontend assets
         run: bun run build
-
       - name: Create rate-limit shard database
         env:
           PGPASSWORD: titiktemu04!
         run: |
           psql -h 127.0.0.1 -p 5432 -U titiktemu_dev -d postgres \
             -c "CREATE DATABASE titiktemu_db_testing_rl_w${{ matrix.shard }} OWNER titiktemu_dev;" || true
-
       - name: Run E2E tests (rate limit)
         env:
           CI: true
@@ -372,8 +322,7 @@ jobs:
           AUTH_THROTTLE_RESET_DECAY: 60
           AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE: 5
           AUTH_THROTTLE_CONTACT_TEST_OVERRIDE: 1000
-        run: bun run test:e2e:rate-limit -- --project=${{ matrix.browser }} --shard=${{ matrix.shard + 1 }}/3
-
+        run: bun run test:e2e:rate-limit -- --project=${{ matrix.browser }} --shard=${{ matrix.playwright_shard }}/3
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -381,7 +330,6 @@ jobs:
           name: playwright-report-rate-limit-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 7
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -390,35 +338,25 @@ jobs:
           path: test-results/
           retention-days: 7
 
-  # ============================================================
-  # CODE QUALITY
-  # ============================================================
   lint:
     name: Code Quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, bcmath, pdo_pgsql, gd, zip, intl
           coverage: none
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
       - run: composer install --prefer-dist --no-progress --no-interaction
       - run: bun install --frozen-lockfile
-
       - name: Run Pint
         run: ./vendor/bin/pint --test
-
       - name: Run Svelte Check
         run: bun run types:check
-
       - name: Run PHPStan
         run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=512M
