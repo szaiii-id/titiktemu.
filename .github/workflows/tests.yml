@@ -447,3 +447,4 @@ jobs:
 
       - name: Run PHPStan
         run: ./vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+ 
