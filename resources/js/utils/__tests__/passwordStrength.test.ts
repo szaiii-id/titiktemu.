@@ -9,6 +9,7 @@ describe('calculatePasswordStrength', () => {
         const result = calculatePasswordStrength('');
         expect(result.level).toBe(0);
         expect(result.label).toBe('');
+        expect(result.color).toBe('');
     });
 
     it('menilai "Lemah" untuk password pendek', () => {
@@ -22,12 +23,14 @@ describe('calculatePasswordStrength', () => {
         const result = calculatePasswordStrength('abcdefg1'); // >= 8, ada angka
         expect(result.level).toBe(2);
         expect(result.label).toBe('Cukup');
+        expect(result.color).toBe('bg-yellow-500');
     });
 
     it('menilai "Kuat" untuk password dengan 3 kriteria', () => {
         const result = calculatePasswordStrength('Abcdefgh1'); // >= 8, mixed, angka
         expect(result.level).toBe(3);
         expect(result.label).toBe('Kuat');
+        expect(result.color).toBe('bg-green-500');
     });
 
     it('menilai "Sangat Kuat" untuk password dengan 4+ kriteria', () => {

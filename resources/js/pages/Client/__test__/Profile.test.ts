@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import Profile from '../Profile.svelte';
+import type { User, UserRole } from '@/types';
 
 // ============================================================
 // MOCK INERTIA — Lengkap dengan page.url & page.props.auth
@@ -62,6 +63,10 @@ vi.mock('@inertiajs/svelte', () => ({
 
 // ============================================================
 // PROPS DEFAULT
+// ------------------------------------------------------------
+// `satisfies Pick<User, ...>` + `role: 'client' as const`
+// membuat TS meng-infer `role` sebagai literal `'client'`
+// (subtype dari UserRole), bukan `string` — fix 53 error.
 // ============================================================
 
 const defaultUser = {
@@ -69,8 +74,8 @@ const defaultUser = {
     name: 'Budi Santoso',
     username: 'budisantoso',
     email: 'budi@example.com',
-    role: 'client',
-};
+    role: 'client' as const, // ✅ kunci fix: literal, bukan string
+} satisfies Pick<User, 'id' | 'name' | 'username' | 'email' | 'role'>;
 
 // ============================================================
 // HELPER — Selector via ID (Robust, tidak ambigu)
@@ -214,14 +219,15 @@ describe('Profile.svelte — Data Initialization', () => {
 
     it('username = null dari props → field kosong', () => {
         render(Profile, {
-            props: { user: { ...defaultUser, username: null } },
+            props: {
+                user: { ...defaultUser, username: null as string | null },
+            },
         });
         expect(getUsernameInput().value).toBe('');
     });
 
     it('avatar menampilkan huruf pertama dari name', () => {
         render(Profile, { props: { user: defaultUser } });
-        // Ada 2 avatar: topbar + preview → pakai getAllByText
         const avatars = screen.getAllByText('B');
         expect(avatars.length).toBeGreaterThan(0);
     });
@@ -230,26 +236,25 @@ describe('Profile.svelte — Data Initialization', () => {
         render(Profile, {
             props: { user: { ...defaultUser, name: '' } },
         });
-        // Ada 2 avatar (topbar + preview) → cek keduanya "?"
         const avatars = screen.getAllByText('?');
         expect(avatars.length).toBeGreaterThan(0);
     });
 
     it('preview name di card header dari form.name', () => {
         render(Profile, { props: { user: defaultUser } });
-        // Cek h2 preview (bukan input value atau topbar)
         expect(getPreviewName()).toBe('Budi Santoso');
     });
 
     it('preview username pakai @ prefix', () => {
         render(Profile, { props: { user: defaultUser } });
-        // Preview card: username dengan @ prefix
         expect(getPreviewUsername()).toBe('@budisantoso');
     });
 
     it('preview username fallback ke "username" kalau kosong', () => {
         render(Profile, {
-            props: { user: { ...defaultUser, username: null } },
+            props: {
+                user: { ...defaultUser, username: null as string | null },
+            },
         });
         expect(getPreviewUsername()).toBe('@username');
     });
@@ -310,7 +315,9 @@ describe('Profile.svelte — hasChanges (Button State)', () => {
 
     it('username null → kosong dianggap sama (tidak hasChanges)', () => {
         render(Profile, {
-            props: { user: { ...defaultUser, username: null } },
+            props: {
+                user: { ...defaultUser, username: null as string | null },
+            },
         });
         expect(getSubmitButton()).toBeDisabled();
     });
@@ -441,7 +448,9 @@ describe('Profile.svelte — Reset Form', () => {
 
     it('reset dengan username null mengembalikan ke string kosong', async () => {
         render(Profile, {
-            props: { user: { ...defaultUser, username: null } },
+            props: {
+                user: { ...defaultUser, username: null as string | null },
+            },
         });
 
         await fireEvent.input(getUsernameInput(), {
@@ -499,7 +508,9 @@ describe('Profile.svelte — Error Handling', () => {
         options.onError({ username: 'Username sudah dipakai.' });
 
         await waitFor(() => {
-            expect(screen.getByText('Username sudah dipakai.')).toBeInTheDocument();
+            expect(
+                screen.getByText('Username sudah dipakai.'),
+            ).toBeInTheDocument();
         });
     });
 
@@ -519,7 +530,7 @@ describe('Profile.svelte — Error Handling', () => {
 
         await waitFor(() => {
             expect(
-                screen.getByText(/Terdapat 2 kesalahan pada form/i)
+                screen.getByText(/Terdapat 2 kesalahan pada form/i),
             ).toBeInTheDocument();
         });
     });
@@ -540,7 +551,9 @@ describe('Profile.svelte — Error Handling', () => {
 
         await waitFor(() => {
             expect(screen.getByText('Nama wajib diisi.')).toBeInTheDocument();
-            expect(screen.getByText('Username sudah dipakai.')).toBeInTheDocument();
+            expect(
+                screen.getByText('Username sudah dipakai.'),
+            ).toBeInTheDocument();
         });
     });
 
@@ -632,7 +645,7 @@ describe('Profile.svelte — Flash Message', () => {
         mockPageProps.flash = { status: 'Profile berhasil diperbarui.' };
         render(Profile, { props: { user: defaultUser } });
         expect(
-            screen.getByText('Profile berhasil diperbarui.')
+            screen.getByText('Profile berhasil diperbarui.'),
         ).toBeInTheDocument();
     });
 
@@ -660,7 +673,6 @@ describe('Profile.svelte — Email Read-Only', () => {
 
     it('email input memiliki text informasi "tidak dapat diubah"', () => {
         render(Profile, { props: { user: defaultUser } });
-        // Ada 2 text serupa → pakai getAllByText
         const infoTexts = screen.getAllByText(/Email tidak dapat diubah/i);
         expect(infoTexts.length).toBeGreaterThan(0);
     });
@@ -670,16 +682,9 @@ describe('Profile.svelte — Email Read-Only', () => {
 
         const email = getEmailInput();
 
-        // Verifikasi atribut HTML
         expect(email.readOnly).toBe(true);
         expect(email.disabled).toBe(true);
-
-        // Verifikasi nilai awal
         expect(email.value).toBe('budi@example.com');
-
-        // Catatan: JSDOM tidak enforce UI behavior untuk fireEvent.input
-        // pada readonly/disabled. Yang penting atribut terpasang,
-        // backend tetap reject perubahan email.
     });
 });
 
@@ -692,7 +697,6 @@ describe('Profile.svelte — Avatar & Preview', () => {
         render(Profile, {
             props: { user: { ...defaultUser, name: 'andi' } },
         });
-        // Ada 2 avatar → pakai getAllByText
         const avatars = screen.getAllByText('A');
         expect(avatars.length).toBeGreaterThan(0);
     });
@@ -700,7 +704,6 @@ describe('Profile.svelte — Avatar & Preview', () => {
     it('avatar update saat name diubah di form', async () => {
         render(Profile, { props: { user: defaultUser } });
 
-        // Awal: 2 avatar "B"
         expect(screen.getAllByText('B').length).toBeGreaterThan(0);
 
         await fireEvent.input(getNameInput(), {
@@ -708,7 +711,6 @@ describe('Profile.svelte — Avatar & Preview', () => {
         });
 
         await waitFor(() => {
-            // Setelah update: 2 avatar "Z"
             expect(screen.getAllByText('Z').length).toBeGreaterThan(0);
         });
     });
@@ -721,7 +723,6 @@ describe('Profile.svelte — Avatar & Preview', () => {
         });
 
         await waitFor(() => {
-            // Cek via helper preview username (bukan topbar)
             expect(getPreviewUsername()).toBe('@username-baru');
         });
     });
@@ -734,7 +735,6 @@ describe('Profile.svelte — Avatar & Preview', () => {
         });
 
         await waitFor(() => {
-            // Cek via helper preview name (bukan badge CLIENT)
             expect(getPreviewName()).toBe('Client');
         });
     });

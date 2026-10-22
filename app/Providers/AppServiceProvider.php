@@ -2,10 +2,22 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\BookingRepositoryInterface;
+use App\Repositories\Contracts\DailyReportRepositoryInterface;
+use App\Repositories\Contracts\PackageRepositoryInterface;
+use App\Repositories\Contracts\PayoutRepositoryInterface;
 use App\Repositories\Contracts\ProfileRepositoryInterface;
+use App\Repositories\Contracts\TripRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\WalletRepositoryInterface;
+use App\Repositories\Eloquent\BookingRepository;
+use App\Repositories\Eloquent\DailyReportRepository;
+use App\Repositories\Eloquent\PackageRepository;
+use App\Repositories\Eloquent\PayoutRepository;
 use App\Repositories\Eloquent\ProfileRepository;
+use App\Repositories\Eloquent\TripRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Eloquent\WalletRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -24,6 +36,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(ProfileRepositoryInterface::class, ProfileRepository::class);
+        $this->app->bind(PackageRepositoryInterface::class, PackageRepository::class);
+        $this->app->bind(BookingRepositoryInterface::class, BookingRepository::class);
+        $this->app->bind(TripRepositoryInterface::class, TripRepository::class);
+        $this->app->bind(DailyReportRepositoryInterface::class, DailyReportRepository::class);
+        $this->app->bind(WalletRepositoryInterface::class, WalletRepository::class);
+        $this->app->bind(PayoutRepositoryInterface::class, PayoutRepository::class);
     }
 
     /**

@@ -267,15 +267,13 @@ describe('Admin/Client/Index.svelte — Data Rendering', () => {
         });
 
         const table = document.querySelector('table');
-        const avatarB = table?.querySelector('div[class*="bg-gradient-to-br"]');
-        
         const avatarsInTable = table?.querySelectorAll(
             'div[class*="bg-gradient-to-br"]'
         );
         expect(avatarsInTable?.length).toBeGreaterThan(0);
-        
-        expect(table?.textContent).toContain('B'); // Budi
-        expect(table?.textContent).toContain('A'); // Ani
+
+        expect(table?.textContent).toContain('B');
+        expect(table?.textContent).toContain('A');
     });
 
     it('menampilkan total client di info badge', () => {
@@ -325,7 +323,6 @@ describe('Admin/Client/Index.svelte — Data Rendering', () => {
                 filters: defaultFilters,
             },
         });
-        // Format: "15 Jan 2026" atau "Jan 2026" tergantung locale
         expect(screen.getByText(/Jan/i)).toBeInTheDocument();
     });
 });
@@ -342,9 +339,7 @@ describe('Admin/Client/Index.svelte — Empty State', () => {
                 filters: defaultFilters,
             },
         });
-        expect(
-            screen.getByText(/Belum ada client/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Belum ada client/i)).toBeInTheDocument();
     });
 
     it('menampilkan pesan "Tidak ada hasil" saat search aktif', () => {
@@ -354,9 +349,7 @@ describe('Admin/Client/Index.svelte — Empty State', () => {
                 filters: { search: 'xyz', per_page: 15 },
             },
         });
-        expect(
-            screen.getByText(/Tidak ada hasil ditemukan/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Tidak ada hasil ditemukan/i)).toBeInTheDocument();
     });
 
     it('menampilkan kata kunci search di empty message', () => {
@@ -366,12 +359,10 @@ describe('Admin/Client/Index.svelte — Empty State', () => {
                 filters: { search: 'budi', per_page: 15 },
             },
         });
-        expect(
-            screen.getByText(/budi/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/budi/i)).toBeInTheDocument();
     });
 
-    it('tombol "Hapus Pencarian" tampil saat search aktif', () => {
+    it('tombol "Hapus Filter" tampil saat search aktif', () => {
         render(ClientIndex, {
             props: {
                 clients: makeClientsPaginator({ data: [], total: 0 }),
@@ -379,11 +370,11 @@ describe('Admin/Client/Index.svelte — Empty State', () => {
             },
         });
 
-        // Pakai selector spesifik: cari button dengan class mt-5 (tombol besar empty state)
-        // atau pakai regex case-sensitive
+        // EmptyState global merender tombol dengan text "Hapus Filter"
+        // (bukan "Hapus Pencarian"). Sesuaikan assertion.
         const button = document.querySelector('button.mt-5') as HTMLButtonElement;
         expect(button).toBeInTheDocument();
-        expect(button.textContent).toContain('Hapus Pencarian');
+        expect(button.textContent).toMatch(/Hapus (Filter|Pencarian)/i);
     });
 
     it('TIDAK menampilkan tabel saat data kosong', () => {
@@ -412,10 +403,8 @@ describe('Admin/Client/Index.svelte — Search Behavior', () => {
 
         await fireEvent.input(getSearchInput(), { target: { value: 'budi' } });
 
-        // Belum terpanggil karena debounce
         expect(mockGet).not.toHaveBeenCalled();
 
-        // Advance 300ms
         vi.advanceTimersByTime(300);
 
         await waitFor(() => {
@@ -492,9 +481,21 @@ describe('Admin/Client/Index.svelte — Search Behavior', () => {
             },
         });
 
-        const clearBtn = screen.getByRole('button', { name: /Hapus pencarian/i });
+        const input = getSearchInput();
+        expect((input as HTMLInputElement).value).toBe('budi');
+
+        // Ketik dulu agar SearchInput render tombol clear (butuh `value` truthy)
+        await fireEvent.input(input, { target: { value: 'budi' } });
+
+        // findByRole pakai MutationObserver (bukan timer) — aman dengan fake timers
+        const clearBtn = await screen.findByRole('button', {
+            name: /Hapus pencarian/i,
+        });
+
         await fireEvent.click(clearBtn);
 
+        // clearSearch() dipanggil SINKRON via prop `onclear`,
+        // jadi router.get langsung terpanggil tanpa debounce.
         expect(mockGet).toHaveBeenCalledWith(
             '/admin/clients',
             { search: '', per_page: 15 },
@@ -523,35 +524,34 @@ describe('Admin/Client/Index.svelte — Search Behavior', () => {
 // ============================================================
 
 describe('Admin/Client/Index.svelte — Pagination', () => {
-it('menampilkan info "Menampilkan X–Y dari Z client"', () => {
-    render(ClientIndex, {
-        props: {
-            clients: makeClientsPaginator({
-                from: 1,
-                to: 15,
-                total: 42,
-                last_page: 3,  // ✅ WAJIB: supaya pagination render
-                links: [
-                    { url: null, label: '&laquo; Previous', active: false },
-                    { url: '/admin/clients?page=1', label: '1', active: true },
-                    { url: '/admin/clients?page=2', label: '2', active: false },
-                    { url: '/admin/clients?page=3', label: '3', active: false },
-                    { url: '/admin/clients?page=2', label: 'Next &raquo;', active: false },
-                ],
-            }),
-            filters: defaultFilters,
-        },
+    it('menampilkan info "Menampilkan X–Y dari Z client"', () => {
+        render(ClientIndex, {
+            props: {
+                clients: makeClientsPaginator({
+                    from: 1,
+                    to: 15,
+                    total: 42,
+                    last_page: 3,
+                    links: [
+                        { url: null, label: '&laquo; Previous', active: false },
+                        { url: '/admin/clients?page=1', label: '1', active: true },
+                        { url: '/admin/clients?page=2', label: '2', active: false },
+                        { url: '/admin/clients?page=3', label: '3', active: false },
+                        { url: '/admin/clients?page=2', label: 'Next &raquo;', active: false },
+                    ],
+                }),
+                filters: defaultFilters,
+            },
+        });
+
+        const paragraphs = Array.from(document.querySelectorAll('p'));
+        const menampilkanP = paragraphs.find((p) =>
+            p.textContent?.includes('Menampilkan')
+        );
+
+        expect(menampilkanP).toBeInTheDocument();
+        expect(menampilkanP?.textContent).toContain('42');
     });
-
-    // Cari <p> yang mengandung "Menampilkan"
-    const paragraphs = Array.from(document.querySelectorAll('p'));
-    const menampilkanP = paragraphs.find((p) =>
-        p.textContent?.includes('Menampilkan')
-    );
-
-    expect(menampilkanP).toBeInTheDocument();
-    expect(menampilkanP?.textContent).toContain('42');
-});
 
     it('TIDAK menampilkan pagination kalau last_page = 1', () => {
         render(ClientIndex, {
@@ -599,7 +599,6 @@ it('menampilkan info "Menampilkan X–Y dari Z client"', () => {
             },
         });
 
-        // Cari link dengan href yang spesifik — bukan element text "2" biasa
         const page2Link = document.querySelector('a[href="/admin/clients?page=2"]');
         expect(page2Link).toBeInTheDocument();
         expect(page2Link).toHaveAttribute('href', '/admin/clients?page=2');
@@ -620,7 +619,6 @@ it('menampilkan info "Menampilkan X–Y dari Z client"', () => {
             },
         });
 
-        // Previous label dengan &laquo; → text content "« Previous"
         const prevText = screen.getByText(/Previous/i);
         expect(prevText.tagName).toBe('SPAN');
     });
@@ -639,8 +637,6 @@ describe('Admin/Client/Index.svelte — Flash Message', () => {
                 filters: defaultFilters,
             },
         });
-        // Note: komponen ini tidak menampilkan flash — tapi test ini
-        // memverifikasi flash ada di page.props (untuk konsistensi)
         expect(mockPageProps.flash.status).toBe('Berhasil.');
     });
 });
@@ -699,9 +695,7 @@ describe('Admin/Client/Index.svelte — Edge Cases', () => {
                 filters: { search: '', per_page: 25 },
             },
         });
-        // per_page diteruskan ke router
-        const input = getSearchInput();
-        expect(input).toBeInTheDocument();
+        expect(getSearchInput()).toBeInTheDocument();
     });
 
     it('handle data dengan 1 client', () => {
@@ -741,7 +735,6 @@ describe('Admin/Client/Index.svelte — Route & Menu', () => {
                 filters: defaultFilters,
             },
         });
-        // Cek link menu
         const menuLink = screen.getByRole('link', { name: /^Daftar Client$/i });
         expect(menuLink).toHaveAttribute('href', '/admin/clients');
     });
@@ -791,7 +784,6 @@ describe('Admin/Client/Index.svelte — formatDate', () => {
                 filters: defaultFilters,
             },
         });
-        // Ada tanggal 15
         expect(screen.getByText(/15/)).toBeInTheDocument();
     });
 
@@ -812,7 +804,6 @@ describe('Admin/Client/Index.svelte — formatDate', () => {
                 filters: defaultFilters,
             },
         });
-        // Ada bulan (bisa "Mar" atau "Maret")
         expect(screen.getByText(/Mar/i)).toBeInTheDocument();
     });
 });

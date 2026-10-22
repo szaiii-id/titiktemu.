@@ -8,7 +8,9 @@ use App\Http\Requests\Admin\ListUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use App\Services\User\UserService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -52,7 +54,7 @@ class UserController extends Controller
      */
     public function store(CreateUserRequest $request): RedirectResponse
     {
-        // ✅ FIX PHPStan: cast ke string + handle default arm
+        // FIX PHPStan: cast ke string + handle default arm
         $role = (string) $request->validated('role');
 
         $result = match ($role) {
@@ -117,11 +119,28 @@ class UserController extends Controller
         abort_if($user->role === 'client', 404);
         abort_if($user->id === auth()->id(), 403, 'Anda tidak dapat menghapus akun sendiri.');
 
-        $this->userService->deleteUser($user);
+        try {
+            $this->userService->deleteUser($user);
 
-        return redirect()
-            ->route('admin.users.index')
-            ->with('status', 'User berhasil dihapus.');
+            return redirect()
+                ->route('admin.users.index')
+                ->with('status', 'User berhasil dihapus.');
+
+        } catch (QueryException $e) {
+            Log::error('Gagal hapus user: QueryException', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+                'sql' => $e->getSql(),
+                'admin_id' => auth()->id(),
+            ]);
+
+            return back()->with(
+                'error',
+                'User tidak bisa dihapus karena masih terhubung ke data lain. '
+                .'Periksa relasi trip, laporan, atau wallet terlebih dahulu.'
+            );
+        }
     }
 
     /**

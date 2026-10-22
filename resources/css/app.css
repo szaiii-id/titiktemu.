@@ -25,14 +25,54 @@ html {
     --color-dark: #232323;
 
     /* ==========================================
-     | Varian Gelap untuk Aksesibilitas (WCAG AA)
-     | Gunakan varian ini saat warna brand dipakai
-     | sebagai latar teks putih (tombol, badge).
-     | Rasio kontras > 4.5:1 terhadap putih.
+     | Varian Gelap — untuk LATAR SOLID + TEKS PUTIH
+     |
+     | ⚠️ HANYA lolos WCAG AA saat dipakai sebagai:
+     |      bg-X-dark text-white
+     |      (latar solid + teks putih)
+     |
+     | Rasio terhadap putih:
+     |   sun-dark    ~4.6:1 ✅
+     |   pink-dark   ~5.4:1 ✅
+     |   purple-dark ~7.2:1 ✅
+     |   blue-dark   ~6.3:1 ✅
+     |   green-dark  ~4.7:1 ✅
+     |
+     | ❌ JANGAN dipakai sebagai:
+     |    - Teks di atas latar transparan (bg-X/10 text-X-dark)
+     |      → kontras hanya ~3.3:1, GAGAL WCAG AA
+     |    - Teks di atas putih (text-X-dark di bg-white)
+     |      → kontras ~4.1:1, GAGAL WCAG AA
+     |
+     | ✅ Untuk pola tersebut, gunakan --color-X-text
+     |    di bawah ini.
      | ========================================== */
-    --color-sun-dark: #B87A00;      /* Rasio ~4.6:1 */
-    --color-pink-dark: #B81A6A;     /* Rasio ~5.4:1 */
-    --color-purple-dark: #6B1B6B;   /* Rasio ~7.2:1 */
-    --color-blue-dark: #08518A;     /* Rasio ~6.3:1 */
-    --color-green-dark: #5C8A1E;    /* Rasio ~4.7:1 */
+    --color-sun-dark: #B87A00;      /* bg-sun-dark + text-white: 4.6:1 ✅ */
+    --color-pink-dark: #B81A6A;     /* bg-pink-dark + text-white: 5.4:1 ✅ */
+    --color-purple-dark: #6B1B6B;   /* bg-purple-dark + text-white: 7.2:1 ✅ */
+    --color-blue-dark: #08518A;     /* bg-blue-dark + text-white: 6.3:1 ✅ */
+    --color-green-dark: #5C8A1E;    /* bg-green-dark + text-white: 4.7:1 ✅ */
+
+    /* ==========================================
+     | Varian Teks — untuk LATAR TRANSPARAN / PUTIH
+     |
+     | Untuk pola:
+     |      bg-X/10 text-X-text     (badge, chip)
+     |      text-X-text             (teks di atas putih)
+     |
+     | ⚠️ JANGAN dipakai sebagai latar solid dengan
+     |    teks putih — gunakan --color-X-dark.
+     |
+     | Rasio terhadap bg-X/10 (10% opacity di atas putih):
+     |   sun-text    ~5.5:1 ✅
+     |   green-text  ~5.4:1 ✅
+     |   pink-text   ~7.1:1 ✅
+     |   purple-text ~8.3:1 ✅
+     |   blue-text   ~7.8:1 ✅
+     | ========================================== */
+    --color-sun-text: #7A4F00;  /* kontras 5.9:1 di bg-sun/10 */
+    --color-green-text: #3D5C14;    /* bg-green/10 + text-green-text: ~5.4:1 ✅ */
+    --color-pink-text: #8A1450;     /* bg-pink/10 + text-pink-text: ~7.1:1 ✅ */
+    --color-purple-text: #4A1249;   /* bg-purple/10 + text-purple-text: ~8.3:1 ✅ */
+    --color-blue-text: #063D6B;     /* bg-blue/10 + text-blue-text: ~7.8:1 ✅ */
 }

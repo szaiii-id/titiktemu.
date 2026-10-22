@@ -4,6 +4,8 @@ import { config as loadEnv } from 'dotenv';
 import path from 'node:path';
 import {
     isCI,
+    SHARD_INDEX,
+    TOTAL_SHARDS,          // ✅ BARU: untuk timeout adaptif
     APP_PORT,
     APP_URL,
     E2E_DB_DATABASE,
@@ -12,27 +14,65 @@ import {
     E2E_DB_PORT,
     E2E_DB_USERNAME,
     E2E_DB_PASSWORD,
+    SHARD_STORAGE_PATH,
 } from './e2e/config';
 
 // Load .env.testing untuk konfigurasi E2E
-loadEnv({ path: path.resolve(process.cwd(), '.env.testing') });
+loadEnv({
+    path: path.resolve(process.cwd(), '.env.testing'),
+    override: false,
+});
 
 // ==========================================
-// WORKERS & TIMEOUT
+// WORKERS — SELALU 1 PER PROSES
 // ==========================================
 const WORKERS = 1;
 
+// ==========================================
+// TIMEOUT ADAPTIF — PROPORSIONAL JUMLAH SHARD
+// ==========================================
+/**
+ * Kenapa adaptif?
+ *
+ * 8 shard paralel di 1 mesin → CPU & RAM terbagi 8 → setiap
+ * `php -S` (single-threaded) melayani lebih lambat → jendela
+ * race hydration, search debounce, dan navigasi melebar.
+ *
+ * Timeout statis (10–15 detik) cukup saat 1-per-1, TAPI tidak
+ * cukup saat 8 shard paralel. Akibatnya muncul error acak:
+ * - `Received: ""` (search input kosong — hydration belum siap)
+ * - `page.goto` timeout (landing page berat)
+ * - `locator.click` timeout (tab filter belum render)
+ *
+ * Solusi: naikkan timeout proporsional jumlah shard.
+ * - ≤4 shard: timeout normal (mesin masih lega)
+ * - >4 shard: timeout naik ~50% (mesin sibuk)
+ */
+const isHeavyLoad = TOTAL_SHARDS > 4;
+
 const TEST_TIMEOUT = isCI ? 90_000 : 60_000;
-const ACTION_TIMEOUT = isCI ? 20_000 : 10_000;
-const NAV_TIMEOUT = isCI ? 30_000 : 15_000;
-const EXPECT_TIMEOUT = isCI ? 20_000 : 10_000;
+
+const ACTION_TIMEOUT = isCI
+    ? (isHeavyLoad ? 30_000 : 20_000)
+    : (isHeavyLoad ? 20_000 : 10_000);
+
+const NAV_TIMEOUT = isCI
+    ? (isHeavyLoad ? 45_000 : 30_000)
+    : (isHeavyLoad ? 30_000 : 15_000);
+
+const EXPECT_TIMEOUT = isCI
+    ? (isHeavyLoad ? 30_000 : 20_000)
+    : (isHeavyLoad ? 20_000 : 10_000);
+
+// ==========================================
+// OUTPUT DIR & REPORT DIR — ISOLASI PER SHARD
+// ==========================================
+const SHARD_OUTPUT_DIR = `test-results/shard-${SHARD_INDEX}`;
+const SHARD_REPORT_DIR = `playwright-report/shard-${SHARD_INDEX}`;
 
 // ==========================================
 // AUTH THROTTLE — DEFAULT UNTUK TESTING
 // ==========================================
-// Nilai-nilai ini bisa di-override via env (misal untuk test rate limiting).
-// Jika tidak di-set, gunakan default yang "longgar" agar test fungsional
-// tidak ter-throttle.
 const AUTH_THROTTLE = {
     LOGIN_MAX: process.env.AUTH_THROTTLE_LOGIN_MAX ?? '5',
     LOGIN_DECAY: process.env.AUTH_THROTTLE_LOGIN_DECAY ?? '60',
@@ -54,7 +94,6 @@ const AUTH_THROTTLE = {
     RESET_TEST_OVERRIDE:
         process.env.AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE ?? '1000',
 
-    // ✅ CONTACT THROTTLE — untuk E2E, limit longgar agar tidak ter-throttle
     CONTACT_TEST_OVERRIDE:
         process.env.AUTH_THROTTLE_CONTACT_TEST_OVERRIDE ?? '1000',
 };
@@ -68,16 +107,15 @@ export default defineConfig({
     testMatch: /(.+\.)?(test|spec)\.[jt]s/,
     testIgnore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
 
-    // 2. GLOBAL SETUP — migrate:fresh + seed + cache:clear
-    // Dijalankan per-shard (setiap shard punya DB sendiri)
+    // 2. GLOBAL SETUP — migrate:fresh + seed + health-check /_test/* per shard
     globalSetup: './e2e/global-setup.ts',
 
-    // 3. TIMEOUT
+    // 3. TIMEOUT — adaptif per jumlah shard
     timeout: TEST_TIMEOUT,
     globalTimeout: 45 * 60_000,
     expect: { timeout: EXPECT_TIMEOUT },
 
-    // 4. EKSEKUSI
+    // 4. EKSEKUSI — KUNCI: workers 1, fullyParallel false
     fullyParallel: false,
     forbidOnly: isCI,
     retries: isCI ? 1 : 0,
@@ -86,25 +124,25 @@ export default defineConfig({
     // 5. FAIL FAST
     maxFailures: isCI ? 10 : 0,
 
-    // 6. REPORTER
+    // 6. REPORTER — ✅ ISOLASI PER SHARD
     reporter: isCI
         ? [
               ['github'],
-              ['html', { open: 'never' }],
+              ['html', { open: 'never', outputFolder: SHARD_REPORT_DIR }],
               ['list'],
           ]
         : [
-              ['html', { open: 'on-failure' }],
+              ['html', { open: 'on-failure', outputFolder: SHARD_REPORT_DIR }],
               ['list'],
           ],
 
-    // 7. OUTPUT ARTIFACT
-    outputDir: 'test-results/',
+    // 7. OUTPUT ARTIFACT — ✅ ISOLASI PER SHARD
+    outputDir: SHARD_OUTPUT_DIR,
 
     // 8. PENGATURAN GLOBAL
     use: {
         baseURL: APP_URL,
-        trace: 'on-first-retry',
+        trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
         actionTimeout: ACTION_TIMEOUT,
@@ -114,14 +152,21 @@ export default defineConfig({
         ignoreHTTPSErrors: true,
     },
 
-    // 9. AUTO-START SERVER
-    // Port otomatis: 8000 + SHARD_INDEX (0 → 8000, 1 → 8001, 2 → 8002)
-    // DB otomatis: titiktemu_db_testing_w{SHARD_INDEX}
+    // 9. AUTO-START SERVER — port per shard (8000 + SHARD_INDEX)
     webServer: {
-        command: `php -S 127.0.0.1:${APP_PORT} -t public`,
+        // ✅ `-d variables_order=EGPCS` — pastikan $_ENV terisi
+        //    (best practice; Laravel baca $_SERVER jadi tetap aman
+        //    meski tanpa ini, tapi ini eksplisit & konsisten).
+        command: `php -d variables_order=EGPCS -S 127.0.0.1:${APP_PORT} -t public`,
         port: APP_PORT,
-        reuseExistingServer: !isCI,
-        timeout: 120_000,
+        reuseExistingServer: false,
+        gracefulShutdown: {
+            signal: 'SIGTERM',
+            timeout: 5_000,
+        },
+        // ✅ Naikkan timeout webServer — 8 shard start bersamaan
+        //    butuh waktu lebih lama untuk bind port + siap.
+        timeout: 180_000,
         stdout: 'pipe',
         stderr: 'pipe',
         env: {
@@ -140,7 +185,9 @@ export default defineConfig({
             QUEUE_CONNECTION: 'sync',
             MAIL_MAILER: 'log',
 
-            // ✅ AUTH THROTTLE — GUNAKAN ENV JIKA DI-SET, DEFAULT KE 1000
+            // ✅ FIX RACE: Web server (php -S) pakai storage shard ini.
+            LARAVEL_STORAGE_PATH: SHARD_STORAGE_PATH,
+
             AUTH_THROTTLE_LOGIN_MAX: AUTH_THROTTLE.LOGIN_MAX,
             AUTH_THROTTLE_LOGIN_DECAY: AUTH_THROTTLE.LOGIN_DECAY,
             AUTH_THROTTLE_LOGIN_TEST_OVERRIDE: AUTH_THROTTLE.LOGIN_TEST_OVERRIDE,
@@ -160,8 +207,6 @@ export default defineConfig({
             AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE:
                 AUTH_THROTTLE.RESET_TEST_OVERRIDE,
 
-            // ✅ CONTACT THROTTLE — OVERRIDE UNTUK E2E
-            // Agar E2E test contact tidak ter-throttle (default 3 di production).
             AUTH_THROTTLE_CONTACT_TEST_OVERRIDE:
                 AUTH_THROTTLE.CONTACT_TEST_OVERRIDE,
         },

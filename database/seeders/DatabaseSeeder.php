@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
         // Panggil seeder user di sini
         $this->call([
             UserSeeder::class,
+            PackageSeeder::class,
+            BookingSeeder::class,
+            WalletSeeder::class,
+            TripMitraSeeder::class,
         ]);
     }
 }

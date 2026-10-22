@@ -15,6 +15,10 @@
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:debug": "playwright test --debug",
+        "test:e2e:shard": "bun scripts/e2e-shard.ts",
+        "test:e2e:shard:2": "TOTAL_SHARDS=2 bun scripts/e2e-shard.ts",
+        "test:e2e:shard:4": "TOTAL_SHARDS=4 bun scripts/e2e-shard.ts",
+        "test:e2e:shard:8": "TOTAL_SHARDS=8 bun scripts/e2e-shard.ts",
         "test:e2e:rate-limit": "AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5 playwright test e2e/rate-limit/"
     },
     "dependencies": {

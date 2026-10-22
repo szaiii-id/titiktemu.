@@ -5,9 +5,22 @@ namespace App\Repositories\Eloquent;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class UserRepository implements UserRepositoryInterface
 {
+    /**
+     * Driver-aware search operator.
+     *
+     * PostgreSQL → `ilike` (case-insensitive)
+     * SQLite/MySQL → `like` (case-insensitive by default)
+     */
+    protected function searchOperator(): string
+    {
+        return DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -114,14 +127,16 @@ class UserRepository implements UserRepositoryInterface
         int $perPage = 15,
         ?string $search = null,
     ): LengthAwarePaginator {
+        $operator = $this->searchOperator();
+
         return User::query()
             ->with('profile')
             ->whereIn('role', $roles)
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ilike', "%{$search}%")
-                        ->orWhere('email', 'ilike', "%{$search}%")
-                        ->orWhere('username', 'ilike', "%{$search}%");
+            ->when($search, function ($query, $search) use ($operator) {
+                $query->where(function ($q) use ($search, $operator) {
+                    $q->where('name', $operator, "%{$search}%")
+                        ->orWhere('email', $operator, "%{$search}%")
+                        ->orWhere('username', $operator, "%{$search}%");
                 });
             })
             ->orderByDesc('created_at')
@@ -138,14 +153,16 @@ class UserRepository implements UserRepositoryInterface
         int $perPage = 15,
         ?string $search = null,
     ): LengthAwarePaginator {
+        $operator = $this->searchOperator();
+
         return User::query()
             ->with('profile')
             ->where('role', 'client')
-            ->when($search, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'ilike', "%{$search}%")
-                        ->orWhere('email', 'ilike', "%{$search}%")
-                        ->orWhere('username', 'ilike', "%{$search}%");
+            ->when($search, function ($query, $search) use ($operator) {
+                $query->where(function ($q) use ($search, $operator) {
+                    $q->where('name', $operator, "%{$search}%")
+                        ->orWhere('email', $operator, "%{$search}%")
+                        ->orWhere('username', $operator, "%{$search}%");
                 });
             })
             ->orderByDesc('created_at')
@@ -171,5 +188,26 @@ class UserRepository implements UserRepositoryInterface
         return User::where('username', $username)
             ->when($exceptUserId, fn ($q) => $q->where('id', '!=', $exceptUserId))
             ->exists();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function searchByRole(string $role, string $search, int $limit = 10): Collection
+    {
+        $operator = $this->searchOperator();
+
+        return User::query()
+            ->where('role', $role)
+            ->when($search, function ($query, $search) use ($operator) {
+                $query->where(function ($q) use ($search, $operator) {
+                    $q->where('name', $operator, "%{$search}%")
+                        ->orWhere('email', $operator, "%{$search}%")
+                        ->orWhere('username', $operator, "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->limit($limit)
+            ->get(['id', 'name', 'email', 'username']);
     }
 }

@@ -35,3 +35,4 @@ expect()->extend('toBeOne', function () {
 */
 
 require_once __DIR__.'/Helpers/UserHelper.php';
+require_once __DIR__.'/Helpers/PackageHelper.php';
