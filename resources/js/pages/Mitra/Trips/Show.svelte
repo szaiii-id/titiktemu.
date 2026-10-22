@@ -445,7 +445,7 @@
                                                                         )}
                                                                     </span>
                                                                     <span
-                                                                        class="text-[10px] text-gray-400"
+                                                                        class="text-[10px] text-gray-600"
                                                                     >
                                                                         {formatDateTime(
                                                                             report.submitted_at,
