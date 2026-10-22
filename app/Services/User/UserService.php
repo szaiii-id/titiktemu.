@@ -175,7 +175,10 @@ class UserService
             // 1. Hapus relasi RESTRICT (wajib manual)
             $user->payouts()->delete();
             $user->tripMitras()->delete();
-            $user->mitraWallet()?->delete();
+
+            if ($user->mitraWallet()->exists()) {
+                $user->mitraWallet()->delete();
+            }
 
             // 2. Hapus relasi non-cascade
             $user->dailyReports()->each(function ($report) {

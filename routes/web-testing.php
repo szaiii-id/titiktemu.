@@ -29,51 +29,20 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Test-Only Routes
 |--------------------------------------------------------------------------
-|
-| File ini HANYA di-load saat APP_ENV=testing (lihat bootstrap/app.php).
-| JANGAN pernah di-load di production.
-|
-| Route di sini untuk keperluan E2E test:
-| - Reset rate limiter
-| - Reset state user (password, name, username, timezone)
-| - Reset state profile (nama_penyedia_usaha, kota, alamat, dll)
-| - Reset database (migrate:fresh + seed)
-|
-| Semua route di-prefix dengan `/_test/` supaya jelas test-only.
-|
 */
-
-// ==========================================
-// SAFETY GUARD & HELPERS
-// ==========================================
 
 $ensureTesting = static function (): void {
     abort_unless(config('app.env') === 'testing', 404);
 };
 
-/**
- * Helper per-model dengan return type eksplisit — PHPStan-friendly.
- *
- * Menggantikan `Model::findOrFail()` yang di Larastan dikembalikan
- * sebagai `Model|Collection`. Dengan `find()` + `abort()` (return `never`),
- * tipe return pasti model tunggal.
- */
 $findPackage = static fn (int $id): Package => Package::query()->find($id) ?? abort(404, 'Package tidak ditemukan.');
 $findBooking = static fn (int $id): Booking => Booking::query()->find($id) ?? abort(404, 'Booking tidak ditemukan.');
 $findTrip = static fn (int $id): Trip => Trip::query()->find($id) ?? abort(404, 'Trip tidak ditemukan.');
 $findReport = static fn (int $id): DailyReport => DailyReport::query()->find($id) ?? abort(404, 'DailyReport tidak ditemukan.');
 $findUser = static fn (int $id): User => User::query()->find($id) ?? abort(404, 'User tidak ditemukan.');
 
-/**
- * Ambil nilai scalar dari property yang mungkin enum atau string.
- */
 $enumValue = static fn (mixed $value): mixed => $value instanceof BackedEnum ? $value->value : $value;
 
-/**
- * Bangun participants array untuk booking test.
- *
- * @return array<int, array{nama: string, umur: int, no_hp: string, catatan: string|null}>
- */
 $buildParticipants = static function (int $jumlahPeserta): array {
     $participants = [];
 
@@ -400,19 +369,6 @@ Route::post('/_test/create-trip', function (Request $request) use ($ensureTestin
 // ==========================================
 // SIMULATE TRIP DUE
 // ==========================================
-/**
- * Paksa trip jadi "due" (tanggal_mulai = hari ini - days_ago).
- *
- * ✅ FIX: pakai `Timezone::today($trip->timezoneOrDefault())` — BUKAN `now()`.
- *
- * Kenapa:
- * - `now()` = UTC (dari config/app.php 'timezone' => 'UTC')
- * - `DashboardController` hitung `hari_ke` pakai `Timezone::today($tz)` (WITA)
- * - Jika test jalan jam 16:00–23:59 UTC, `now()` = hari ini UTC,
- *   tapi `Timezone::today('Asia/Makassar')` = besok WITA → beda 1 hari
- * - Akibatnya `trips.tanggal_mulai` ≠ `todayStr` WITA → `hari_ke` salah
- * - `TripDay.tanggal` juga harus di-update agar sinkron
- */
 Route::post('/_test/simulate-trip-due', function (Request $request) use ($ensureTesting, $findTrip, $enumValue): JsonResponse {
     $ensureTesting();
 
@@ -424,7 +380,6 @@ Route::post('/_test/simulate-trip-due', function (Request $request) use ($ensure
     $trip = $findTrip((int) $request->input('trip_id'));
     $daysAgo = (int) $request->input('days_ago', 1);
 
-    // ✅ FIX: pakai timezone trip, BUKAN now() (UTC)
     $tz = $trip->timezoneOrDefault();
     $todayLocal = Timezone::today($tz);
 
@@ -437,9 +392,6 @@ Route::post('/_test/simulate-trip-due', function (Request $request) use ($ensure
         'status' => TripStatus::SCHEDULED->value,
     ]);
 
-    // ✅ FIX: update TripDay.tanggal agar sinkron dengan tanggal_mulai baru
-    // Tanpa ini: TripDay.tanggal dari seed masih tanggal lama → dashboard
-    // tidak menemukan TripDay untuk hari ini → report-warning tidak muncul
     $tanggalMulaiCarbon = Carbon::parse($tanggalMulaiBaru);
 
     foreach ($trip->days as $day) {
@@ -518,15 +470,17 @@ Route::post('/_test/submit-daily-report', function (Request $request) use ($ensu
     }
 
     if ($request->has('mitra_id')) {
+        /** @var User|null $mitra */
         $mitra = User::query()->find($request->input('mitra_id'));
     } else {
+        // ✅ FIX PHPStan: query langsung dari User agar return type pasti User
         $mitraIndex = (int) $request->input('mitra_index', 0);
-        $mitra = $trip->mitras()
-            ->with('mitra')
+        /** @var User|null $mitra */
+        $mitra = User::query()
+            ->whereHas('tripMitras', static fn ($q) => $q->where('trip_id', $trip->id))
             ->orderBy('id')
             ->skip($mitraIndex)
-            ->first()
-            ?->mitra;
+            ->first();
     }
 
     if ($mitra === null) {
@@ -738,7 +692,7 @@ Route::post('/_test/find-package', function (Request $request) use ($ensureTesti
         'id' => $pkg->id,
         'kode' => $pkg->kode,
         'nama' => $pkg->nama,
-        'status' => $pkg->status instanceof BackedEnum ? $pkg->status->value : $pkg->status,
+        'status' => $pkg->status->value, // ✅ FIX: status pasti enum
         'timezone' => $pkg->timezone,
         'durasi_hari' => $pkg->durasi_hari,
     ]);
@@ -747,14 +701,6 @@ Route::post('/_test/find-package', function (Request $request) use ($ensureTesti
 // ==========================================
 // FIND TRIP (E2E HELPER)
 // ==========================================
-/**
- * Resolve ID trip dari kode (mis. `TRP-2026-001`).
- *
- * Dipakai oleh `e2e/auth.ts` → `getTripIdByKode()` untuk
- * kebutuhan `resetTripState()` (reset status trip ke `scheduled`).
- *
- * Return: id, kode, status, tanggal_mulai, mitra_count.
- */
 Route::post('/_test/find-trip', function (Request $request) use ($ensureTesting): JsonResponse {
     $ensureTesting();
 
@@ -774,7 +720,7 @@ Route::post('/_test/find-trip', function (Request $request) use ($ensureTesting)
     return response()->json([
         'id' => $trip->id,
         'kode' => $trip->kode,
-        'status' => $trip->status instanceof BackedEnum ? $trip->status->value : $trip->status,
+        'status' => $trip->status->value, // ✅ FIX: status pasti enum
         'tanggal_mulai' => $trip->tanggal_mulai,
         'mitra_count' => $trip->mitras()->count(),
     ]);
@@ -792,28 +738,23 @@ Route::post('/_test/reset-trip-days', function (Request $request) use ($ensureTe
 
     $trip = $findTrip((int) $request->input('trip_id'));
 
-    // ✅ Hapus semua TripDay — cascade ke daily_reports (FK sudah cascadeOnDelete)
     TripDay::query()
         ->where('trip_id', $trip->id)
         ->delete();
 
-    // ✅ Durasi: fallback berlapis
-    $durasiHari = $trip->package?->durasi_hari
-        ?? $trip->snapshotDurasiHari()
-        ?? 1;
+    // ✅ FIX PHPStan: relasi package tidak nullable, tidak perlu ?->
+    $durasiHari = $trip->package->durasi_hari;
 
-    // ✅ Tanggal mulai: fallback ke now()
-    $tanggalMulai = $trip->tanggal_mulai
-        ? Carbon::parse($trip->tanggal_mulai)
-        : now();
+    // ✅ FIX PHPStan: tanggal_mulai bisa nullable, jadi tetap pakai ?? fallback
+    // ✅ FIX PHPStan: tanggal_mulai sudah pasti Carbon (tidak nullable)
+    $tanggalMulai = Carbon::parse($trip->tanggal_mulai);
 
-    // ✅ Re-create TripDay — LENGKAP dengan judul (WAJIB)
     for ($i = 1; $i <= $durasiHari; $i++) {
         TripDay::create([
             'trip_id' => $trip->id,
             'hari_ke' => $i,
             'tanggal' => $tanggalMulai->copy()->addDays($i - 1)->format('Y-m-d'),
-            'judul' => 'Hari ke-'.$i,  // ✅ WAJIB — anti not-null violation
+            'judul' => 'Hari ke-'.$i,
             'deskripsi' => null,
             'status' => TripDay::STATUS_PENDING,
         ]);
@@ -834,10 +775,8 @@ Route::post('/_test/reset-trip-mitras', function (Request $request) use ($ensure
 
     $trip = $findTrip((int) $request->input('trip_id'));
 
-    // Hapus semua mitra di trip
     $trip->mitras()->delete();
 
-    // Re-assign 2 mitra seed (Budi + Ani)
     $mitra1 = User::where('email', 'budi@ptabc.com')->first();
     $mitra2 = User::where('email', 'ani@gmail.com')->first();
     $admin = User::where('role', 'admin')->first();

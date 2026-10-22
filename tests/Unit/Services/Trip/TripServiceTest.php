@@ -15,6 +15,7 @@ use App\Services\Trip\TripService;
 use App\Services\Wallet\WalletService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -66,8 +67,9 @@ function makeTripServiceMock(array $attrs = []): MockInterface
         'kode' => 'TRP-2026-001',
         'booking_id' => 10,
         'package_id' => 5,
-        'tanggal_mulai' => '2026-01-01',
-        'tanggal_selesai' => '2026-01-02',
+        // ✅ FIX: Gunakan Carbon instance, bukan string
+        'tanggal_mulai' => Carbon::parse('2026-01-01'),
+        'tanggal_selesai' => Carbon::parse('2026-01-02'),
         'jumlah_peserta' => 2,
         'timezone' => 'Asia/Makassar',
         'status' => TripStatus::SCHEDULED,
@@ -102,7 +104,7 @@ function makePackageServiceMockForTrip(array $attrs = []): MockInterface
         'kode' => 'PKG-001',
         'nama' => 'Paket Test',
         'slug' => 'paket-test',
-        'kategori' => PackageKategori::WISATA_ALAM, // ← enum
+        'kategori' => PackageKategori::WISATA_ALAM,
         'durasi_hari' => 2,
         'durasi_malam' => 1,
         'timezone' => 'Asia/Makassar',
@@ -243,9 +245,6 @@ it('createFromBooking throw jika booking sudah punya trip', function () {
 |==========================================================================
 | createFromBooking() — PARTIAL (Happy path via mock)
 |==========================================================================
-| Karena `TripDay::create()` static, tidak bisa verifikasi payload.
-| Test verifikasi: tripRepository->create dipanggil, transaction 1×.
-|==========================================================================
 */
 
 it('createFromBooking panggil tripRepository->create', function () {
@@ -316,11 +315,13 @@ it('activate throw jika status bukan scheduled', function () {
 });
 
 it('activate throw jika tanggal_mulai belum tiba', function () {
+    // ✅ FIX: Gunakan Carbon untuk tanggal_mulai (bukan string)
     $trip = makeTripServiceMock([
         'status' => TripStatus::SCHEDULED,
-        'tanggal_mulai' => now()->addDays(5)->format('Y-m-d'),
+        'tanggal_mulai' => Carbon::now()->addDays(5),
         'timezone' => 'Asia/Makassar',
     ]);
+
     $trip->shouldReceive('timezoneOrDefault')->andReturn('Asia/Makassar');
 
     expect(fn () => $this->service->activate($trip))
@@ -328,10 +329,13 @@ it('activate throw jika tanggal_mulai belum tiba', function () {
 });
 
 it('activate throw jika belum punya mitra', function () {
+    // ✅ FIX: Gunakan Carbon dan tanggal yang sudah lewat
     $trip = makeTripServiceMock([
         'status' => TripStatus::SCHEDULED,
-        'tanggal_mulai' => now()->subDay()->format('Y-m-d'),
+        'tanggal_mulai' => Carbon::now()->subDay(),
+        'timezone' => 'Asia/Makassar',
     ]);
+
     $trip->shouldReceive('timezoneOrDefault')->andReturn('Asia/Makassar');
     $trip->shouldReceive('hasMitra')->andReturn(false);
 
@@ -455,7 +459,11 @@ it('activateDueTrips return 0 jika tidak ada candidate', function () {
 });
 
 it('activateDueTrips skip trip tanpa mitra', function () {
-    $trip = makeTripServiceMock();
+    // ✅ FIX: Tanggal_mulai harus hari ini (atau kemarin) agar masuk kandidat
+    $trip = makeTripServiceMock([
+        'tanggal_mulai' => Carbon::now()->startOfDay(),
+    ]);
+
     $trip->shouldReceive('timezoneOrDefault')->andReturn('Asia/Makassar');
     $trip->shouldReceive('hasMitra')->andReturn(false);
 
@@ -466,6 +474,7 @@ it('activateDueTrips skip trip tanpa mitra', function () {
     $result = $this->service->activateDueTrips();
 
     expect($result['activated'])->toBe(0);
+    // ✅ FIX: Pastikan sekarang menghitung skip-nya
     expect($result['skipped_no_mitra'])->toBe(1);
 });
 

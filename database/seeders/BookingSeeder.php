@@ -21,17 +21,6 @@ class BookingSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * Booking #1-#5 = data demo (pending, payment_verified, cancelled).
-     * Booking #6 = data E2E khusus, status CONFIRMED, tanggal hari ini (WITA).
-     *
-     * ⚠️ FIX RACE #1: Pakai advisory lock global `booking_creation_global`
-     * SAMA dengan `BookingRepository::generateKode()`. Ini mencegah
-     * race antara seeder dan `BookingService::create()` yang bisa
-     * menyebabkan duplicate `BKG-2026-001`.
-     *
-     * ⚠️ FIX RACE #2: Skip jika booking sudah ada (`firstOrCreate`-style)
-     * — jangan pakai `updateOrCreate` yang bisa race.
      */
     public function run(): void
     {
@@ -53,24 +42,14 @@ class BookingSeeder extends Seeder
             return;
         }
 
-        // ==========================================
-        // 0. HAPUS TRIP LAMA (STALE DATA)
-        // ------------------------------------------------------------
-        // Trip yang existing dihapus dulu supaya tidak ada "stale trip"
-        // dari test run sebelumnya.
-        //
-        // Deleting trips cascade ke: trip_mitras, trip_days,
-        // daily_reports, daily_report_media, e_tickets.
-        // ==========================================
+        // HAPUS TRIP LAMA (STALE DATA)
         $staleTripCount = Trip::query()->count();
         if ($staleTripCount > 0) {
             Trip::query()->forceDelete();
             $this->command->info("🗑️  Menghapus {$staleTripCount} trip lama (stale).");
         }
 
-        // ==========================================
         // 1. BOOKING PENDING PAYMENT
-        // ==========================================
         $this->seedBooking([
             'kode' => 'BKG-'.now()->year.'-001',
             'package' => $paketPasarTerapung,
@@ -86,9 +65,7 @@ class BookingSeeder extends Seeder
             'payment' => null,
         ]);
 
-        // ==========================================
         // 2. BOOKING PAYMENT VERIFIED
-        // ==========================================
         $this->seedBooking([
             'kode' => 'BKG-'.now()->year.'-002',
             'package' => $paketHutanKalimantan,
@@ -110,14 +87,12 @@ class BookingSeeder extends Seeder
                 'nama_pengirim' => 'Budi Client',
                 'bukti_transfer' => null,
                 'verified_by' => $admin,
-                'verified_at' => now()->subHours(6),
+                'verified_at' => Carbon::now()->subHours(6),
                 'catatan' => 'Transfer sudah masuk, sesuai nominal.',
             ],
         ]);
 
-        // ==========================================
         // 3. BOOKING PAYMENT VERIFIED
-        // ==========================================
         $this->seedBooking([
             'kode' => 'BKG-'.now()->year.'-003',
             'package' => $paketPasarTerapung,
@@ -138,14 +113,12 @@ class BookingSeeder extends Seeder
                 'nama_pengirim' => 'Budi Client',
                 'bukti_transfer' => null,
                 'verified_by' => $admin,
-                'verified_at' => now()->subDays(2),
+                'verified_at' => Carbon::now()->subDays(2),
                 'catatan' => 'Sudah diverifikasi.',
             ],
         ]);
 
-        // ==========================================
         // 4. BOOKING PAYMENT VERIFIED (tanggal dekat)
-        // ==========================================
         $this->seedBooking([
             'kode' => 'BKG-'.now()->year.'-004',
             'package' => $paketHutanKalimantan,
@@ -165,14 +138,12 @@ class BookingSeeder extends Seeder
                 'nama_pengirim' => 'Budi Client',
                 'bukti_transfer' => null,
                 'verified_by' => $admin,
-                'verified_at' => now()->subDays(1),
+                'verified_at' => Carbon::now()->subDays(1),
                 'catatan' => 'Sudah diverifikasi.',
             ],
         ]);
 
-        // ==========================================
         // 5. BOOKING CANCELLED
-        // ==========================================
         $this->seedBooking([
             'kode' => 'BKG-'.now()->year.'-005',
             'package' => $paketPasarTerapung,
@@ -188,15 +159,7 @@ class BookingSeeder extends Seeder
             'payment' => null,
         ]);
 
-        // ==========================================
         // 6. BOOKING E2E CONFIRMED (khusus test)
-        // ------------------------------------------------------------
-        // Booking ini dibuat CONFIRMED dengan tanggal hari ini (WITA)
-        // supaya E2E Trip & Daily Report punya data deterministik.
-        // Trip akan otomatis dibuat oleh backfillMissingTrips() di akhir.
-        //
-        // ⚠️ JANGAN ubah statusnya di test lain.
-        // ==========================================
         $this->seedBooking([
             'kode' => 'BKG-'.now()->year.'-E2E-CONFIRMED',
             'package' => $paketPasarTerapung,
@@ -216,7 +179,7 @@ class BookingSeeder extends Seeder
                 'nama_pengirim' => 'E2E Client 1',
                 'bukti_transfer' => null,
                 'verified_by' => $admin,
-                'verified_at' => now()->subDays(1),
+                'verified_at' => Carbon::now()->subDays(1),
                 'catatan' => 'Pembayaran E2E sudah diverifikasi.',
             ],
         ]);
@@ -225,19 +188,13 @@ class BookingSeeder extends Seeder
         $this->command->info('   Booking #3 & #4 berstatus PAYMENT_VERIFIED.');
         $this->command->info('   Booking #6 (E2E) berstatus CONFIRMED — trip otomatis dibuat.');
 
-        // Backfill Trip untuk booking confirmed yang belum punya trip
         $this->backfillMissingTrips();
     }
 
     /**
      * Helper: seed satu booking lengkap (dengan participants & payment).
      *
-     * ✅ FIX RACE:
-     * 1. Pakai advisory lock global `booking_creation_global` — SAMA
-     *    dengan `BookingRepository::generateKode()`. Ini mencegah
-     *    seeder dan `BookingService::create()` insert kode yang sama.
-     * 2. Cek existing dulu — kalau sudah ada, skip (jangan updateOrCreate
-     *    yang bisa race).
+     * ✅ FIX PHPStan: Tambahkan PHPDoc tipe array yang lengkap
      *
      * @param  array{
      *     kode: string,
@@ -276,7 +233,6 @@ class BookingSeeder extends Seeder
             ? now()->addHours(24)
             : null;
 
-        // ✅ FIX RACE: Advisory lock global — sama dengan generateKode()
         $isPgsql = DB::connection()->getDriverName() === 'pgsql';
         $lockKey = crc32('booking_creation_global');
         $hasLock = false;
@@ -287,7 +243,6 @@ class BookingSeeder extends Seeder
         }
 
         try {
-            // ✅ Skip jika sudah ada (idempotent)
             $booking = Booking::where('kode', $data['kode'])->first();
 
             if ($booking === null) {
@@ -303,7 +258,6 @@ class BookingSeeder extends Seeder
                     'catatan' => $data['catatan'] ?? null,
                 ]);
             } else {
-                // Update field selain kode — tidak perlu re-insert
                 $booking->update([
                     'package_id' => $package->id,
                     'user_id' => $client->id,
@@ -316,7 +270,6 @@ class BookingSeeder extends Seeder
                 ]);
             }
 
-            // Participants: delete + insert (aman karena dalam lock)
             BookingParticipant::where('booking_id', $booking->id)->delete();
 
             foreach ($data['participants'] as $p) {
@@ -330,7 +283,13 @@ class BookingSeeder extends Seeder
             }
 
             if ($data['payment'] !== null) {
+                /** @var array{jumlah?: float|int|null, metode: PaymentMetode, bank_pengirim?: string|null, nama_pengirim?: string|null, bukti_transfer?: string|null, verified_by?: User|null, verified_at?: Carbon|null, catatan?: string|null} $paymentData */
                 $paymentData = $data['payment'];
+
+                // ✅ FIX PHPStan: Hilangkan instanceof karena tipe sudah pasti User dari PHPDoc
+                $verifiedById = isset($paymentData['verified_by'])
+                    ? $paymentData['verified_by']->id
+                    : null;
 
                 Payment::updateOrCreate(
                     ['booking_id' => $booking->id],
@@ -340,14 +299,13 @@ class BookingSeeder extends Seeder
                         'bank_pengirim' => $paymentData['bank_pengirim'] ?? null,
                         'nama_pengirim' => $paymentData['nama_pengirim'] ?? null,
                         'bukti_transfer' => $paymentData['bukti_transfer'] ?? null,
-                        'verified_by' => $paymentData['verified_by']?->id,
+                        'verified_by' => $verifiedById,
                         'verified_at' => $paymentData['verified_at'] ?? null,
                         'catatan' => $paymentData['catatan'] ?? null,
                     ]
                 );
             }
         } finally {
-            // ✅ Release lock
             if ($hasLock) {
                 DB::selectOne('SELECT pg_advisory_unlock(?)', [$lockKey]);
             }
@@ -356,17 +314,12 @@ class BookingSeeder extends Seeder
 
     /**
      * Backfill Trip untuk booking confirmed yang belum punya trip.
-     *
-     * ✅ FIX: hanya backfill `BKG-*-E2E-CONFIRMED` (bukan semua
-     * booking confirmed lain). Ini supaya trip yang dibuat untuk
-     * E2E deterministik — tanggal_mulai = hari ini (WITA).
      */
     protected function backfillMissingTrips(): void
     {
         $tripService = app(TripService::class);
         $eTicketService = app(ETicketService::class);
 
-        // ✅ FIX: hanya backfill BKG-*-E2E-CONFIRMED
         $missing = Booking::where('status', BookingStatus::CONFIRMED->value)
             ->where('kode', 'like', 'BKG-%-E2E-CONFIRMED')
             ->whereDoesntHave('trip')

@@ -131,7 +131,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'email' => $user->email,
                 'error' => $e->getMessage(),
-                'sql' => $e->getSql() ?? null,
+                'sql' => $e->getSql(),
                 'admin_id' => auth()->id(),
             ]);
 

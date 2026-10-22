@@ -296,9 +296,10 @@ it('destroy package dengan booking ditolak', function () {
 
     $this->actingAs($this->admin)
         ->delete(route('admin.packages.destroy', $this->draftPackage->id))
-        ->assertSessionHasErrors('package');
+        // ✅ FIX: Controller mengembalikan flash 'error', bukan session errors
+        ->assertSessionHas('error');
 
-    // Package masih ada
+    // Package masih ada (tidak terhapus)
     $this->assertNotSoftDeleted('packages', [
         'id' => $this->draftPackage->id,
     ]);

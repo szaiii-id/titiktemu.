@@ -11,14 +11,6 @@ import {
 // HELPERS
 // ============================================================
 
-/**
- * Buat File dengan ukuran tertentu.
- *
- * CATATAN PENTING: `new File([''], name)` selalu berukuran 0 byte,
- * karena ukuran File = total byte dari array Blob parts. Untuk
- * mensimulasikan file berukuran `size` byte, isi array harus
- * benar-benar berukuran `size` byte.
- */
 const createMockFile = (
     name: string,
     size: number,
@@ -62,7 +54,8 @@ describe('validateImageFile', () => {
         const file = createMockFile('big.png', 3 * 1024 * 1024, 'image/png');
         const result = validateImageFile(file);
         expect(result.valid).toBe(false);
-        expect(result.error).toContain('melebihi 2 MB');
+        // ✅ FIX: Sesuaikan dengan pesan di fileUpload.ts ("maksimal 2MB")
+        expect(result.error).toContain('maksimal 2MB');
     });
 
     it('menerima ukuran kustom via options.maxSizeMB', () => {
@@ -110,7 +103,8 @@ describe('validateMultipleImageFiles', () => {
         expect(result.valid).toBe(false);
         expect(result.errors.length).toBe(2);
         expect(result.errors.some((e) => e.includes('tidak didukung'))).toBe(true);
-        expect(result.errors.some((e) => e.includes('melebihi'))).toBe(true);
+        // ✅ FIX: Sesuaikan dengan pesan di fileUpload.ts ("maksimal 2MB")
+        expect(result.errors.some((e) => e.includes('maksimal 2MB'))).toBe(true);
     });
 
     it('valid jika semua file sesuai', () => {

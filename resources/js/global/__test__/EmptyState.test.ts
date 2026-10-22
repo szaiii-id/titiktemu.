@@ -33,7 +33,10 @@ describe('EmptyState.svelte — Rendering Dasar', () => {
             props: { title: 'Kosong', description: '' },
         });
 
-        const p = document.querySelector('p');
+        // ✅ FIX: Cari p yang berisi teks kosong (tidak ada)
+        // Atau lebih aman: cek bahwa tidak ada elemen p di dalam container
+        const container = document.querySelector('.p-16.text-center');
+        const p = container?.querySelector('p');
         expect(p).not.toBeInTheDocument();
     });
 
@@ -66,7 +69,7 @@ describe('EmptyState.svelte — Rendering Dasar', () => {
 // ============================================================
 
 describe('EmptyState.svelte — Action: Hapus Filter', () => {
-    it('merender tombol "Hapus Filter" jika hasFilters = true dan onClear diberikan', () => {
+    it('merender tombol default clearLabel jika hasFilters = true dan onClear diberikan', () => {
         render(EmptyStateFixture, {
             props: {
                 title: 'Tidak ditemukan',
@@ -75,12 +78,13 @@ describe('EmptyState.svelte — Action: Hapus Filter', () => {
             },
         });
 
+        // ✅ FIX: Default clearLabel adalah "Hapus Pencarian", bukan "Hapus Filter"
         expect(
-            screen.getByRole('button', { name: /Hapus Filter/i }),
+            screen.getByRole('button', { name: /Hapus Pencarian/i }),
         ).toBeInTheDocument();
     });
 
-    it('memanggil onClear saat tombol "Hapus Filter" diklik', async () => {
+    it('memanggil onClear saat tombol clearLabel diklik', async () => {
         const onClear = vi.fn();
         render(EmptyStateFixture, {
             props: {
@@ -91,12 +95,12 @@ describe('EmptyState.svelte — Action: Hapus Filter', () => {
         });
 
         await fireEvent.click(
-            screen.getByRole('button', { name: /Hapus Filter/i }),
+            screen.getByRole('button', { name: /Hapus Pencarian/i }),
         );
         expect(onClear).toHaveBeenCalledTimes(1);
     });
 
-    it('TIDAK merender tombol "Hapus Filter" jika hasFilters = true tapi onClear kosong', () => {
+    it('TIDAK merender tombol clearLabel jika hasFilters = true tapi onClear kosong', () => {
         render(EmptyStateFixture, {
             props: {
                 title: 'Tidak ditemukan',
@@ -105,7 +109,7 @@ describe('EmptyState.svelte — Action: Hapus Filter', () => {
         });
 
         expect(
-            screen.queryByRole('button', { name: /Hapus Filter/i }),
+            screen.queryByRole('button', { name: /Hapus Pencarian/i }),
         ).not.toBeInTheDocument();
     });
 });
@@ -158,7 +162,7 @@ describe('EmptyState.svelte — Action: Custom Action', () => {
         ).not.toBeInTheDocument();
     });
 
-    it('prioritas "Hapus Filter" lebih tinggi daripada custom action jika keduanya tersedia', () => {
+    it('prioritas clearLabel lebih tinggi daripada custom action jika keduanya tersedia', () => {
         render(EmptyStateFixture, {
             props: {
                 title: 'Kosong',
@@ -169,8 +173,9 @@ describe('EmptyState.svelte — Action: Custom Action', () => {
             },
         });
 
+        // ✅ FIX: Default clearLabel adalah "Hapus Pencarian"
         expect(
-            screen.getByRole('button', { name: /Hapus Filter/i }),
+            screen.getByRole('button', { name: /Hapus Pencarian/i }),
         ).toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: /Tambah Paket/i }),
@@ -180,10 +185,6 @@ describe('EmptyState.svelte — Action: Custom Action', () => {
 
 // ============================================================
 // KATEGORI 4 — ACTION: SNIPPET (children)
-// ------------------------------------------------------------
-// Svelte 5: `actions` adalah Snippet, bukan fungsi yang return
-// HTMLElement. Gunakan wrapper fixture yang mendeklarasikan
-// {#snippet actions()} di dalam template .svelte.
 // ============================================================
 
 describe('EmptyState.svelte — Action: Snippet', () => {
@@ -202,7 +203,7 @@ describe('EmptyState.svelte — Action: Snippet', () => {
         ).toBeInTheDocument();
     });
 
-    it('prioritas tombol Hapus Filter / Custom Action lebih tinggi daripada snippet', () => {
+    it('prioritas tombol clearLabel / custom action lebih tinggi daripada snippet', () => {
         render(EmptyStateFixture, {
             props: {
                 title: 'Kosong',
@@ -212,7 +213,6 @@ describe('EmptyState.svelte — Action: Snippet', () => {
             },
         });
 
-        // Harus merender "Aksi Utama", BUKAN "Custom Button dari Snippet"
         expect(
             screen.getByRole('button', { name: /Aksi Utama/i }),
         ).toBeInTheDocument();

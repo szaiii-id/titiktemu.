@@ -6,6 +6,8 @@ use App\Repositories\Contracts\ProfileRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\User\UserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -37,7 +39,6 @@ afterEach(function () {
 */
 
 it('membuat admin baru dengan password eksplisit', function () {
-    // ARRANGE
     $data = [
         'name' => 'Admin Satu',
         'username' => 'admin1',
@@ -47,25 +48,11 @@ it('membuat admin baru dengan password eksplisit', function () {
         'telepon' => '08123456789',
     ];
 
-    // validateUnique → tidak ada konflik
-    $this->userRepository->shouldReceive('emailExists')
-        ->once()
-        ->with('admin1@example.com', null)
-        ->andReturn(false);
+    $this->userRepository->shouldReceive('emailExists')->once()->with('admin1@example.com', null)->andReturn(false);
+    $this->userRepository->shouldReceive('usernameExists')->once()->with('admin1', null)->andReturn(false);
 
-    $this->userRepository->shouldReceive('usernameExists')
-        ->once()
-        ->with('admin1', null)
-        ->andReturn(false);
+    $createdUser = makeUser(['id' => 1, 'name' => 'Admin Satu', 'email' => 'admin1@example.com', 'role' => 'admin']);
 
-    $createdUser = makeUser([
-        'id' => 1,
-        'name' => 'Admin Satu',
-        'email' => 'admin1@example.com',
-        'role' => 'admin',
-    ]);
-
-    // createUser → assert payload
     $this->userRepository->shouldReceive('createUser')
         ->once()
         ->with(Mockery::on(function ($payload) {
@@ -78,112 +65,77 @@ it('membuat admin baru dengan password eksplisit', function () {
         }))
         ->andReturn($createdUser);
 
-    // createForUser → assert payload profile
     $this->profileRepository->shouldReceive('createForUser')
         ->once()
         ->with($createdUser, Mockery::on(function ($profile) {
             return $profile['tipe'] === 'admin'
                 && $profile['nama_penyedia_usaha'] === 'PT Admin'
                 && $profile['telepon'] === '08123456789'
-                && $profile['alamat'] === null; // default null
+                && $profile['alamat'] === null;
         }));
 
-    // ACT
     $result = $this->service->createAdmin($data);
 
-    // ASSERT
     expect($result['user'])->toBe($createdUser);
     expect($result['plain_password'])->toBe('SecretPass123!');
 });
 
 it('membuat admin baru dengan password auto-generate jika tidak diisi', function () {
-    // ARRANGE
-    $data = [
-        'name' => 'Admin Dua',
-        'email' => 'admin2@example.com',
-    ];
+    $data = ['name' => 'Admin Dua', 'email' => 'admin2@example.com'];
 
     $this->userRepository->shouldReceive('emailExists')->andReturn(false);
-    // username tidak di-set → usernameExists tidak boleh dipanggil
     $this->userRepository->shouldReceive('usernameExists')->never();
 
     $createdUser = makeUser(['id' => 2, 'email' => 'admin2@example.com']);
 
-    // Password di-generate → cek bahwa password yang dikirim BUKAN null
     $capturedPassword = null;
     $this->userRepository->shouldReceive('createUser')
         ->once()
         ->with(Mockery::on(function ($payload) use (&$capturedPassword) {
             $capturedPassword = $payload['password'];
 
-            return ! empty($payload['password'])
-                && is_string($payload['password'])
-                && strlen($payload['password']) >= 12;
+            return ! empty($payload['password']) && is_string($payload['password']) && strlen($payload['password']) >= 12;
         }))
         ->andReturn($createdUser);
 
     $this->profileRepository->shouldReceive('createForUser')->once();
 
-    // ACT
     $result = $this->service->createAdmin($data);
 
-    // ASSERT
     expect($result['plain_password'])->toBe($capturedPassword);
     expect($result['plain_password'])->not->toBeEmpty();
 });
 
 it('createAdmin memanggil repository dalam urutan yang benar', function () {
-    // Behavioral: verifikasi urutan panggilan
     $data = ['name' => 'A', 'email' => 'a@b.com', 'username' => 'aaa'];
-
     $createdUser = makeUser(['id' => 100, 'role' => 'admin']);
 
-    $this->userRepository->shouldReceive('emailExists')
-        ->once()->with('a@b.com', null)->andReturn(false)->ordered();
-
-    $this->userRepository->shouldReceive('usernameExists')
-        ->once()->with('aaa', null)->andReturn(false)->ordered();
-
-    $this->userRepository->shouldReceive('createUser')
-        ->once()->andReturn($createdUser)->ordered();
-
-    $this->profileRepository->shouldReceive('createForUser')
-        ->once()->ordered();
+    $this->userRepository->shouldReceive('emailExists')->once()->with('a@b.com', null)->andReturn(false)->ordered();
+    $this->userRepository->shouldReceive('usernameExists')->once()->with('aaa', null)->andReturn(false)->ordered();
+    $this->userRepository->shouldReceive('createUser')->once()->andReturn($createdUser)->ordered();
+    $this->profileRepository->shouldReceive('createForUser')->once()->ordered();
 
     $this->service->createAdmin($data);
 });
 
 it('melempar ValidationException jika email admin sudah terpakai', function () {
-    // ARRANGE
     $data = ['name' => 'X', 'email' => 'dup@example.com'];
 
-    $this->userRepository->shouldReceive('emailExists')
-        ->once()
-        ->with('dup@example.com', null)
-        ->andReturn(true);
-
-    // Repository create TIDAK boleh dipanggil
+    $this->userRepository->shouldReceive('emailExists')->once()->with('dup@example.com', null)->andReturn(true);
     $this->userRepository->shouldReceive('createUser')->never();
     $this->profileRepository->shouldReceive('createForUser')->never();
 
-    // ACT + ASSERT
-    expect(fn () => $this->service->createAdmin($data))
-        ->toThrow(ValidationException::class);
+    expect(fn () => $this->service->createAdmin($data))->toThrow(ValidationException::class);
 });
 
 it('melempar ValidationException jika username admin sudah terpakai', function () {
     $data = ['name' => 'X', 'email' => 'new@example.com', 'username' => 'taken'];
 
     $this->userRepository->shouldReceive('emailExists')->andReturn(false);
-    $this->userRepository->shouldReceive('usernameExists')
-        ->once()
-        ->with('taken', null)
-        ->andReturn(true);
-
+    $this->userRepository->shouldReceive('usernameExists')->once()->with('taken', null)->andReturn(true);
     $this->userRepository->shouldReceive('createUser')->never();
 
-    expect(fn () => $this->service->createAdmin($data))
-        ->toThrow(ValidationException::class);
+    expect(fn () => $this->service->createAdmin($data))->toThrow(ValidationException::class);
 });
 
 /*
@@ -193,12 +145,7 @@ it('melempar ValidationException jika username admin sudah terpakai', function (
 */
 
 it('membuat mitra baru dengan role mitra dan tipe profile mitra', function () {
-    $data = [
-        'name' => 'Mitra Satu',
-        'email' => 'mitra1@example.com',
-        'username' => 'mitra1',
-        'password' => 'MitraPass123!',
-    ];
+    $data = ['name' => 'Mitra Satu', 'email' => 'mitra1@example.com', 'username' => 'mitra1', 'password' => 'MitraPass123!'];
 
     $this->userRepository->shouldReceive('emailExists')->andReturn(false);
     $this->userRepository->shouldReceive('usernameExists')->andReturn(false);
@@ -226,8 +173,7 @@ it('melempar ValidationException jika email mitra sudah terpakai', function () {
     $this->userRepository->shouldReceive('emailExists')->andReturn(true);
     $this->userRepository->shouldReceive('createUser')->never();
 
-    expect(fn () => $this->service->createMitra($data))
-        ->toThrow(ValidationException::class);
+    expect(fn () => $this->service->createMitra($data))->toThrow(ValidationException::class);
 });
 
 /*
@@ -237,34 +183,19 @@ it('melempar ValidationException jika email mitra sudah terpakai', function () {
 */
 
 it('update user dengan data baru dan profile baru (profile belum ada)', function () {
-    // ARRANGE
     $user = Mockery::mock(User::class)->makePartial();
     $user->forceFill(['id' => 5, 'name' => 'Lama', 'role' => 'mitra']);
 
-    // validateUnique: email & username baru unik (except user id 5)
-    $this->userRepository->shouldReceive('emailExists')
-        ->once()
-        ->with('baru@example.com', 5)
-        ->andReturn(false);
-    $this->userRepository->shouldReceive('usernameExists')
-        ->once()
-        ->with('baru', 5)
-        ->andReturn(false);
+    $this->userRepository->shouldReceive('emailExists')->once()->with('baru@example.com', 5)->andReturn(false);
+    $this->userRepository->shouldReceive('usernameExists')->once()->with('baru', 5)->andReturn(false);
 
-    // updateUser
     $this->userRepository->shouldReceive('updateUser')
         ->once()
-        ->with($user, Mockery::on(fn ($p) => $p['name'] === 'Baru'
-            && $p['username'] === 'baru'
-            && $p['email'] === 'baru@example.com'
-        ))
+        ->with($user, Mockery::on(fn ($p) => $p['name'] === 'Baru' && $p['username'] === 'baru' && $p['email'] === 'baru@example.com'))
         ->andReturn($user);
 
-    // Profile: user belum punya profile
     $user->shouldReceive('load')->with('profile')->andReturn($user);
     $user->shouldReceive('refresh')->andReturn($user);
-
-    // Karena $user->profile = null, maka createForUser dipanggil
     $user->shouldReceive('getAttribute')->with('profile')->andReturn(null);
 
     $this->profileRepository->shouldReceive('createForUser')
@@ -272,19 +203,16 @@ it('update user dengan data baru dan profile baru (profile belum ada)', function
         ->with($user, Mockery::on(fn ($p) => $p['tipe'] === 'mitra' && $p['alamat'] === 'Jl. Baru'))
         ->andReturn(new Profile);
 
-    // ACT
     $result = $this->service->updateUser(
         $user,
         ['name' => 'Baru', 'username' => 'baru', 'email' => 'baru@example.com'],
         ['alamat' => 'Jl. Baru']
     );
 
-    // ASSERT
     expect($result)->toBe($user);
 });
 
 it('update user dan profile yang sudah ada', function () {
-    // ARRANGE
     $existingProfile = new Profile;
     $existingProfile->forceFill(['id' => 99, 'tipe' => 'mitra']);
 
@@ -294,15 +222,11 @@ it('update user dan profile yang sudah ada', function () {
 
     $this->userRepository->shouldReceive('emailExists')->andReturn(false);
     $this->userRepository->shouldReceive('usernameExists')->andReturn(false);
-
-    $this->userRepository->shouldReceive('updateUser')
-        ->once()
-        ->andReturn($user);
+    $this->userRepository->shouldReceive('updateUser')->once()->andReturn($user);
 
     $user->shouldReceive('load')->with('profile')->andReturn($user);
     $user->shouldReceive('refresh')->andReturn($user);
 
-    // Karena profile sudah ada → updateProfile
     $this->profileRepository->shouldReceive('updateProfile')
         ->once()
         ->with($existingProfile, Mockery::on(fn ($p) => $p['alamat'] === 'Jl. Update'))
@@ -310,14 +234,8 @@ it('update user dan profile yang sudah ada', function () {
 
     $this->profileRepository->shouldReceive('createForUser')->never();
 
-    // ACT
-    $result = $this->service->updateUser(
-        $user,
-        ['name' => 'Baru'],
-        ['alamat' => 'Jl. Update']
-    );
+    $result = $this->service->updateUser($user, ['name' => 'Baru'], ['alamat' => 'Jl. Update']);
 
-    // ASSERT
     expect($result)->toBe($user);
 });
 
@@ -333,7 +251,6 @@ it('update user tanpa profileData → profileRepository tidak dipanggil', functi
     $user->shouldReceive('load')->with('profile')->andReturn($user);
     $user->shouldReceive('refresh')->andReturn($user);
 
-    // profileData kosong → tidak ada update/create profile
     $this->profileRepository->shouldReceive('updateProfile')->never();
     $this->profileRepository->shouldReceive('createForUser')->never();
 
@@ -344,15 +261,10 @@ it('update user melempar ValidationException jika email duplikat', function () {
     $user = Mockery::mock(User::class)->makePartial();
     $user->forceFill(['id' => 5]);
 
-    $this->userRepository->shouldReceive('emailExists')
-        ->once()
-        ->with('dup@example.com', 5)
-        ->andReturn(true);
-
+    $this->userRepository->shouldReceive('emailExists')->once()->with('dup@example.com', 5)->andReturn(true);
     $this->userRepository->shouldReceive('updateUser')->never();
 
-    expect(fn () => $this->service->updateUser($user, ['email' => 'dup@example.com']))
-        ->toThrow(ValidationException::class);
+    expect(fn () => $this->service->updateUser($user, ['email' => 'dup@example.com']))->toThrow(ValidationException::class);
 });
 
 /*
@@ -362,16 +274,37 @@ it('update user melempar ValidationException jika email duplikat', function () {
 */
 
 it('menghapus user melalui repository', function () {
-    $user = makeUser(['id' => 7, 'email' => 'hapus@example.com', 'role' => 'client']);
+    // ✅ FIX: Gunakan Mockery::mock langsung
+    $user = Mockery::mock(User::class)->makePartial();
+    $user->forceFill([
+        'id' => 7,
+        'email' => 'hapus@example.com',
+        'role' => 'client',
+    ]);
 
-    $this->userRepository->shouldReceive('deleteUser')
-        ->once()
-        ->with($user)
-        ->andReturn(true);
+    // ✅ FIX: Mock class HasMany, bukan objek kosong
+    $payoutsMock = Mockery::mock(HasMany::class);
+    $payoutsMock->shouldReceive('delete')->once()->andReturn(true);
+    $user->shouldReceive('payouts')->andReturn($payoutsMock);
+
+    $tripMitrasMock = Mockery::mock(HasMany::class);
+    $tripMitrasMock->shouldReceive('delete')->once()->andReturn(true);
+    $user->shouldReceive('tripMitras')->andReturn($tripMitrasMock);
+
+    $mitraWalletMock = Mockery::mock(HasOne::class);
+    $mitraWalletMock->shouldReceive('exists')->once()->andReturn(false);
+    $user->shouldReceive('mitraWallet')->andReturn($mitraWalletMock);
+
+    $dailyReportsMock = Mockery::mock(HasMany::class);
+    $dailyReportsMock->shouldReceive('each')->once()->andReturnUsing(function ($callback) {
+        // Tidak ada report, jadi callback tidak dipanggil
+    });
+    $user->shouldReceive('dailyReports')->andReturn($dailyReportsMock);
+
+    $this->userRepository->shouldReceive('deleteUser')->once()->with($user)->andReturn(true);
 
     $this->service->deleteUser($user);
 
-    // Assert via mock expectation (jika tidak dipanggil → test gagal)
     expect(true)->toBeTrue();
 });
 
@@ -382,7 +315,6 @@ it('menghapus user melalui repository', function () {
 */
 
 it('reset password user dan set must_change_password = true', function () {
-    // ARRANGE
     $user = Mockery::mock(User::class)->makePartial();
     $user->forceFill(['id' => 3, 'email' => 'reset@example.com']);
 
@@ -400,10 +332,8 @@ it('reset password user dan set must_change_password = true', function () {
 
     $user->shouldReceive('refresh')->andReturn($user);
 
-    // ACT
     $result = $this->service->resetPassword($user);
 
-    // ASSERT
     expect($result['user'])->toBe($user);
     expect($result['plain_password'])->toBe($capturedPassword);
     expect($result['plain_password'])->not->toBeEmpty();
@@ -419,102 +349,69 @@ it('paginateByRoles meneruskan parameter ke repository', function () {
     $paginator = Mockery::mock(LengthAwarePaginator::class);
 
     $this->userRepository->shouldReceive('paginateByRoles')
-        ->once()
-        ->with(['admin', 'mitra'], 25, 'budi')
-        ->andReturn($paginator);
+        ->once()->with(['admin', 'mitra'], 25, 'budi')->andReturn($paginator);
 
-    $result = $this->service->paginateByRoles(['admin', 'mitra'], 25, 'budi');
-
-    expect($result)->toBe($paginator);
+    expect($this->service->paginateByRoles(['admin', 'mitra'], 25, 'budi'))->toBe($paginator);
 });
 
 it('paginateByRoles menggunakan default perPage = 15 dan search = null', function () {
     $paginator = Mockery::mock(LengthAwarePaginator::class);
 
     $this->userRepository->shouldReceive('paginateByRoles')
-        ->once()
-        ->with(['admin'], 15, null)
-        ->andReturn($paginator);
+        ->once()->with(['admin'], 15, null)->andReturn($paginator);
 
     $this->service->paginateByRoles(['admin']);
 });
 
 it('paginateByRoles dengan perPage minimum (1) tetap diteruskan', function () {
-    // BVA: batas bawah perPage
     $paginator = Mockery::mock(LengthAwarePaginator::class);
 
     $this->userRepository->shouldReceive('paginateByRoles')
-        ->once()
-        ->with(['admin'], 1, null)
-        ->andReturn($paginator);
+        ->once()->with(['admin'], 1, null)->andReturn($paginator);
 
-    $result = $this->service->paginateByRoles(['admin'], 1);
-    expect($result)->toBe($paginator);
+    expect($this->service->paginateByRoles(['admin'], 1))->toBe($paginator);
 });
 
 it('paginateClients meneruskan parameter ke repository', function () {
     $paginator = Mockery::mock(LengthAwarePaginator::class);
 
     $this->userRepository->shouldReceive('paginateClients')
-        ->once()
-        ->with(10, 'search-keyword')
-        ->andReturn($paginator);
+        ->once()->with(10, 'search-keyword')->andReturn($paginator);
 
-    $result = $this->service->paginateClients(10, 'search-keyword');
-
-    expect($result)->toBe($paginator);
+    expect($this->service->paginateClients(10, 'search-keyword'))->toBe($paginator);
 });
 
 /*
 |==========================================================================
 | BVA — generatePassword()
 |==========================================================================
-| Menguji batas-batas parameter `length` pada generatePassword().
-| Method ini protected, jadi diakses via Reflection.
 */
 
 it('generatePassword dengan panjang default = 12 karakter', function () {
-    // BVA: default value
     $reflection = new ReflectionMethod($this->service, 'generatePassword');
     $reflection->setAccessible(true);
-
-    $password = $reflection->invoke($this->service);
-
-    expect(strlen($password))->toBe(12);
+    expect(strlen($reflection->invoke($this->service)))->toBe(12);
 });
 
 it('generatePassword dengan length = 0 mengembalikan string kosong', function () {
-    // BVA: batas bawah ekstrem
     $reflection = new ReflectionMethod($this->service, 'generatePassword');
     $reflection->setAccessible(true);
-
-    $password = $reflection->invoke($this->service, 0);
-
-    expect($password)->toBe('');
+    expect($reflection->invoke($this->service, 0))->toBe('');
 });
 
 it('generatePassword dengan length = 1 mengembalikan 1 karakter', function () {
-    // BVA: batas bawah berguna
     $reflection = new ReflectionMethod($this->service, 'generatePassword');
     $reflection->setAccessible(true);
-
-    $password = $reflection->invoke($this->service, 1);
-
-    expect(strlen($password))->toBe(1);
+    expect(strlen($reflection->invoke($this->service, 1)))->toBe(1);
 });
 
 it('generatePassword dengan length = 100 mengembalikan 100 karakter', function () {
-    // BVA: batas atas
     $reflection = new ReflectionMethod($this->service, 'generatePassword');
     $reflection->setAccessible(true);
-
-    $password = $reflection->invoke($this->service, 100);
-
-    expect(strlen($password))->toBe(100);
+    expect(strlen($reflection->invoke($this->service, 100)))->toBe(100);
 });
 
 it('generatePassword menghasilkan string yang unik antar pemanggilan', function () {
-    // Edge case: verifikasi randomness
     $reflection = new ReflectionMethod($this->service, 'generatePassword');
     $reflection->setAccessible(true);
 
@@ -528,40 +425,24 @@ it('generatePassword menghasilkan string yang unik antar pemanggilan', function 
 |==========================================================================
 | Equivalence Partitioning — validateUnique
 |==========================================================================
-| Partisi: email ada/tidak ada, username ada/tidak ada, exceptUserId null/int.
 */
 
 it('createAdmin melempar ValidationException jika email DAN username duplikat sekaligus', function () {
-    // Partisi: dua-duanya konflik — email dicek duluan
-    $data = [
-        'name' => 'X',
-        'email' => 'dup@example.com',
-        'username' => 'taken',
-    ];
+    $data = ['name' => 'X', 'email' => 'dup@example.com', 'username' => 'taken'];
 
-    $this->userRepository->shouldReceive('emailExists')
-        ->once()
-        ->andReturn(true);
-
-    // usernameExists TIDAK dipanggil karena email sudah throw duluan
+    $this->userRepository->shouldReceive('emailExists')->once()->andReturn(true);
     $this->userRepository->shouldReceive('usernameExists')->never();
     $this->userRepository->shouldReceive('createUser')->never();
 
-    expect(fn () => $this->service->createAdmin($data))
-        ->toThrow(ValidationException::class);
+    expect(fn () => $this->service->createAdmin($data))->toThrow(ValidationException::class);
 });
 
 it('createAdmin tidak memanggil usernameExists jika username kosong string', function () {
-    // Partisi: username = '' (empty string) → skip
     $data = ['name' => 'X', 'email' => 'a@b.com', 'username' => ''];
 
     $this->userRepository->shouldReceive('emailExists')->andReturn(false);
-    // empty('') = true → usernameExists tidak dipanggil
     $this->userRepository->shouldReceive('usernameExists')->never();
-    $this->userRepository->shouldReceive('createUser')
-        ->once()
-        ->andReturn(makeUser(['id' => 1]));
-
+    $this->userRepository->shouldReceive('createUser')->once()->andReturn(makeUser(['id' => 1]));
     $this->profileRepository->shouldReceive('createForUser')->once();
 
     $this->service->createAdmin($data);
@@ -574,7 +455,6 @@ it('createAdmin tidak memanggil usernameExists jika username kosong string', fun
 */
 
 it('createAdmin dengan semua field profile opsional diisi', function () {
-    // Edge: memastikan semua field diteruskan dengan benar
     $data = [
         'name' => 'Admin Full',
         'email' => 'full@example.com',
@@ -595,10 +475,7 @@ it('createAdmin dengan semua field profile opsional diisi', function () {
     $this->userRepository->shouldReceive('usernameExists')->andReturn(false);
 
     $createdUser = makeUser(['id' => 99, 'role' => 'admin']);
-
-    $this->userRepository->shouldReceive('createUser')
-        ->once()
-        ->andReturn($createdUser);
+    $this->userRepository->shouldReceive('createUser')->once()->andReturn($createdUser);
 
     $this->profileRepository->shouldReceive('createForUser')
         ->once()
@@ -622,7 +499,6 @@ it('createAdmin dengan semua field profile opsional diisi', function () {
 });
 
 it('createMitra dengan password auto-generate', function () {
-    // Edge: createMitra tanpa password eksplisit
     $data = ['name' => 'Mitra Auto', 'email' => 'mitra-auto@example.com'];
 
     $this->userRepository->shouldReceive('emailExists')->andReturn(false);
@@ -636,8 +512,7 @@ it('createMitra dengan password auto-generate', function () {
         ->with(Mockery::on(function ($payload) use (&$capturedPassword) {
             $capturedPassword = $payload['password'];
 
-            return ! empty($payload['password'])
-                && strlen($payload['password']) >= 12;
+            return ! empty($payload['password']) && strlen($payload['password']) >= 12;
         }))
         ->andReturn($createdUser);
 
