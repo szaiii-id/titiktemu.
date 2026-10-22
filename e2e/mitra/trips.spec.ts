@@ -293,6 +293,7 @@ test.describe('Mitra — Trips', () => {
          * PASTI render (dari seed: 1 scheduled).
          */
         test('menampilkan tab "Semua" dan "Terjadwal"', async ({ page }) => {
+            await page.waitForTimeout(1000);
             await expect(
                 page.getByRole('tab', { name: /^Semua/i }),
             ).toBeVisible();
@@ -321,6 +322,7 @@ test.describe('Mitra — Trips', () => {
         });
 
         test('menampilkan badge status "Terjadwal"', async ({ page }) => {
+            await page.waitForTimeout(1000);
             await expect(
                 page.getByText(/Terjadwal/i).first(),
             ).toBeVisible();
@@ -480,6 +482,7 @@ test.describe('Mitra — Trips', () => {
         });
 
         test('menampilkan instruksi dari admin', async ({ page }) => {
+            await page.waitForTimeout(1000);
             await expect(
                 page.getByText(/Jaga kebersihan area/i).first(),
             ).toBeVisible();
@@ -601,7 +604,7 @@ test.describe('Mitra — Trips', () => {
         }) => {
             await asMitra();
             await page.goto(`/mitra/trips/${tripId}`);
-
+            await page.waitForTimeout(1000);
             await expect(
                 page.getByRole('link', { name: /Lapor Hari Ini/i }),
             ).toBeVisible({ timeout: 10_000 });

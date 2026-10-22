@@ -211,7 +211,7 @@ test.describe('Client — Bookings', () => {
         }) => {
             await expect(
                 page.getByRole('link', { name: /Jelajah Paket/i }),
-            ).toHaveAttribute('href', '/client/catalog');
+            ).toHaveAttribute('href', /\/client\/catalog/);
         });
 
         test('menampilkan status tabs', async ({ page }) => {

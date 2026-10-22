@@ -1325,7 +1325,7 @@
                                                                             openVerifyReportModal(
                                                                                 report,
                                                                             )}
-                                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white bg-green-dark hover:bg-green transition-all"
+                                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white bg-green-800 hover:bg-green transition-all"
                                                                     >
                                                                         <svg
                                                                             class="w-3 h-3"

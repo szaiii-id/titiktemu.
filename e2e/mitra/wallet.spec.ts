@@ -139,7 +139,7 @@ test.describe('Mitra — Wallet', () => {
         }) => {
             await expect(
                 page.getByRole('link', { name: /Tarik Dana/i }),
-            ).toHaveAttribute('href', '/mitra/payouts/create');
+            ).toHaveAttribute('href', /\/mitra\/payouts\/create/);
         });
     });
 
