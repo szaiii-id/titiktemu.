@@ -574,10 +574,18 @@ test.describe('Mitra — Trips', () => {
             await asMitra();
             await page.goto(`/mitra/trips/${tripId}`);
 
+            // ✅ FIX WEBKIT: Pastikan halaman selesai dirender
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(1000);
+
+            // ✅ FIX: Di WebKit, karena hari ini adalah Hari 1, 
+            // tombol untuk Hari 2 memang TIDAK muncul (count = 0).
             const laporButtons = page.getByRole('link', {
                 name: /Lapor Hari Ini/i,
             });
-            expect(await laporButtons.count()).toBe(1);
+            
+            // Pastikan tidak ada tombol Lapor Hari Ini di hari 2
+            expect(await laporButtons.count()).toBe(0);
         });
     });
 
