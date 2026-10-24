@@ -218,7 +218,7 @@ jobs:
         run: bun run test:e2e -- --project=${{ matrix.browser }} --shard=${{ matrix.playwright_shard }}/3
       - name: Upload Playwright report
         # if: always()
-        if : false
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-functional-${{ matrix.browser }}
@@ -325,14 +325,14 @@ jobs:
           AUTH_THROTTLE_CONTACT_TEST_OVERRIDE: 1000
         run: bun run test:e2e:rate-limit -- --project=${{ matrix.browser }} --shard=${{ matrix.playwright_shard }}/3
       - name: Upload Playwright report
-        if: always()
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-rate-limit-${{ matrix.browser }}
           path: playwright-report/
           retention-days: 7
       - name: Upload test results
-        if: always()
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: test-results-rate-limit-${{ matrix.browser }}
