@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
             TripMitraSeeder::class,
         ]);
 
-         // ✅ Hanya jalankan DemoDataSeeder jika BUKAN testing
+        // ✅ Hanya jalankan DemoDataSeeder jika BUKAN testing
         if (! app()->environment('testing')) {
             $this->call(DemoDataSeeder::class);
         }

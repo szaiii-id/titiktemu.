@@ -12,6 +12,7 @@ class AutoVerifyReports extends Command
 {
     // Nama perintah yang akan dipanggil di terminal
     protected $signature = 'reports:auto-verify {--days=3 : Batas hari laporan dianggap kadaluarsa}';
+
     protected $description = 'Otomatis verifikasi laporan harian yang sudah lewat batas waktu (SLA).';
 
     public function handle(DailyReportService $dailyReportService): int
@@ -25,15 +26,17 @@ class AutoVerifyReports extends Command
             ->get();
 
         if ($reports->isEmpty()) {
-            $this->info("Tidak ada laporan yang perlu diverifikasi otomatis.");
+            $this->info('Tidak ada laporan yang perlu diverifikasi otomatis.');
+
             return Command::SUCCESS;
         }
 
         // Cari Admin (sebagai verifier formal)
         $admin = User::where('role', 'admin')->first();
-        
-        if (!$admin) {
-            $this->error("Admin tidak ditemukan. Gagal auto-verifikasi.");
+
+        if (! $admin) {
+            $this->error('Admin tidak ditemukan. Gagal auto-verifikasi.');
+
             return Command::FAILURE;
         }
 
@@ -44,11 +47,11 @@ class AutoVerifyReports extends Command
                 // Panggil service yang sudah ada untuk memproses verifikasi
                 // (Ini juga akan mencairkan honor ke wallet mitra)
                 $dailyReportService->verify($report, $admin);
-                
+
                 // Catat di log bahwa ini diverifikasi otomatis
                 $report->update(['rejection_reason' => null]); // pastikan null
                 Log::info("Auto-Verify: Laporan {$report->id} diverifikasi otomatis oleh sistem.");
-                
+
                 $verifiedCount++;
             } catch (\Throwable $e) {
                 Log::error("Auto-Verify Gagal untuk laporan {$report->id}: {$e->getMessage()}");
@@ -57,6 +60,7 @@ class AutoVerifyReports extends Command
         }
 
         $this->info("Berhasil auto-verifikasi {$verifiedCount} laporan.");
+
         return Command::SUCCESS;
     }
 }

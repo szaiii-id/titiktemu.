@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class MitraPerformanceExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $startDate;
+
     protected $endDate;
 
     public function __construct($startDate, $endDate)
@@ -25,13 +26,13 @@ class MitraPerformanceExport implements FromCollection, WithHeadings, WithMappin
             ->withCount(['tripMitras as total_trip' => function ($q) {
                 $q->whereHas('trip', function ($tq) {
                     $tq->where('status', 'completed')
-                       ->whereBetween('tanggal_mulai', [$this->startDate, $this->endDate]);
+                        ->whereBetween('tanggal_mulai', [$this->startDate, $this->endDate]);
                 });
             }])
             ->withSum(['tripMitras as total_honor' => function ($q) {
                 $q->whereHas('trip', function ($tq) {
                     $tq->where('status', 'completed')
-                       ->whereBetween('tanggal_mulai', [$this->startDate, $this->endDate]);
+                        ->whereBetween('tanggal_mulai', [$this->startDate, $this->endDate]);
                 });
             }], 'honor')
             ->orderByDesc('total_honor')

@@ -12,6 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /*
 |==========================================================================
@@ -121,7 +122,7 @@ it('exportRevenuePdf memanggil getRevenueData dan Pdf::loadView', function () {
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->with('a4', 'landscape')->andReturnSelf();
     $pdfMock->shouldReceive('stream')->once()->andReturn($response);
 
@@ -144,7 +145,7 @@ it('exportMitraPdf memanggil getMitraPerformanceData dan Pdf::loadView', functio
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->with('a4', 'portrait')->andReturnSelf();
     $pdfMock->shouldReceive('stream')->once()->andReturn($response);
 
@@ -167,7 +168,7 @@ it('exportDailyPdf memanggil getDailyReportData dan Pdf::loadView', function () 
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->with('a4', 'landscape')->andReturnSelf();
     $pdfMock->shouldReceive('stream')->once()->andReturn($response);
 
@@ -190,7 +191,7 @@ it('exportPayoutPdf memanggil getPayoutData dan Pdf::loadView', function () {
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->with('a4', 'landscape')->andReturnSelf();
     $pdfMock->shouldReceive('stream')->once()->andReturn($response);
 
@@ -277,7 +278,7 @@ it('exportTripManifest throw 403 jika user adalah mitra yang tidak di-assign', f
     $mitra->forceFill(['id' => 99, 'role' => 'mitra']);
 
     expect(fn () => $this->service->exportTripManifest($trip, $mitra))
-        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        ->toThrow(HttpException::class);
 });
 
 it('exportTripManifest throw 403 jika user bukan admin dan bukan mitra', function () {
@@ -288,7 +289,7 @@ it('exportTripManifest throw 403 jika user bukan admin dan bukan mitra', functio
     $client->forceFill(['id' => 99, 'role' => 'client']);
 
     expect(fn () => $this->service->exportTripManifest($trip, $client))
-        ->toThrow(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        ->toThrow(HttpException::class);
 });
 
 it('exportTripManifest berhasil untuk admin', function () {
@@ -304,7 +305,7 @@ it('exportTripManifest berhasil untuk admin', function () {
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->with('a4', 'portrait')->andReturnSelf();
     $pdfMock->shouldReceive('stream')->once()->andReturn($response);
 
@@ -331,7 +332,7 @@ it('exportTripManifest berhasil untuk mitra yang di-assign', function () {
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->andReturnSelf();
     $pdfMock->shouldReceive('stream')->once()->andReturn($response);
 
@@ -356,7 +357,7 @@ it('exportRevenuePdf menghasilkan nama file dengan tanggal hari ini', function (
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->andReturnSelf();
     $pdfMock->shouldReceive('stream')
         ->once()
@@ -380,7 +381,7 @@ it('exportTripManifest menghasilkan nama file dengan kode trip', function () {
 
     $response = new Response('pdf-content');
 
-    $pdfMock = Mockery::mock(\Barryvdh\DomPDF\PDF::class);
+    $pdfMock = Mockery::mock(Barryvdh\DomPDF\PDF::class);
     $pdfMock->shouldReceive('setPaper')->once()->andReturnSelf();
     $pdfMock->shouldReceive('stream')
         ->once()

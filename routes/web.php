@@ -160,7 +160,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/trips/{trip}/assign-mitra', [TripController::class, 'assignMitra'])->name('trips.assign-mitra');
             Route::put('/trips/{trip}/mitras/{tripMitra}', [TripController::class, 'updateMitra'])->name('trips.update-mitra');
             Route::delete('/trips/{trip}/mitras/{tripMitra}', [TripController::class, 'unassignMitra'])->name('trips.unassign-mitra');
-            
+
             // ✅ Manifest pindah ke ReportController
             Route::get('/trips/{trip}/manifest', [ReportController::class, 'exportTripManifest'])->name('trips.manifest');
 
@@ -177,7 +177,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/payouts', [AdminPayoutController::class, 'index'])->name('payouts.index');
             Route::post('/payouts/{payout}/approve', [AdminPayoutController::class, 'approve'])->name('payouts.approve');
             Route::post('/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('payouts.reject');
-            Route::post('/payouts/{payout}/mark-paid', [AdminPayoutController::class, 'markPaid'])->name('payouts.mark-paid');  
+            Route::post('/payouts/{payout}/mark-paid', [AdminPayoutController::class, 'markPaid'])->name('payouts.mark-paid');
 
             // ==========================================
             // LAPORAN (Fase 7)
@@ -186,7 +186,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/', [ReportController::class, 'index'])->name('index');
                 Route::get('/export-pdf', [ReportController::class, 'exportPdf'])->name('export-pdf');
                 Route::get('/export-excel', [ReportController::class, 'exportExcel'])->name('export-excel');
-                
+
                 // Laporan Kinerja Mitra
                 Route::get('/mitra', [ReportController::class, 'mitraPerformance'])->name('mitra');
                 Route::get('/mitra/export-pdf', [ReportController::class, 'exportMitraPdf'])->name('mitra.export-pdf');
@@ -222,7 +222,7 @@ Route::middleware('auth')->group(function () {
             // ==========================================
             Route::get('/trips', [MitraTripController::class, 'index'])->name('trips.index');
             Route::get('/trips/{trip}', [MitraTripController::class, 'show'])->name('trips.show');
-            
+
             // ✅ Manifest pindah ke ReportController
             Route::get('/trips/{trip}/manifest', [ReportController::class, 'exportTripManifest'])->name('trips.manifest');
 

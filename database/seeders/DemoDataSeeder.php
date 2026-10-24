@@ -11,6 +11,7 @@ use App\Models\Payout;
 use App\Models\User;
 use App\Services\Trip\TripService;
 use App\Services\Wallet\WalletService;
+use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -21,19 +22,22 @@ class DemoDataSeeder extends Seeder
         // ✅ SKIP DI TESTING
         if (app()->environment('testing')) {
             $this->command->warn('⚠️ DemoDataSeeder di-skip di environment testing.');
+
             return;
         }
 
         $admin = User::where('role', 'admin')->first();
-        if (!$admin) {
+        if (! $admin) {
             $this->command->error('Admin tidak ditemukan. Jalankan UserSeeder dulu.');
+
             return;
         }
 
-        $faker = \Faker\Factory::create('id_ID');
+        $faker = Factory::create('id_ID');
         $packages = Package::where('status', 'aktif')->get();
         if ($packages->isEmpty()) {
             $this->command->error('Tidak ada paket aktif.');
+
             return;
         }
 
@@ -46,7 +50,7 @@ class DemoDataSeeder extends Seeder
                 $mitra = User::create([
                     'name' => $faker->name,
                     'email' => $faker->unique()->safeEmail,
-                    'username' => 'mitra' . $i . time() . rand(10, 99),
+                    'username' => 'mitra'.$i.time().rand(10, 99),
                     'password' => 'password123',
                     'role' => 'mitra',
                     'timezone' => 'Asia/Makassar',
@@ -70,7 +74,7 @@ class DemoDataSeeder extends Seeder
                 $client = User::create([
                     'name' => $faker->name,
                     'email' => $faker->unique()->safeEmail,
-                    'username' => 'client' . $i . time() . rand(10, 99),
+                    'username' => 'client'.$i.time().rand(10, 99),
                     'password' => 'password123',
                     'role' => 'client',
                     'timezone' => 'Asia/Makassar',
@@ -113,8 +117,8 @@ class DemoDataSeeder extends Seeder
 
             $createdAt = Carbon::parse($tanggalBerangkat)->subDays(rand(7, 30));
 
-            $booking = new Booking();
-            $booking->kode = 'BKG-' . now()->year . '-' . str_pad((string) ($i + 100), 3, '0', STR_PAD_LEFT);
+            $booking = new Booking;
+            $booking->kode = 'BKG-'.now()->year.'-'.str_pad((string) ($i + 100), 3, '0', STR_PAD_LEFT);
             $booking->package_id = $package->id;
             $booking->user_id = $client->id;
             $booking->tanggal_keberangkatan = $tanggalBerangkat->format('Y-m-d');
@@ -132,13 +136,13 @@ class DemoDataSeeder extends Seeder
                     'booking_id' => $booking->id,
                     'nama' => $faker->name,
                     'umur' => rand(18, 60),
-                    'no_hp' => '08' . rand(1111111111, 9999999999),
+                    'no_hp' => '08'.rand(1111111111, 9999999999),
                     'catatan' => $faker->optional()->sentence,
                 ]);
             }
 
             // Payment (jika status bukan pending & bukan cancelled)
-            if (!in_array($statusForCreate, ['pending_payment', 'cancelled'])) {
+            if (! in_array($statusForCreate, ['pending_payment', 'cancelled'])) {
                 Payment::create([
                     'booking_id' => $booking->id,
                     'jumlah' => $booking->total_harga,
@@ -200,8 +204,8 @@ class DemoDataSeeder extends Seeder
                 $status = 'pending';
             }
 
-            $payout = new Payout();
-            $payout->kode = 'PAY-' . now()->year . '-' . str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT);
+            $payout = new Payout;
+            $payout->kode = 'PAY-'.now()->year.'-'.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT);
             $payout->mitra_id = $mitra->id;
             $payout->jumlah = rand(500000, 3000000);
             $payout->status = $status;
@@ -220,7 +224,9 @@ class DemoDataSeeder extends Seeder
 
         foreach ($mitras as $mitra) {
             $wallet = $mitra->mitraWallet;
-            if (!$wallet) continue;
+            if (! $wallet) {
+                continue;
+            }
 
             $wallet->update([
                 'saldo' => rand(200000, 2000000),
@@ -231,6 +237,6 @@ class DemoDataSeeder extends Seeder
         $this->command->info('✅ DemoDataSeeder selesai!');
         $this->command->info('   - 30 booking (tersebar 6 bulan terakhir)');
         $this->command->info('   - 15 payout (3 bulan terakhir)');
-        $this->command->info('   - ' . $mitras->count() . ' mitra + ' . $clients->count() . ' client');
+        $this->command->info('   - '.$mitras->count().' mitra + '.$clients->count().' client');
     }
 }

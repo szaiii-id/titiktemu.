@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class RevenueExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $startDate;
+
     protected $endDate;
 
     public function __construct($startDate, $endDate)
@@ -26,7 +27,7 @@ class RevenueExport implements FromCollection, WithHeadings, WithMapping
     {
         return Booking::with(['client:id,name', 'package:id,nama']) // ✅ FIX: client, bukan user
             ->whereIn('status', ['confirmed', 'completed'])
-            ->whereBetween('created_at', [$this->startDate . ' 00:00:00', $this->endDate . ' 23:59:59'])
+            ->whereBetween('created_at', [$this->startDate.' 00:00:00', $this->endDate.' 23:59:59'])
             ->orderBy('created_at', 'desc')
             ->get();
     }

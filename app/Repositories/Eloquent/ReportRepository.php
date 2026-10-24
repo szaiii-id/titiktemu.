@@ -18,17 +18,17 @@ class ReportRepository
     public function getRevenueData(string $startDate, string $endDate): array
     {
         $totalRevenue = Booking::whereIn('status', ['confirmed', 'completed'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->sum('total_harga');
 
         $totalHonor = TripMitra::whereHas('trip', function ($q) use ($startDate, $endDate) {
             $q->where('status', 'completed')
-              ->whereBetween('tanggal_mulai', [$startDate, $endDate]);
+                ->whereBetween('tanggal_mulai', [$startDate, $endDate]);
         })->sum('honor');
 
         $transactions = Booking::with(['client:id,name', 'package:id,nama'])
             ->whereIn('status', ['confirmed', 'completed'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn ($b) => [
@@ -57,13 +57,13 @@ class ReportRepository
             ->withCount(['tripMitras as total_trip' => function ($q) use ($startDate, $endDate) {
                 $q->whereHas('trip', function ($tq) use ($startDate, $endDate) {
                     $tq->where('status', 'completed')
-                       ->whereBetween('tanggal_mulai', [$startDate, $endDate]);
+                        ->whereBetween('tanggal_mulai', [$startDate, $endDate]);
                 });
             }])
             ->withSum(['tripMitras as total_honor' => function ($q) use ($startDate, $endDate) {
                 $q->whereHas('trip', function ($tq) use ($startDate, $endDate) {
                     $tq->where('status', 'completed')
-                       ->whereBetween('tanggal_mulai', [$startDate, $endDate]);
+                        ->whereBetween('tanggal_mulai', [$startDate, $endDate]);
                 });
             }], 'honor')
             ->orderByDesc('total_honor')
@@ -89,7 +89,7 @@ class ReportRepository
     public function getDailyReportData(string $startDate, string $endDate): array
     {
         $reports = DailyReport::with(['tripDay.trip', 'mitra:id,name'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn ($r) => [
@@ -116,7 +116,7 @@ class ReportRepository
     public function getPayoutData(string $startDate, string $endDate): array
     {
         $payouts = Payout::with(['mitra:id,name'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn ($p) => [

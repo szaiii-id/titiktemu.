@@ -2,15 +2,10 @@
 
 use App\Enums\BookingStatus;
 use App\Enums\PackageStatus;
-use App\Enums\PayoutStatus;
-use App\Enums\TripStatus;
 use App\Models\Booking;
-use App\Models\DailyReport;
 use App\Models\Package;
 use App\Models\Payout;
 use App\Models\Trip;
-use App\Models\TripDay;
-use App\Models\TripMitra;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;

@@ -2,15 +2,15 @@
 
 namespace App\Services\Report;
 
-use App\Repositories\Eloquent\ReportRepository;
+use App\Exports\DailyReportExport;
+use App\Exports\MitraPerformanceExport;
+use App\Exports\PayoutExport;
+use App\Exports\RevenueExport;
 use App\Models\Trip;
 use App\Models\User;
+use App\Repositories\Eloquent\ReportRepository;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\RevenueExport;
-use App\Exports\MitraPerformanceExport;
-use App\Exports\DailyReportExport;
-use App\Exports\PayoutExport;
 
 class ReportService
 {
@@ -36,12 +36,13 @@ class ReportService
         $data = $this->getRevenueData($startDate, $endDate);
         $pdf = Pdf::loadView('reports.revenue-pdf', compact('data', 'startDate', 'endDate'));
         $pdf->setPaper('a4', 'landscape');
-        return $pdf->stream('Laporan-Pendapatan-' . now()->format('Y-m-d') . '.pdf');
+
+        return $pdf->stream('Laporan-Pendapatan-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function exportRevenueExcel(string $startDate, string $endDate)
     {
-        return Excel::download(new RevenueExport($startDate, $endDate), 'Laporan-Pendapatan-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new RevenueExport($startDate, $endDate), 'Laporan-Pendapatan-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ==========================================
@@ -57,12 +58,13 @@ class ReportService
         $data = $this->getMitraPerformanceData($startDate, $endDate);
         $pdf = Pdf::loadView('reports.mitra-performance-pdf', compact('data', 'startDate', 'endDate'));
         $pdf->setPaper('a4', 'portrait');
-        return $pdf->stream('Laporan-Kinerja-Mitra-' . now()->format('Y-m-d') . '.pdf');
+
+        return $pdf->stream('Laporan-Kinerja-Mitra-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function exportMitraExcel(string $startDate, string $endDate)
     {
-        return Excel::download(new MitraPerformanceExport($startDate, $endDate), 'Laporan-Kinerja-Mitra-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new MitraPerformanceExport($startDate, $endDate), 'Laporan-Kinerja-Mitra-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ==========================================
@@ -78,12 +80,13 @@ class ReportService
         $data = $this->getDailyReportData($startDate, $endDate);
         $pdf = Pdf::loadView('reports.daily-reports-pdf', compact('data', 'startDate', 'endDate'));
         $pdf->setPaper('a4', 'landscape');
-        return $pdf->stream('Laporan-Harian-' . now()->format('Y-m-d') . '.pdf');
+
+        return $pdf->stream('Laporan-Harian-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function exportDailyExcel(string $startDate, string $endDate)
     {
-        return Excel::download(new DailyReportExport($startDate, $endDate), 'Laporan-Harian-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new DailyReportExport($startDate, $endDate), 'Laporan-Harian-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ==========================================
@@ -99,12 +102,13 @@ class ReportService
         $data = $this->getPayoutData($startDate, $endDate);
         $pdf = Pdf::loadView('reports.payout-pdf', compact('data', 'startDate', 'endDate'));
         $pdf->setPaper('a4', 'landscape');
-        return $pdf->stream('Laporan-Payout-' . now()->format('Y-m-d') . '.pdf');
+
+        return $pdf->stream('Laporan-Payout-'.now()->format('Y-m-d').'.pdf');
     }
 
     public function exportPayoutExcel(string $startDate, string $endDate)
     {
-        return Excel::download(new PayoutExport($startDate, $endDate), 'Laporan-Payout-' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new PayoutExport($startDate, $endDate), 'Laporan-Payout-'.now()->format('Y-m-d').'.xlsx');
     }
 
     // ==========================================
@@ -123,6 +127,7 @@ class ReportService
         $trip->load(['booking.client', 'booking.participants', 'package', 'mitras.mitra', 'days.dailyReports']);
         $pdf = Pdf::loadView('reports.trip-manifest', compact('trip'));
         $pdf->setPaper('a4', 'portrait');
-        return $pdf->stream('Itinerary-dan-Peserta-' . $trip->kode . '.pdf');
+
+        return $pdf->stream('Itinerary-dan-Peserta-'.$trip->kode.'.pdf');
     }
 }

@@ -82,3 +82,7 @@ yarn-error.log
 /boost.json
 /opencode.json
 /opencode.jsonc
+# E2E test shards & temp storage
+storage/shard-*/
+test-results/
+playwright-report/
