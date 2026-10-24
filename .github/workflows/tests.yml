@@ -222,14 +222,14 @@ jobs:
         with:
           name: playwright-report-functional-${{ matrix.browser }}
           path: playwright-report/
-          retention-days: 7
+          retention-days: 1
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-functional-${{ matrix.browser }}
           path: test-results/
-          retention-days: 7
+          retention-days: 1
 
   test-e2e-rate-limit:
     name: E2E Rate Limit (${{ matrix.browser }})
