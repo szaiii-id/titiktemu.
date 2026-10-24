@@ -11,6 +11,25 @@
      *           agar tidak kosong (tidak ada elemen) saat render awal.
      * ⚠️ FIX #3: error handling — jika createImagePreview gagal, set
      *           localError — agar user tahu (bukan silent).
+     *
+     * ✅ FIX A11Y #2: `label-content-name-mismatch` di tombol upload.
+     *
+     * MASALAH SEBELUMNYA (FIX A11Y #1):
+     * - `<button aria-labelledby="upload-label-...">` dengan label visual
+     *   "Logo Usaha (1 file, maks 2 MB)" dan teks di dalam tombol
+     *   "Klik untuk upload JPG, PNG, atau WEBP" → MISMATCH.
+     *
+     * FIX A11Y #1 (SUDAH DIPERBAIKI, tapi masih mismatch):
+     * - Ganti ke `aria-label="Logo Usaha — Klik untuk upload"`.
+     * - Ternyata STILL mismatch karena ada teks visible KEDUA
+     *   "JPG, PNG, atau WEBP" yang TIDAK termasuk dalam aria-label.
+     *
+     * FIX A11Y #2 (SEKARANG):
+     * - Hapus `aria-label` sepenuhnya.
+     * - Biarkan accessible name = gabungan teks visible:
+     *   "Klik untuk upload JPG, PNG, atau WEBP"
+     * - 100% match karena tidak ada aria-label yang memotong teks.
+     * - SVG sudah `aria-hidden="true"` → tidak masuk accessible name.
      */
 
     import {
@@ -52,7 +71,7 @@
     } = $props();
 
     // ==========================================
-    // A11Y — unique id untuk label
+    // A11Y — unique id untuk label (visual only)
     // ==========================================
 
     const uploadLabelId = `upload-label-${crypto.randomUUID()}`;
@@ -158,7 +177,8 @@
 </script>
 
 <div>
-    <!-- Label visual -->
+    <!-- Label visual — id tetap ada untuk keperluan lain, tapi TIDAK
+         dihubungkan via aria-labelledby ke tombol upload. -->
     <span id={uploadLabelId} class="block text-xs font-bold text-dark mb-1.5">
         {label}
         <span class="text-gray-600 font-normal">
@@ -192,7 +212,7 @@
                             aria-label="Hapus logo"
                             data-testid="logo-remove-button"
                         >
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -224,13 +244,13 @@
                             aria-label="Hapus logo"
                             data-testid="logo-remove-button"
                         >
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
                     {/if}
                     <!-- Overlay filename: pointer-events-none agar tidak intercept klik -->
-                    <div class="absolute bottom-0 left-0 right-0 z-10 bg-black/60 text-white text-[10px] font-bold py-0.5 px-1.5 truncate pointer-events-none">
+                    <div class="absolute bottom-0 left-0 right-0 z-10 bg-black/60 text-white text-[10px] font-bold py-0.5 px-1.5 truncate pointer-events-none" aria-hidden="true">
                         {file.name} · {formatFileSize(file.size)}
                     </div>
                 </div>
@@ -241,10 +261,19 @@
     <!-- Dropzone / Upload button -->
     {#if canAddMore}
         <div data-testid="logo-placeholder">
+            <!--
+                ✅ FIX A11Y #2: HAPUS `aria-label` sepenuhnya.
+
+                Sebelumnya: aria-label="Logo Usaha — Klik untuk upload"
+                → mismatch karena teks "JPG, PNG, atau WEBP" tidak termasuk.
+
+                Sekarang: tanpa aria-label → accessible name = gabungan
+                teks visible ("Klik untuk upload JPG, PNG, atau WEBP").
+                100% match → LOLOS WCAG 2.5.3.
+            -->
             <button
                 type="button"
                 onclick={openPicker}
-                aria-labelledby={uploadLabelId}
                 data-testid="logo-upload-button"
                 class="flex flex-col items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-pink hover:bg-pink/5 transition-all"
             >

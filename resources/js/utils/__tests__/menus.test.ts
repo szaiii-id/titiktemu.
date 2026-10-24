@@ -34,8 +34,8 @@ describe('adminMenu', () => {
         expectValidMenuItems(adminMenu);
     });
 
-    it('memiliki 8 item menu', () => {
-        expect(adminMenu).toHaveLength(8);
+    it('memiliki 9 item menu', () => {
+        expect(adminMenu).toHaveLength(9);
     });
 
     it('berisi menu yang diharapkan', () => {
@@ -44,6 +44,7 @@ describe('adminMenu', () => {
         expect(labels).toContain('Paket Wisata');
         expect(labels).toContain('Booking');
         expect(labels).toContain('Trip');
+        expect(labels).toContain('Laporan Harian');
         expect(labels).toContain('Laporan');
         expect(labels).toContain('Payout');
         expect(labels).toContain('Manajemen User');
@@ -59,6 +60,16 @@ describe('adminMenu', () => {
     it('menu Dashboard mengarah ke /admin/dashboard', () => {
         const dashboard = adminMenu.find((m) => m.label === 'Dashboard');
         expect(dashboard?.href).toBe('/admin/dashboard');
+    });
+
+    it('menu Laporan mengarah ke /admin/reports', () => {
+        const report = adminMenu.find((m) => m.label === 'Laporan');
+        expect(report?.href).toBe('/admin/reports');
+    });
+
+    it('menu Laporan Harian mengarah ke /admin/daily-reports', () => {
+        const dailyReport = adminMenu.find((m) => m.label === 'Laporan Harian');
+        expect(dailyReport?.href).toBe('/admin/daily-reports');
     });
 });
 

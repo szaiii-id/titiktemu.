@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PackageDayController;
 use App\Http\Controllers\Admin\PackageDayCostController;
 use App\Http\Controllers\Admin\PackageFacilityController;
 use App\Http\Controllers\Admin\PayoutController as AdminPayoutController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\TripController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
@@ -159,6 +160,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/trips/{trip}/assign-mitra', [TripController::class, 'assignMitra'])->name('trips.assign-mitra');
             Route::put('/trips/{trip}/mitras/{tripMitra}', [TripController::class, 'updateMitra'])->name('trips.update-mitra');
             Route::delete('/trips/{trip}/mitras/{tripMitra}', [TripController::class, 'unassignMitra'])->name('trips.unassign-mitra');
+            
+            // ✅ Manifest pindah ke ReportController
+            Route::get('/trips/{trip}/manifest', [ReportController::class, 'exportTripManifest'])->name('trips.manifest');
 
             // ==========================================
             // DAILY REPORT (Fase 4)
@@ -173,8 +177,32 @@ Route::middleware('auth')->group(function () {
             Route::get('/payouts', [AdminPayoutController::class, 'index'])->name('payouts.index');
             Route::post('/payouts/{payout}/approve', [AdminPayoutController::class, 'approve'])->name('payouts.approve');
             Route::post('/payouts/{payout}/reject', [AdminPayoutController::class, 'reject'])->name('payouts.reject');
-            Route::post('/payouts/{payout}/mark-paid', [AdminPayoutController::class, 'markPaid'])->name('payouts.mark-paid');
-        });
+            Route::post('/payouts/{payout}/mark-paid', [AdminPayoutController::class, 'markPaid'])->name('payouts.mark-paid');  
+
+            // ==========================================
+            // LAPORAN (Fase 7)
+            // ==========================================
+            Route::prefix('reports')->name('reports.')->group(function () {
+                Route::get('/', [ReportController::class, 'index'])->name('index');
+                Route::get('/export-pdf', [ReportController::class, 'exportPdf'])->name('export-pdf');
+                Route::get('/export-excel', [ReportController::class, 'exportExcel'])->name('export-excel');
+                
+                // Laporan Kinerja Mitra
+                Route::get('/mitra', [ReportController::class, 'mitraPerformance'])->name('mitra');
+                Route::get('/mitra/export-pdf', [ReportController::class, 'exportMitraPdf'])->name('mitra.export-pdf');
+                Route::get('/mitra/export-excel', [ReportController::class, 'exportMitraExcel'])->name('mitra.export-excel');
+
+                // Laporan Harian
+                Route::get('/daily', [ReportController::class, 'dailyReports'])->name('daily');
+                Route::get('/daily/export-pdf', [ReportController::class, 'exportDailyPdf'])->name('daily.export-pdf');
+                Route::get('/daily/export-excel', [ReportController::class, 'exportDailyExcel'])->name('daily.export-excel');
+
+                // Laporan Payout
+                Route::get('/payout', [ReportController::class, 'payouts'])->name('payout');
+                Route::get('/payout/export-pdf', [ReportController::class, 'exportPayoutPdf'])->name('payout.export-pdf');
+                Route::get('/payout/export-excel', [ReportController::class, 'exportPayoutExcel'])->name('payout.export-excel');
+            });
+        }); // ✅ Tutup grup 'admin'
 
     // --------------------------------------
     // Rute Mitra
@@ -194,6 +222,9 @@ Route::middleware('auth')->group(function () {
             // ==========================================
             Route::get('/trips', [MitraTripController::class, 'index'])->name('trips.index');
             Route::get('/trips/{trip}', [MitraTripController::class, 'show'])->name('trips.show');
+            
+            // ✅ Manifest pindah ke ReportController
+            Route::get('/trips/{trip}/manifest', [ReportController::class, 'exportTripManifest'])->name('trips.manifest');
 
             // ==========================================
             // DAILY REPORT (Fase 4)
@@ -209,7 +240,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/payouts', [MitraPayoutController::class, 'index'])->name('payouts.index');
             Route::get('/payouts/create', [MitraPayoutController::class, 'create'])->name('payouts.create');
             Route::post('/payouts', [MitraPayoutController::class, 'store'])->name('payouts.store');
-        });
+        }); // ✅ Tutup grup 'mitra'
 
     // --------------------------------------
     // Rute Client
@@ -242,5 +273,6 @@ Route::middleware('auth')->group(function () {
             // E-TICKET (Fase 6)
             // ==========================================
             Route::get('/e-tickets/{uuid}/download', [ETicketController::class, 'download'])->name('e-tickets.download');
-        });
-});
+        }); // ✅ Tutup grup 'client'
+
+}); // ✅ Tutup grup 'auth'

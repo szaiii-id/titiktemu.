@@ -20,6 +20,9 @@ import type { Page } from '@playwright/test';
  *           timeout) SEBELUM analyze, anti "Execution context was destroyed".
  * ⚠️ FIX #2: scanPage — retry analyze() jika kena Execution context destroyed
  *           (race Inertia re-render / hydration).
+ *
+ * ✅ ADDED: 4 halaman report di ADMIN_PAGES (Pendapatan, Kinerja Mitra,
+ *           Rekap Harian, Payout).
  */
 
 // ==========================================
@@ -94,6 +97,13 @@ const ADMIN_PAGES: PageDefinition[] = [
     { path: '/admin/trips', name: 'Admin Trips Index' },
     { path: '/admin/daily-reports', name: 'Admin Daily Reports Index' },
     { path: '/admin/payouts', name: 'Admin Payouts Index' },
+
+    // ✅ BARU: 4 halaman report
+    { path: '/admin/reports', name: 'Admin Reports — Pendapatan' },
+    { path: '/admin/reports/mitra', name: 'Admin Reports — Kinerja Mitra' },
+    { path: '/admin/reports/daily', name: 'Admin Reports — Rekap Harian' },
+    { path: '/admin/reports/payout', name: 'Admin Reports — Payout' },
+
     { path: '/change-password', name: 'Change Password (Admin)' },
 ];
 

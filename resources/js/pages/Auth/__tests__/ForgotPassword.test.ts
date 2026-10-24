@@ -70,8 +70,16 @@ describe('ForgotPassword.svelte — UI Contract', () => {
     });
 
     it('menampilkan tombol kembali ke login dengan href benar', () => {
+        // ✅ FIX A11Y: `aria-label="Kembali ke halaman login"` dihapus dari
+        // source (WCAG 2.5.3 fix). Accessible name sekarang = teks visible
+        // "Kembali ke Login" (huruf L besar, tanpa "halaman").
+        //
+        // Assertion lama `/Kembali ke halaman login/i` GAGAL karena
+        // accessible name berubah.
+        //
+        // Assertion baru: cek accessible name yang benar (dari teks visible).
         render(ForgotPassword);
-        const link = screen.getByRole('link', { name: /Kembali ke halaman login/i });
+        const link = screen.getByRole('link', { name: /Kembali ke Login/i });
         expect(link).toHaveAttribute('href', '/login');
     });
 

@@ -54,6 +54,9 @@ it('GET /admin/dashboard merender Inertia component Admin/Dashboard', function (
     $response->assertInertia(fn ($page) => $page
         ->component('Admin/Dashboard')
         ->has('stats')
+        ->has('recent_bookings')
+        ->has('monthly_revenue')
+        ->has('monthly_bookings')
     );
 });
 
@@ -65,18 +68,12 @@ it('stats memiliki struktur yang benar', function () {
         ->has('stats.totalMitra')
         ->has('stats.totalClient')
         ->has('stats.packages')
-        ->has('stats.packages.draft')
-        ->has('stats.packages.aktif')
-        ->has('stats.packages.arsip')
-        ->has('stats.packages.total')
         ->has('stats.bookings')
-        ->has('stats.bookings.pending_payment')
-        ->has('stats.bookings.total')
-        ->has('stats.bookings.needs_attention')
         ->has('stats.trips')
-        ->has('stats.trips.needs_mitra')
         ->has('stats.daily_reports')
         ->has('stats.payouts')
+        ->has('stats.total_revenue')
+        ->has('stats.total_honor')
     );
 });
 
@@ -117,7 +114,6 @@ it('admin dengan must_change_password = true di-redirect ke change-password', fu
 */
 
 it('stats totalAdmin menghitung admin dengan benar', function () {
-    // Ada 1 admin (dari setup) + 1 admin baru = 2
     User::factory()->admin()->create(['must_change_password' => false]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
@@ -133,7 +129,7 @@ it('stats totalMitra menghitung mitra dengan benar', function () {
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
     $response->assertInertia(fn ($page) => $page
-        ->where('stats.totalMitra', 2) // 1 dari setup + 1 baru
+        ->where('stats.totalMitra', 2)
     );
 });
 
@@ -154,22 +150,10 @@ it('stats totalClient menghitung client dengan benar', function () {
 */
 
 it('stats packages menghitung per status', function () {
-    Package::factory()->create([
-        'status' => PackageStatus::DRAFT,
-        'created_by' => $this->admin->id,
-    ]);
-    Package::factory()->create([
-        'status' => PackageStatus::DRAFT,
-        'created_by' => $this->admin->id,
-    ]);
-    Package::factory()->create([
-        'status' => PackageStatus::AKTIF,
-        'created_by' => $this->admin->id,
-    ]);
-    Package::factory()->create([
-        'status' => PackageStatus::ARSIP,
-        'created_by' => $this->admin->id,
-    ]);
+    Package::factory()->create(['status' => PackageStatus::DRAFT, 'created_by' => $this->admin->id]);
+    Package::factory()->create(['status' => PackageStatus::DRAFT, 'created_by' => $this->admin->id]);
+    Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
+    Package::factory()->create(['status' => PackageStatus::ARSIP, 'created_by' => $this->admin->id]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -193,26 +177,10 @@ it('stats bookings menghitung per status', function () {
         'created_by' => $this->admin->id,
     ]);
 
-    Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::PENDING_PAYMENT,
-    ]);
-    Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::PENDING_PAYMENT,
-    ]);
-    Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::PAYMENT_VERIFIED,
-    ]);
-    Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
+    Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::PENDING_PAYMENT]);
+    Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::PENDING_PAYMENT]);
+    Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::PAYMENT_VERIFIED]);
+    Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -221,7 +189,7 @@ it('stats bookings menghitung per status', function () {
         ->where('stats.bookings.payment_verified', 1)
         ->where('stats.bookings.confirmed', 1)
         ->where('stats.bookings.total', 4)
-        ->where('stats.bookings.needs_attention', 3) // pending + verified
+        ->where('stats.bookings.needs_attention', 3)
     );
 });
 
@@ -232,44 +200,15 @@ it('stats bookings menghitung per status', function () {
 */
 
 it('stats trips menghitung per status', function () {
-    $package = Package::factory()->create([
-        'status' => PackageStatus::AKTIF,
-        'created_by' => $this->admin->id,
-    ]);
+    $package = Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
 
-    // Buat 3 booking berbeda
-    $booking1 = Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
-    $booking2 = Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
-    $booking3 = Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
+    $booking1 = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
+    $booking2 = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
+    $booking3 = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
 
-    // Buat 3 trip dengan booking berbeda
-    Trip::factory()->create([
-        'booking_id' => $booking1->id,
-        'package_id' => $package->id,
-        'status' => TripStatus::SCHEDULED,
-    ]);
-    Trip::factory()->create([
-        'booking_id' => $booking2->id,
-        'package_id' => $package->id,
-        'status' => TripStatus::ACTIVE,
-    ]);
-    Trip::factory()->create([
-        'booking_id' => $booking3->id,
-        'package_id' => $package->id,
-        'status' => TripStatus::COMPLETED,
-    ]);
+    Trip::factory()->create(['booking_id' => $booking1->id, 'package_id' => $package->id, 'status' => TripStatus::SCHEDULED]);
+    Trip::factory()->create(['booking_id' => $booking2->id, 'package_id' => $package->id, 'status' => TripStatus::ACTIVE]);
+    Trip::factory()->create(['booking_id' => $booking3->id, 'package_id' => $package->id, 'status' => TripStatus::COMPLETED]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -282,40 +221,15 @@ it('stats trips menghitung per status', function () {
 });
 
 it('stats trips.needs_mitra hitung trip scheduled tanpa mitra', function () {
-    $package = Package::factory()->create([
-        'status' => PackageStatus::AKTIF,
-        'created_by' => $this->admin->id,
-    ]);
+    $package = Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
 
-    // Buat 2 booking berbeda
-    $booking1 = Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
-    $booking2 = Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
+    $booking1 = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
+    $booking2 = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
 
-    // Trip scheduled TANPA mitra
-    Trip::factory()->create([
-        'booking_id' => $booking1->id,
-        'package_id' => $package->id,
-        'status' => TripStatus::SCHEDULED,
-    ]);
+    Trip::factory()->create(['booking_id' => $booking1->id, 'package_id' => $package->id, 'status' => TripStatus::SCHEDULED]);
 
-    // Trip scheduled DENGAN mitra
-    $tripWithMitra = Trip::factory()->create([
-        'booking_id' => $booking2->id,
-        'package_id' => $package->id,
-        'status' => TripStatus::SCHEDULED,
-    ]);
-    TripMitra::factory()->create([
-        'trip_id' => $tripWithMitra->id,
-        'mitra_id' => $this->mitra->id,
-    ]);
+    $tripWithMitra = Trip::factory()->create(['booking_id' => $booking2->id, 'package_id' => $package->id, 'status' => TripStatus::SCHEDULED]);
+    TripMitra::factory()->create(['trip_id' => $tripWithMitra->id, 'mitra_id' => $this->mitra->id]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -331,44 +245,18 @@ it('stats trips.needs_mitra hitung trip scheduled tanpa mitra', function () {
 */
 
 it('stats daily_reports menghitung per status', function () {
-    $package = Package::factory()->create([
-        'status' => PackageStatus::AKTIF,
-        'created_by' => $this->admin->id,
-    ]);
-
-    $booking = Booking::factory()->create([
-        'user_id' => $this->client->id,
-        'package_id' => $package->id,
-        'status' => BookingStatus::CONFIRMED,
-    ]);
-
-    $trip = Trip::factory()->create([
-        'booking_id' => $booking->id,
-        'package_id' => $package->id,
-    ]);
-
+    $package = Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
+    $booking = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
+    $trip = Trip::factory()->create(['booking_id' => $booking->id, 'package_id' => $package->id]);
     $tripDay = TripDay::factory()->create(['trip_id' => $trip->id]);
 
-    // Buat 3 mitra berbeda (unique constraint: 1 report per mitra per trip_day)
     $mitra1 = User::factory()->mitra()->create(['must_change_password' => false]);
     $mitra2 = User::factory()->mitra()->create(['must_change_password' => false]);
     $mitra3 = User::factory()->mitra()->create(['must_change_password' => false]);
 
-    DailyReport::factory()->create([
-        'trip_day_id' => $tripDay->id,
-        'mitra_id' => $mitra1->id,
-        'status' => DailyReport::STATUS_SUBMITTED,
-    ]);
-    DailyReport::factory()->create([
-        'trip_day_id' => $tripDay->id,
-        'mitra_id' => $mitra2->id,
-        'status' => DailyReport::STATUS_SUBMITTED,
-    ]);
-    DailyReport::factory()->create([
-        'trip_day_id' => $tripDay->id,
-        'mitra_id' => $mitra3->id,
-        'status' => DailyReport::STATUS_VERIFIED,
-    ]);
+    DailyReport::factory()->create(['trip_day_id' => $tripDay->id, 'mitra_id' => $mitra1->id, 'status' => DailyReport::STATUS_SUBMITTED]);
+    DailyReport::factory()->create(['trip_day_id' => $tripDay->id, 'mitra_id' => $mitra2->id, 'status' => DailyReport::STATUS_SUBMITTED]);
+    DailyReport::factory()->create(['trip_day_id' => $tripDay->id, 'mitra_id' => $mitra3->id, 'status' => DailyReport::STATUS_VERIFIED]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -378,6 +266,7 @@ it('stats daily_reports menghitung per status', function () {
         ->where('stats.daily_reports.total', 3)
     );
 });
+
 /*
 |==========================================================================
 | KATEGORI 8 — DATA INTEGRITY: Payout Counts
@@ -385,18 +274,9 @@ it('stats daily_reports menghitung per status', function () {
 */
 
 it('stats payouts menghitung per status', function () {
-    Payout::factory()->create([
-        'mitra_id' => $this->mitra->id,
-        'status' => PayoutStatus::PENDING,
-    ]);
-    Payout::factory()->create([
-        'mitra_id' => $this->mitra->id,
-        'status' => PayoutStatus::PENDING,
-    ]);
-    Payout::factory()->create([
-        'mitra_id' => $this->mitra->id,
-        'status' => PayoutStatus::APPROVED,
-    ]);
+    Payout::factory()->create(['mitra_id' => $this->mitra->id, 'status' => PayoutStatus::PENDING]);
+    Payout::factory()->create(['mitra_id' => $this->mitra->id, 'status' => PayoutStatus::PENDING]);
+    Payout::factory()->create(['mitra_id' => $this->mitra->id, 'status' => PayoutStatus::APPROVED]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -435,9 +315,9 @@ it('stats return 0 jika tidak ada data', function () {
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
     $response->assertInertia(fn ($page) => $page
-        ->where('stats.totalAdmin', 1) // admin dari setup
-        ->where('stats.totalMitra', 1) // mitra dari setup
-        ->where('stats.totalClient', 1) // client dari setup
+        ->where('stats.totalAdmin', 1)
+        ->where('stats.totalMitra', 1)
+        ->where('stats.totalClient', 1)
         ->where('stats.packages.total', 0)
         ->where('stats.bookings.total', 0)
         ->where('stats.trips.total', 0)
@@ -447,14 +327,8 @@ it('stats return 0 jika tidak ada data', function () {
 });
 
 it('stats konsisten — total = sum of per-status', function () {
-    Package::factory()->create([
-        'status' => PackageStatus::DRAFT,
-        'created_by' => $this->admin->id,
-    ]);
-    Package::factory()->create([
-        'status' => PackageStatus::AKTIF,
-        'created_by' => $this->admin->id,
-    ]);
+    Package::factory()->create(['status' => PackageStatus::DRAFT, 'created_by' => $this->admin->id]);
+    Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
 
     $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
 
@@ -463,5 +337,83 @@ it('stats konsisten — total = sum of per-status', function () {
                 + $page->toArray()['props']['stats']['packages']['aktif']
                 + $page->toArray()['props']['stats']['packages']['arsip']
         )
+    );
+});
+
+/*
+|==========================================================================
+| KATEGORI 11 — DATA REVENUE & HONOR (BARU)
+|==========================================================================
+*/
+
+it('stats total_revenue menghitung pendapatan dari booking confirmed/completed', function () {
+    $package = Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
+
+    Booking::factory()->create([
+        'user_id' => $this->client->id,
+        'package_id' => $package->id,
+        'status' => BookingStatus::CONFIRMED,
+        'total_harga' => 1000000,
+    ]);
+    Booking::factory()->create([
+        'user_id' => $this->client->id,
+        'package_id' => $package->id,
+        'status' => BookingStatus::COMPLETED,
+        'total_harga' => 2000000,
+    ]);
+
+    $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('stats.total_revenue', 3000000)
+    );
+});
+
+it('stats total_honor menghitung honor dari trip completed', function () {
+    $package = Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
+    $booking = Booking::factory()->create(['user_id' => $this->client->id, 'package_id' => $package->id, 'status' => BookingStatus::CONFIRMED]);
+    $trip = Trip::factory()->create(['booking_id' => $booking->id, 'package_id' => $package->id, 'status' => TripStatus::COMPLETED]);
+
+    TripMitra::factory()->create(['trip_id' => $trip->id, 'mitra_id' => $this->mitra->id, 'honor' => 500000]);
+
+    $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->where('stats.total_honor', 500000)
+    );
+});
+
+it('recent_bookings mengembalikan 5 booking terbaru', function () {
+    $package = Package::factory()->create(['status' => PackageStatus::AKTIF, 'created_by' => $this->admin->id]);
+
+    for ($i = 0; $i < 6; $i++) {
+        Booking::factory()->create([
+            'user_id' => $this->client->id,
+            'package_id' => $package->id,
+            'status' => BookingStatus::CONFIRMED,
+            'created_at' => now()->subDays($i),
+        ]);
+    }
+
+    $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('recent_bookings', 5)
+    );
+});
+
+it('monthly_revenue mengembalikan 6 bulan terakhir', function () {
+    $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('monthly_revenue', 6)
+    );
+});
+
+it('monthly_bookings mengembalikan 6 bulan terakhir', function () {
+    $response = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->has('monthly_bookings', 6)
     );
 });

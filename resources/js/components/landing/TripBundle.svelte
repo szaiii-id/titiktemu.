@@ -266,6 +266,7 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                             stroke-width="2"
+                            aria-hidden="true"
                         >
 
                             <path
@@ -329,6 +330,7 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                             stroke-width="2"
+                            aria-hidden="true"
                         >
 
                             <path
@@ -370,9 +372,24 @@
 
                     {#each bundles as bundle (bundle.id)}
 
+    <!--
+        ✅ FIX A11Y: hapus `aria-label` yang tidak cocok dengan teks visible.
+
+        SEBELUMNYA:
+          aria-label="Pilih Paket Meratus Explorer"
+          teks visible: "Pegunungan Meratus" + "Paket Meratus Explorer"
+          → "Pegunungan Meratus" tidak ada di aria-label → MISMATCH.
+
+        SESUDAH:
+          Tanpa aria-label. Accessible name = gabungan teks visible
+          ("Pegunungan Meratus Paket Meratus Explorer") → LOLOS WCAG 2.5.3.
+
+        Bonus: tambah `aria-current` untuk menandai kartu aktif,
+        supaya screen reader user tahu kartu mana yang sedang dipilih.
+    -->
     <button
         type="button"
-        aria-label={`Pilih ${bundle.title}`}
+        aria-current={getPosition(bundle.id) === "center" ? "true" : undefined}
         onclick={() => selectBundle(bundle.id)}
         class={`absolute top-0 transition-all duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)]
             ${
@@ -457,12 +474,17 @@
 
                         {#each bundles as bundle}
 
+                            <!--
+                                ✅ FIX A11Y: hapus `aria-label`. Accessible name
+                                otomatis dari `alt` gambar thumbnail (bundle.title).
+                                Ini lebih konsisten dengan kartu utama di atas.
+                            -->
                             <button
                                 type="button"
                                 onclick={() =>
                                     selectBundle(bundle.id)
                                 }
-                                aria-label={`Pilih ${bundle.title}`}
+                                aria-current={activeId === bundle.id ? "true" : undefined}
                                 class="
                                     overflow-hidden
                                     rounded-xl

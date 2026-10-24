@@ -22,14 +22,16 @@
         "test:e2e:rate-limit": "AUTH_THROTTLE_LOGIN_TEST_OVERRIDE=5 AUTH_THROTTLE_REGISTER_TEST_OVERRIDE=3 AUTH_THROTTLE_FORGOT_PASSWORD_TEST_OVERRIDE=3 AUTH_THROTTLE_RESET_PASSWORD_TEST_OVERRIDE=5 playwright test e2e/rate-limit/"
     },
     "dependencies": {
-        "@inertiajs/svelte": "^3.0.0",
+        "@faintshadow/flarecharts": "^26.3.1",
+        "@inertiajs/core": "^3",
+        "@inertiajs/svelte": "^3",
         "@inertiajs/vite": "^3.0.0",
         "@sveltejs/vite-plugin-svelte": "^7.3.1",
         "@tailwindcss/vite": "^4.1.11",
         "clsx": "^2.1.1",
         "concurrently": "^10.0.3",
         "laravel-vite-plugin": "^3.1",
-        "svelte": "^5.16.0",
+        "svelte": "^5.57.2",
         "tailwind-merge": "^3.2.0",
         "tailwindcss": "^4.1.1",
         "typescript": "^5.7.2",

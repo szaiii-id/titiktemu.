@@ -12,6 +12,9 @@ import type { Locator, Page } from '@playwright/test';
  * ⚠️ FIX #4: modal & status badge → expect.poll
  * ⚠️ FIX #5: ensureTripActive + submit → polling, bukan waitForResponse saja
  * ⚠️ FIX #6: findTripDayIdByHariKe — fallback kalau tombol tidak muncul
+ * ⚠️ FIX #7: "upload button punya aria-label" — ganti assertion ke
+ *           accessible name (aria-labelledby sudah dihapus dari
+ *           ImageUploader.svelte saat fix WCAG 2.5.3)
  */
 
 // ==========================================
@@ -702,7 +705,7 @@ test.describe('Mitra — Daily Reports', () => {
             await expect(page.locator('label[for="catatan"]')).toBeVisible();
         });
 
-        test('upload button punya aria-label', async ({
+        test('upload button punya accessible name yang jelas', async ({
             page,
             asAdmin,
             asMitra,
@@ -719,11 +722,18 @@ test.describe('Mitra — Daily Reports', () => {
                 { waitUntil: 'domcontentloaded' },
             );
 
-            const uploadBtn = page.getByTestId('logo-upload-button');
-            const ariaLabelledby = await uploadBtn.getAttribute(
-                'aria-labelledby',
-            );
-            expect(ariaLabelledby).toBeTruthy();
+            // ✅ FIX #7: `aria-labelledby` sudah dihapus dari ImageUploader.svelte
+            // saat fix WCAG 2.5.3. Accessible name sekarang = gabungan teks
+            // visible ("Klik untuk upload JPG, PNG, atau WEBP").
+            //
+            // Assert via getByRole('button', { name: ... }) — lebih semantik
+            // dan tidak rapuh terhadap perubahan atribut aria-*.
+            await expect(
+                page.getByRole('button', { name: /Klik untuk upload/i }),
+            ).toBeVisible();
+
+            // Bonus: pastikan tombol punya data-testid (untuk test lain)
+            await expect(page.getByTestId('logo-upload-button')).toBeVisible();
         });
     });
 
