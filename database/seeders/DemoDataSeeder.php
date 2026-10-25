@@ -11,6 +11,7 @@ use App\Models\Payout;
 use App\Models\User;
 use App\Services\Trip\TripService;
 use App\Services\Wallet\WalletService;
+use Carbon\CarbonImmutable;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
@@ -121,13 +122,20 @@ class DemoDataSeeder extends Seeder
             $booking->kode = 'BKG-'.now()->year.'-'.str_pad((string) ($i + 100), 3, '0', STR_PAD_LEFT);
             $booking->package_id = $package->id;
             $booking->user_id = $client->id;
-            $booking->tanggal_keberangkatan = $tanggalBerangkat->format('Y-m-d');
+
+            // ✅ FIX: Cast ke Carbon/string sesuai tipe properti model
+            $booking->tanggal_keberangkatan = $tanggalBerangkat;
             $booking->jumlah_peserta = $jumlahPeserta;
-            $booking->total_harga = $package->harga_per_orang * $jumlahPeserta;
+
+            // ✅ FIX: Cast ke string karena model mendefinisikan total_harga sebagai string (decimal)
+            $booking->total_harga = (string) ($package->harga_per_orang * $jumlahPeserta);
+
             $booking->status = $statusForCreate;
             $booking->catatan = $faker->optional()->sentence;
             $booking->expired_at = $statusForCreate === 'pending_payment' ? now()->addHours(24) : null;
-            $booking->created_at = $createdAt;
+
+            // ✅ FIX: Booking pakai CarbonImmutable
+            $booking->created_at = CarbonImmutable::parse($createdAt);
             $booking->save();
 
             // Participants
@@ -207,13 +215,22 @@ class DemoDataSeeder extends Seeder
             $payout = new Payout;
             $payout->kode = 'PAY-'.now()->year.'-'.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT);
             $payout->mitra_id = $mitra->id;
-            $payout->jumlah = rand(500000, 3000000);
+
+            // ✅ FIX: Cast ke string karena model mendefinisikan jumlah sebagai string (decimal)
+            $payout->jumlah = (string) rand(500000, 3000000);
+
             $payout->status = $status;
             $payout->bank_tujuan = $faker->randomElement(['BCA', 'Mandiri', 'BRI', 'BNI']);
-            $payout->no_rekening = $faker->bankAccountNumber;
+
+            // ✅ FIX: Faker Indonesia tidak punya bankAccountNumber, gunakan angka random
+            $payout->no_rekening = (string) rand(1000000000, 9999999999);
+
             $payout->nama_pemilik = $mitra->name;
             $payout->catatan = $faker->optional()->sentence;
-            $payout->created_at = $tanggalRequest;
+
+            // ✅ FIX: Payout pakai Carbon biasa (bukan CarbonImmutable)
+            $payout->created_at = Carbon::parse($tanggalRequest);
+
             $payout->save();
         }
 

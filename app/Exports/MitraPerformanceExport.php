@@ -10,16 +10,19 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class MitraPerformanceExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $startDate;
+    protected string $startDate;
 
-    protected $endDate;
+    protected string $endDate;
 
-    public function __construct($startDate, $endDate)
+    public function __construct(string $startDate, string $endDate)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
     }
 
+    /**
+     * @return Collection<int, User>
+     */
     public function collection(): Collection
     {
         return User::where('role', 'mitra')
@@ -44,6 +47,10 @@ class MitraPerformanceExport implements FromCollection, WithHeadings, WithMappin
         return ['ID Mitra', 'Nama Mitra', 'Email', 'Total Trip Selesai', 'Total Honor Diterima'];
     }
 
+    /**
+     * @param  User  $mitra
+     * @return array<int, mixed>
+     */
     public function map($mitra): array
     {
         return [

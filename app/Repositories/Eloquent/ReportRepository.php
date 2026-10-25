@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class ReportRepository
 {
     /**
-     * Ambil data pendapatan (Revenue).
+     * @return array<string, mixed>
      */
     public function getRevenueData(string $startDate, string $endDate): array
     {
@@ -37,7 +37,7 @@ class ReportRepository
                 'client' => $b->client->name ?? '-',
                 'paket' => $b->package->nama ?? '-',
                 'total' => $b->total_harga,
-                'status' => is_object($b->status) ? $b->status->value : $b->status,
+                'status' => $b->status->value,
             ]);
 
         return [
@@ -49,7 +49,7 @@ class ReportRepository
     }
 
     /**
-     * Ambil data kinerja mitra.
+     * @return array<string, mixed>
      */
     public function getMitraPerformanceData(string $startDate, string $endDate): array
     {
@@ -84,7 +84,7 @@ class ReportRepository
     }
 
     /**
-     * Ambil data laporan harian.
+     * @return array<string, mixed>
      */
     public function getDailyReportData(string $startDate, string $endDate): array
     {
@@ -92,15 +92,17 @@ class ReportRepository
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(fn ($r) => [
-                'id' => $r->id,
-                'trip_kode' => $r->tripDay->trip->kode ?? '-',
-                'mitra' => $r->mitra->name ?? '-',
-                'hari_ke' => $r->tripDay->hari_ke ?? '-',
-                'tanggal' => $r->created_at->format('Y-m-d'),
-                'status' => is_object($r->status) ? $r->status->value : $r->status,
-                'catatan' => $r->catatan ?? '-',
-            ]);
+            ->map(function ($r) {
+                return [
+                    'id' => $r->id,
+                    'trip_kode' => $r->tripDay->trip->kode ?? '-',
+                    'mitra' => $r->mitra->name ?? '-',
+                    'hari_ke' => $r->tripDay->hari_ke ?? '-',
+                    'tanggal' => $r->created_at->format('Y-m-d'),
+                    'status' => $r->status, // ✅ FIX: DailyReport pakai string, bukan Enum
+                    'catatan' => $r->catatan ?? '-',
+                ];
+            });
 
         return [
             'total_reports' => $reports->count(),
@@ -111,7 +113,7 @@ class ReportRepository
     }
 
     /**
-     * Ambil data payout.
+     * @return array<string, mixed>
      */
     public function getPayoutData(string $startDate, string $endDate): array
     {
@@ -125,7 +127,7 @@ class ReportRepository
                 'mitra' => $p->mitra->name ?? '-',
                 'tanggal' => $p->created_at->format('Y-m-d'),
                 'jumlah' => $p->jumlah,
-                'status' => is_object($p->status) ? $p->status->value : $p->status,
+                'status' => $p->status->value, // ✅ Payout pakai Enum
             ]);
 
         return [
@@ -137,7 +139,7 @@ class ReportRepository
     }
 
     /**
-     * Ambil data pendapatan bulanan (6 bulan terakhir).
+     * @return array<int, array<string, mixed>>
      */
     public function getMonthlyRevenue(): array
     {

@@ -8,6 +8,7 @@ use App\Services\Report\ReportService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class ReportController extends Controller
 {
@@ -30,7 +31,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function exportPdf(Request $request)
+    public function exportPdf(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -38,7 +39,7 @@ class ReportController extends Controller
         return $this->reportService->exportRevenuePdf($startDate, $endDate);
     }
 
-    public function exportExcel(Request $request)
+    public function exportExcel(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -60,7 +61,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function exportMitraPdf(Request $request)
+    public function exportMitraPdf(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -68,7 +69,7 @@ class ReportController extends Controller
         return $this->reportService->exportMitraPdf($startDate, $endDate);
     }
 
-    public function exportMitraExcel(Request $request)
+    public function exportMitraExcel(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -90,7 +91,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function exportDailyPdf(Request $request)
+    public function exportDailyPdf(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -98,7 +99,7 @@ class ReportController extends Controller
         return $this->reportService->exportDailyPdf($startDate, $endDate);
     }
 
-    public function exportDailyExcel(Request $request)
+    public function exportDailyExcel(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -120,7 +121,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function exportPayoutPdf(Request $request)
+    public function exportPayoutPdf(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -128,7 +129,7 @@ class ReportController extends Controller
         return $this->reportService->exportPayoutPdf($startDate, $endDate);
     }
 
-    public function exportPayoutExcel(Request $request)
+    public function exportPayoutExcel(Request $request): HttpResponse
     {
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
@@ -139,7 +140,7 @@ class ReportController extends Controller
     // ==========================================
     // 5. MANIFEST TRIP
     // ==========================================
-    public function exportTripManifest(Trip $trip)
+    public function exportTripManifest(Trip $trip): HttpResponse
     {
         return $this->reportService->exportTripManifest($trip, auth()->user());
     }

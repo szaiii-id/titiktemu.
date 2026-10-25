@@ -10,16 +10,19 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class DailyReportExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $startDate;
+    protected string $startDate;
 
-    protected $endDate;
+    protected string $endDate;
 
-    public function __construct($startDate, $endDate)
+    public function __construct(string $startDate, string $endDate)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
     }
 
+    /**
+     * @return Collection<int, DailyReport>
+     */
     public function collection(): Collection
     {
         return DailyReport::with(['tripDay.trip', 'mitra:id,name'])
@@ -33,6 +36,10 @@ class DailyReportExport implements FromCollection, WithHeadings, WithMapping
         return ['ID Laporan', 'Kode Trip', 'Nama Mitra', 'Hari Ke-', 'Tanggal', 'Status', 'Catatan'];
     }
 
+    /**
+     * @param  DailyReport  $report
+     * @return array<int, mixed>
+     */
     public function map($report): array
     {
         return [
@@ -41,7 +48,7 @@ class DailyReportExport implements FromCollection, WithHeadings, WithMapping
             $report->mitra->name ?? '-',
             $report->tripDay->hari_ke ?? '-',
             $report->created_at->format('Y-m-d'),
-            is_object($report->status) ? $report->status->value : $report->status,
+            $report->status, // ✅ FIX: Hapus ->value karena ini string biasa
             $report->catatan ?? '-',
         ];
     }

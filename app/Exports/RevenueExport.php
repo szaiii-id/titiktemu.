@@ -10,22 +10,22 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class RevenueExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $startDate;
+    protected string $startDate;
 
-    protected $endDate;
+    protected string $endDate;
 
-    public function __construct($startDate, $endDate)
+    public function __construct(string $startDate, string $endDate)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
     }
 
     /**
-     * ✅ FIX: Tambahkan return type : Collection
+     * @return Collection<int, Booking>
      */
     public function collection(): Collection
     {
-        return Booking::with(['client:id,name', 'package:id,nama']) // ✅ FIX: client, bukan user
+        return Booking::with(['client:id,name', 'package:id,nama'])
             ->whereIn('status', ['confirmed', 'completed'])
             ->whereBetween('created_at', [$this->startDate.' 00:00:00', $this->endDate.' 23:59:59'])
             ->orderBy('created_at', 'desc')
@@ -37,16 +37,19 @@ class RevenueExport implements FromCollection, WithHeadings, WithMapping
         return ['Kode Booking', 'Tanggal', 'Nama Client', 'Paket', 'Total Harga', 'Status'];
     }
 
+    /**
+     * @param  Booking  $booking
+     * @return array<int, mixed>
+     */
     public function map($booking): array
     {
         return [
             $booking->kode,
             $booking->created_at->format('Y-m-d'),
-            $booking->client->name ?? '-', // ✅ FIX: client
+            $booking->client->name ?? '-',
             $booking->package->nama ?? '-',
             $booking->total_harga,
-            // ✅ FIX: Ambil value dari enum
-            is_object($booking->status) ? $booking->status->value : $booking->status,
+            $booking->status->value, // ✅ FIX: Hapus is_object(), langsung ambil value Enum
         ];
     }
 }

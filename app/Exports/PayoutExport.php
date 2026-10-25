@@ -10,16 +10,19 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class PayoutExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $startDate;
+    protected string $startDate;
 
-    protected $endDate;
+    protected string $endDate;
 
-    public function __construct($startDate, $endDate)
+    public function __construct(string $startDate, string $endDate)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
     }
 
+    /**
+     * @return Collection<int, Payout>
+     */
     public function collection(): Collection
     {
         return Payout::with(['mitra:id,name'])
@@ -33,6 +36,10 @@ class PayoutExport implements FromCollection, WithHeadings, WithMapping
         return ['ID Payout', 'Kode', 'Nama Mitra', 'Tanggal Request', 'Jumlah', 'Status'];
     }
 
+    /**
+     * @param  Payout  $payout
+     * @return array<int, mixed>
+     */
     public function map($payout): array
     {
         return [
@@ -41,7 +48,7 @@ class PayoutExport implements FromCollection, WithHeadings, WithMapping
             $payout->mitra->name ?? '-',
             $payout->created_at->format('Y-m-d'),
             $payout->jumlah,
-            is_object($payout->status) ? $payout->status->value : $payout->status,
+            $payout->status->value, // ✅ FIX: Hapus is_object(), langsung ambil value Enum
         ];
     }
 }

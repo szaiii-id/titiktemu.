@@ -34,8 +34,9 @@ class DashboardController extends Controller
         $reportCounts = $this->dailyReportService->countByStatus();
         $payoutCounts = $this->payoutService->countByStatus();
 
-        $totalRevenue = Booking::whereIn('status', ['confirmed', 'completed'])->sum('total_harga');
-        $totalHonor = TripMitra::whereHas('trip', function ($q) {
+        // ✅ FIX: Cast ke (float) agar mengembalikan tipe data angka, bukan string
+        $totalRevenue = (float) Booking::whereIn('status', ['confirmed', 'completed'])->sum('total_harga');
+        $totalHonor = (float) TripMitra::whereHas('trip', function ($q) {
             $q->where('status', 'completed');
         })->sum('honor');
 
@@ -94,8 +95,8 @@ class DashboardController extends Controller
                 'kode' => $b->kode,
                 'client' => $b->client->name ?? '-',
                 'paket' => $b->package->nama ?? '-',
-                'total' => $b->total_harga,
-                'status' => is_object($b->status) ? $b->status->value : $b->status,
+                'total' => (float) $b->total_harga, // ✅ FIX: Cast ke float
+                'status' => $b->status->value, // ✅ FIX: Hapus is_object(), langsung ambil value Enum
                 'tanggal' => $b->created_at->format('d M Y'),
             ]);
 
