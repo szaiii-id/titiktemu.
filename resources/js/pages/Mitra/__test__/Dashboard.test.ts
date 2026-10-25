@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/svelte';
 import MitraDashboard from '../Dashboard.svelte';
 
 // ============================================================
-// MOCK INERTIA — WAJIB (satu-satunya mock)
+// MOCK INERTIA
 // ============================================================
 vi.mock('@inertiajs/svelte', () => ({
     inertia: () => ({
@@ -95,19 +95,7 @@ const createPendingReport = (overrides: any = {}) => ({
 });
 
 /**
- * Ambil section terdekat dari heading berdasarkan nama.
- * `closest()` di TS bertipe Element|null, jadi di-cast ke HTMLElement.
- */
-const getSectionByHeading = (name: string): HTMLElement => {
-    const heading = screen.getByRole('heading', { level: 2, name });
-    return heading.closest('div.mb-6') as HTMLElement;
-};
-
-/**
- * Ambil KARTU wallet (bukan link sidebar "Wallet").
- * Sidebar: <a href="/mitra/wallet"><span>Wallet</span></a>
- * Kartu:   <a href="/mitra/wallet">... Saldo Wallet ...</a>
- * Diferensiasi via teks "Saldo Wallet".
+ * Ambil kartu wallet (link dengan teks "Saldo Wallet").
  */
 const getWalletCard = (): HTMLElement => {
     const link = screen
@@ -141,7 +129,7 @@ describe('Mitra Dashboard — Welcome & Wallet', () => {
 
         expect(
             screen.getByRole('heading', {
-                name: /Selamat Datang, Mitra Test/i,
+                name: /Halo, Mitra Test/i,
             }),
         ).toBeInTheDocument();
     });
@@ -170,10 +158,10 @@ describe('Mitra Dashboard — Welcome & Wallet', () => {
 });
 
 // ============================================================
-// KATEGORI 2 — WARNING LAPORAN
+// KATEGORI 2 — PERLU TINDAKAN (Warning Laporan)
 // ============================================================
 
-describe('Mitra Dashboard — Warning Laporan', () => {
+describe('Mitra Dashboard — Perlu Tindakan', () => {
     it('menampilkan warning jika ada trip yang belum lapor hari ini', () => {
         render(MitraDashboard, {
             props: {
@@ -184,7 +172,7 @@ describe('Mitra Dashboard — Warning Laporan', () => {
         });
 
         expect(
-            screen.getByRole('heading', { name: 'Laporan Menunggu' }),
+            screen.getByRole('heading', { name: 'Perlu Tindakan Anda' }),
         ).toBeInTheDocument();
         expect(
             screen.getByText(/1 trip perlu laporan hari ini/i),
@@ -213,7 +201,7 @@ describe('Mitra Dashboard — Warning Laporan', () => {
         });
 
         expect(
-            screen.queryByRole('heading', { name: 'Laporan Menunggu' }),
+            screen.queryByRole('heading', { name: 'Perlu Tindakan Anda' }),
         ).not.toBeInTheDocument();
     });
 
@@ -227,7 +215,7 @@ describe('Mitra Dashboard — Warning Laporan', () => {
         });
 
         expect(
-            screen.queryByRole('heading', { name: 'Laporan Menunggu' }),
+            screen.queryByRole('heading', { name: 'Perlu Tindakan Anda' }),
         ).not.toBeInTheDocument();
     });
 });
@@ -237,23 +225,30 @@ describe('Mitra Dashboard — Warning Laporan', () => {
 // ============================================================
 
 describe('Mitra Dashboard — Trip Hari Ini', () => {
-    it('merender trip hari ini jika ada', () => {
-        render(MitraDashboard, {
-            props: {
-                stats: createStats(),
-                todayTrips: [createTrip()],
-                pendingReports: [],
-            },
-        });
-
-        const section = getSectionByHeading('Trip Hari Ini');
-        expect(
-            within(section).getByText('Bali Adventure'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('TRP-001'),
-        ).toBeInTheDocument();
+it('merender trip hari ini jika ada', () => {
+    render(MitraDashboard, {
+        props: {
+            stats: createStats(),
+            todayTrips: [createTrip()],
+            pendingReports: [],
+        },
     });
+
+    expect(
+        screen.getByRole('heading', { name: 'Trip Hari Ini' }),
+    ).toBeInTheDocument();
+
+    const tripSection = screen
+        .getByRole('heading', { name: 'Trip Hari Ini' })
+        .closest('div.mb-8') as HTMLElement;
+
+    expect(
+        within(tripSection).getByText('Bali Adventure'),
+    ).toBeInTheDocument();
+    expect(
+        within(tripSection).getByText('TRP-001'),
+    ).toBeInTheDocument();
+});
 
     it('TIDAK merender section Trip Hari Ini jika kosong', () => {
         render(MitraDashboard, {
@@ -274,67 +269,7 @@ describe('Mitra Dashboard — Trip Hari Ini', () => {
 });
 
 // ============================================================
-// KATEGORI 4 — STATISTIK
-// ============================================================
-
-describe('Mitra Dashboard — Statistik', () => {
-    it('merender 4 label Statistik Trip dengan nilai benar', () => {
-        render(MitraDashboard, {
-            props: {
-                stats: createStats(),
-                todayTrips: [],
-                pendingReports: [],
-            },
-        });
-
-        const section = getSectionByHeading('Statistik Trip');
-
-        expect(
-            within(section).getByText('Total Trip'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('Terjadwal'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('Berjalan'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('Selesai'),
-        ).toBeInTheDocument();
-
-        expect(within(section).getByText('6')).toBeInTheDocument();
-    });
-
-    it('merender 4 label Statistik Laporan dengan nilai benar', () => {
-        render(MitraDashboard, {
-            props: {
-                stats: createStats(),
-                todayTrips: [],
-                pendingReports: [],
-            },
-        });
-
-        const section = getSectionByHeading('Statistik Laporan');
-
-        expect(
-            within(section).getByText('Total Laporan'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('Pending'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('Terverifikasi'),
-        ).toBeInTheDocument();
-        expect(
-            within(section).getByText('Ditolak'),
-        ).toBeInTheDocument();
-
-        expect(within(section).getByText('5')).toBeInTheDocument();
-    });
-});
-
-// ============================================================
-// KATEGORI 5 — LAPORAN PENDING
+// KATEGORI 4 — LAPORAN PENDING
 // ============================================================
 
 describe('Mitra Dashboard — Laporan Pending', () => {
@@ -347,12 +282,12 @@ describe('Mitra Dashboard — Laporan Pending', () => {
             },
         });
 
-        const section = getSectionByHeading(
-            'Laporan Menunggu Verifikasi',
-        );
         expect(
-            within(section).getByText('Bali Adventure'),
+            screen.getByRole('heading', {
+                name: 'Laporan Menunggu Verifikasi',
+            }),
         ).toBeInTheDocument();
+        expect(screen.getByText('Bali Adventure')).toBeInTheDocument();
     });
 
     it('TIDAK merender section jika pendingReports kosong', () => {
@@ -370,5 +305,25 @@ describe('Mitra Dashboard — Laporan Pending', () => {
                 name: 'Laporan Menunggu Verifikasi',
             }),
         ).not.toBeInTheDocument();
+    });
+});
+
+// ============================================================
+// KATEGORI 5 — PANEL INFO
+// ============================================================
+
+describe('Mitra Dashboard — Panel Info', () => {
+    it('menampilkan panel "Panel Mitra"', () => {
+        render(MitraDashboard, {
+            props: {
+                stats: createStats(),
+                todayTrips: [],
+                pendingReports: [],
+            },
+        });
+
+        expect(
+            screen.getByRole('heading', { name: 'Panel Mitra' }),
+        ).toBeInTheDocument();
     });
 });

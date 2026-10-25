@@ -1,533 +1,178 @@
 <script lang="ts">
     import DashboardLayout from '@/components/layout/DashboardLayout.svelte';
-    import PageHeader from '@/global/PageHeader.svelte';
-    import StatCard from '@/global/StatCard.svelte';
     import { page, inertia } from '@inertiajs/svelte';
-    import type { TripStatus } from '@/types';
     import { adminMenu } from '@/utils/menus';
+    import { formatCurrency } from '@/utils/formatCurrency';
+    import { AreaChart } from '@faintshadow/flarecharts';
 
-    // ==========================================
-    // PROPS
-    // ==========================================
-
-    type Stats = {
-        totalAdmin: number;
-        totalMitra: number;
-        totalClient: number;
-        packages: {
-            draft: number;
-            aktif: number;
-            arsip: number;
-            total: number;
-        };
-        bookings: {
-            pending_payment: number;
-            payment_verified: number;
-            confirmed: number;
-            in_progress: number;
-            completed: number;
-            cancelled: number;
-            total: number;
-            needs_attention: number;
-        };
-        trips: {
-            scheduled: number;
-            active: number;
-            completed: number;
-            cancelled: number;
-            total: number;
-            needs_mitra: number;
-        };
-        daily_reports: {
-            submitted: number;
-            verified: number;
-            rejected: number;
-            total: number;
-        };
-        payouts: {
-            pending: number;
-            approved: number;
-            paid: number;
-            rejected: number;
-            total: number;
-        };
-    };
-
-    let {
-        stats = {
-            totalAdmin: 0,
-            totalMitra: 0,
-            totalClient: 0,
-            packages: { draft: 0, aktif: 0, arsip: 0, total: 0 },
-            bookings: {
-                pending_payment: 0,
-                payment_verified: 0,
-                confirmed: 0,
-                in_progress: 0,
-                completed: 0,
-                cancelled: 0,
-                total: 0,
-                needs_attention: 0,
-            },
-            trips: {
-                scheduled: 0,
-                active: 0,
-                completed: 0,
-                cancelled: 0,
-                total: 0,
-                needs_mitra: 0,
-            },
-            daily_reports: {
-                submitted: 0,
-                verified: 0,
-                rejected: 0,
-                total: 0,
-            },
-            payouts: {
-                pending: 0,
-                approved: 0,
-                paid: 0,
-                rejected: 0,
-                total: 0,
-            },
-        },
-    }: {
-        stats?: Stats;
-    } = $props();
-
+    let { stats, recent_bookings = [], monthly_revenue = [], monthly_bookings = [] } = $props();
     let user = $derived(page.props.auth?.user);
+
+    // Flarecharts membutuhkan format: [{ name: 'Series Name', data: [{ x: 'Label', y: Value }] }]
+    let revenueChartData = $derived([
+        {
+            name: 'Pendapatan',
+            data: monthly_revenue.map((d: any) => ({ x: d.bulan, y: d.total }))
+        }
+    ]);
+
+    let bookingChartData = $derived([
+        {
+            name: 'Booking',
+            data: monthly_bookings.map((d: any) => ({ x: d.bulan, y: d.total }))
+        }
+    ]);
 </script>
 
 <svelte:head><title>Dashboard Admin | Titiktemu</title></svelte:head>
 
 <DashboardLayout title="Dashboard" menuItems={adminMenu}>
-    <!-- Welcome Banner -->
-    <div
-        class="bg-gradient-to-r from-pink-dark to-purple rounded-3xl p-8 text-white shadow-lg mb-6"
-    >
-        <h1 class="text-3xl sm:text-4xl font-extrabold mb-2">
-            Selamat Datang, {user?.name ?? 'Admin'}<span class="text-sun"
-                >.</span
-            >
-        </h1>
-        <p class="text-sm sm:text-base opacity-90">
-            Kelola platform Titiktemu dari sini. Semua data ada di
-            tangan Anda.
-        </p>
+    <!-- HEADER & WELCOME -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-dark">
+                Halo, {user?.name ?? 'Admin'}<span class="text-pink-dark">.</span>
+            </h1>
+            <p class="text-gray-500 mt-1">Ini ringkasan performa bisnis Anda hari ini.</p>
+        </div>
+        <div class="flex gap-2">
+            <a href="/admin/reports" use:inertia class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-gray-200 text-dark font-bold text-sm hover:bg-gray-50 shadow-sm transition-all">
+                <svg class="w-4 h-4 text-pink-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                Lihat Laporan
+            </a>
+        </div>
     </div>
 
-    <!-- BOOKING -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-lg font-extrabold text-dark">
-                    Booking
-                </h2>
-                {#if stats.bookings.needs_attention > 0}
-                    <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sun/10 text-sun-text border border-sun/20"
-                    >
-                        <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="3"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                        {stats.bookings.needs_attention} butuh perhatian
-                    </span>
-                {/if}
+    <!-- RINGKASAN UTAMA (4 KARTU) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Pendapatan -->
+        <div class="bg-gradient-to-br from-pink-dark to-purple rounded-3xl p-5 shadow-lg relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <svg class="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <a
-                href="/admin/bookings"
-                use:inertia
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pink-text hover:text-sun-text"
-            >
-                Kelola Booking
-                <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                </svg>
-            </a>
+            <p class="text-white/80 text-[11px] font-extrabold uppercase tracking-widest mb-1">Total Pendapatan</p>
+            <p class="text-2xl font-extrabold text-white">{formatCurrency(stats.total_revenue)}</p>
+            <p class="text-[10px] text-white/60 mt-1">Laba Kotor: {formatCurrency(stats.total_revenue - stats.total_honor)}</p>
         </div>
-        <div
-            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
-        >
-            <StatCard
-                label="Total"
-                value={stats.bookings.total}
-                href="/admin/bookings"
-                color="pink"
-            />
-            <StatCard
-                label="Pending"
-                value={stats.bookings.pending_payment}
-                href="/admin/bookings?status=pending_payment"
-                color="sun"
-            />
-            <StatCard
-                label="Verifikasi"
-                value={stats.bookings.payment_verified}
-                href="/admin/bookings?status=payment_verified"
-                color="blue"
-            />
-            <StatCard
-                label="Konfirmasi"
-                value={stats.bookings.confirmed}
-                href="/admin/bookings?status=confirmed"
-                color="green"
-            />
-            <StatCard
-                label="Selesai"
-                value={stats.bookings.completed}
-                href="/admin/bookings?status=completed"
-                color="gray"
-            />
-            <StatCard
-                label="Batal"
-                value={stats.bookings.cancelled}
-                href="/admin/bookings?status=cancelled"
-                color="red"
-            />
-        </div>
-    </div>
 
-    <!-- TRIP -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-lg font-extrabold text-dark">Trip</h2>
-                {#if stats.trips.needs_mitra > 0}
-                    <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-red-50 text-red-700 border border-red-200"
-                    >
-                        <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="3"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                        {stats.trips.needs_mitra} belum punya mitra
-                    </span>
-                {/if}
+        <!-- Trip Aktif -->
+        <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <svg class="w-16 h-16 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <a
-                href="/admin/trips"
-                use:inertia
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pink-text hover:text-sun-text"
-            >
-                Kelola Trip
-                <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                </svg>
-            </a>
+            <p class="text-gray-500 text-[11px] font-extrabold uppercase tracking-widest mb-1">Trip Sedang Jalan</p>
+            <p class="text-2xl font-extrabold text-dark">{stats.trips.active}</p>
+            <a href="/admin/trips?status=active" use:inertia class="text-[10px] font-bold text-blue-text hover:underline mt-2 block">Lihat Detail →</a>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            <StatCard
-                label="Total"
-                value={stats.trips.total}
-                href="/admin/trips"
-                color="pink"
-            />
-            <StatCard
-                label="Terjadwal"
-                value={stats.trips.scheduled}
-                href="/admin/trips?status=scheduled"
-                color="blue"
-            />
-            <StatCard
-                label="Berjalan"
-                value={stats.trips.active}
-                href="/admin/trips?status=active"
-                color="purple"
-            />
-            <StatCard
-                label="Selesai"
-                value={stats.trips.completed}
-                href="/admin/trips?status=completed"
-                color="green"
-            />
-            <StatCard
-                label="Batal"
-                value={stats.trips.cancelled}
-                href="/admin/trips?status=cancelled"
-                color="red"
-            />
-        </div>
-    </div>
 
-    <!-- LAPORAN HARIAN -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-lg font-extrabold text-dark">
-                    Laporan Harian
-                </h2>
-                {#if stats.daily_reports.submitted > 0}
-                    <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sun/10 text-sun-text border border-sun/20"
-                    >
-                        <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="3"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                        {stats.daily_reports.submitted} menunggu verifikasi
-                    </span>
-                {/if}
+        <!-- Laporan Menunggu -->
+        <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <svg class="w-16 h-16 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
             </div>
-            <a
-                href="/admin/daily-reports"
-                use:inertia
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pink-text hover:text-sun-text"
-            >
-                Verifikasi Laporan
-                <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                </svg>
-            </a>
+            <p class="text-gray-500 text-[11px] font-extrabold uppercase tracking-widest mb-1">Laporan Menunggu</p>
+            <p class="text-2xl font-extrabold text-dark">{stats.daily_reports.submitted}</p>
+            <a href="/admin/daily-reports?status=submitted" use:inertia class="text-[10px] font-bold text-sun-text hover:underline mt-2 block">Verifikasi Sekarang →</a>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard
-                label="Total"
-                value={stats.daily_reports.total}
-                href="/admin/daily-reports"
-                color="pink"
-            />
-            <StatCard
-                label="Pending"
-                value={stats.daily_reports.submitted}
-                href="/admin/daily-reports?status=submitted"
-                color="sun"
-            />
-            <StatCard
-                label="Terverifikasi"
-                value={stats.daily_reports.verified}
-                href="/admin/daily-reports?status=verified"
-                color="green"
-            />
-            <StatCard
-                label="Ditolak"
-                value={stats.daily_reports.rejected}
-                href="/admin/daily-reports?status=rejected"
-                color="red"
-            />
-        </div>
-    </div>
 
-    <!-- PAYOUT -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-                <h2 class="text-lg font-extrabold text-dark">
-                    Pencairan Honor
-                </h2>
-                {#if stats.payouts.pending > 0}
-                    <span
-                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sun/10 text-sun-text border border-sun/20"
-                    >
-                        <svg
-                            class="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="3"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                            />
-                        </svg>
-                        {stats.payouts.pending} menunggu review
-                    </span>
-                {/if}
+        <!-- Payout Pending -->
+        <div class="bg-white border border-gray-200 rounded-3xl p-5 shadow-sm relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <svg class="w-16 h-16 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
             </div>
-            <a
-                href="/admin/payouts"
-                use:inertia
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pink-text hover:text-sun-text"
-            >
-                Kelola Payout
-                <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                </svg>
-            </a>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <StatCard
-                label="Total"
-                value={stats.payouts.total}
-                href="/admin/payouts"
-                color="pink"
-            />
-            <StatCard
-                label="Pending"
-                value={stats.payouts.pending}
-                href="/admin/payouts?status=pending"
-                color="sun"
-            />
-            <StatCard
-                label="Approved"
-                value={stats.payouts.approved}
-                href="/admin/payouts?status=approved"
-                color="blue"
-            />
-            <StatCard
-                label="Paid"
-                value={stats.payouts.paid}
-                href="/admin/payouts?status=paid"
-                color="green"
-            />
+            <p class="text-gray-500 text-[11px] font-extrabold uppercase tracking-widest mb-1">Payout Menunggu</p>
+            <p class="text-2xl font-extrabold text-dark">{stats.payouts.pending}</p>
+            <a href="/admin/payouts?status=pending" use:inertia class="text-[10px] font-bold text-red-700 hover:underline mt-2 block">Review Payout →</a>
         </div>
     </div>
 
-    <!-- PAKET WISATA -->
-    <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-extrabold text-dark">
-                Paket Wisata
-            </h2>
-            <a
-                href="/admin/packages"
-                use:inertia
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-pink-text hover:text-sun-text"
-            >
-                Kelola Paket
-                <svg
-                    class="w-3.5 h-3.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                </svg>
-            </a>
+    <!-- ✅ GRAFIK GANDA (FLARECHARTS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Grafik 1: Area Chart Pendapatan -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-base font-extrabold text-dark">Tren Pendapatan</h3>
+                    <p class="text-xs text-gray-500">6 Bulan Terakhir</p>
+                </div>
+                <a href="/admin/reports" use:inertia class="text-xs font-bold text-pink-text hover:underline">Detail →</a>
+            </div>
+            
+            <div class="h-56">
+                <AreaChart 
+                    series={revenueChartData}
+                    xAxis={{ type: 'band' }}
+                    yAxis={{ type: 'linear' }}
+                />
+            </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <StatCard
-                label="Total"
-                value={stats.packages.total}
-                href="/admin/packages"
-                color="pink"
-            />
-            <StatCard
-                label="Draft"
-                value={stats.packages.draft}
-                href="/admin/packages?status=draft"
-                color="gray"
-            />
-            <StatCard
-                label="Aktif"
-                value={stats.packages.aktif}
-                href="/admin/packages?status=aktif"
-                color="green"
-            />
-            <StatCard
-                label="Arsip"
-                value={stats.packages.arsip}
-                href="/admin/packages?status=arsip"
-                color="sun"
-            />
+
+        <!-- Grafik 2: Area Chart Booking -->
+        <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-base font-extrabold text-dark">Tren Booking</h3>
+                    <p class="text-xs text-gray-500">6 Bulan Terakhir</p>
+                </div>
+                <a href="/admin/bookings" use:inertia class="text-xs font-bold text-pink-text hover:underline">Detail →</a>
+            </div>
+            
+            <div class="h-56">
+                <AreaChart 
+                    series={bookingChartData}
+                    xAxis={{ type: 'band' }}
+                    yAxis={{ type: 'linear' }}
+                />
+            </div>
         </div>
     </div>
 
-    <!-- PENGGUNA -->
-    <div class="mb-6">
-        <h2 class="text-lg font-extrabold text-dark mb-3">Pengguna</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <StatCard
-                label="Admin"
-                value={stats.totalAdmin}
-                color="purple"
-            />
-            <StatCard
-                label="Mitra"
-                value={stats.totalMitra}
-                color="blue"
-            />
-            <StatCard
-                label="Client"
-                value={stats.totalClient}
-                color="green"
-            />
+    <!-- BOOKING TERBARU -->
+    <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-5 sm:p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-extrabold text-dark">Booking Terbaru</h3>
+            <a href="/admin/bookings" use:inertia class="text-xs font-bold text-pink-text hover:underline">Semua →</a>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {#each recent_bookings as b}
+                <a href={`/admin/bookings/${b.id}`} use:inertia class="block p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="text-xs font-mono font-bold text-dark truncate">{b.kode}</p>
+                            <p class="text-[11px] text-gray-500 truncate">{b.client}</p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-green-100 text-green-800 uppercase">{b.status}</span>
+                    </div>
+                    <p class="text-xs font-bold text-dark mt-1">{formatCurrency(b.total)}</p>
+                </a>
+            {:else}
+                <p class="text-xs text-gray-500 italic text-center py-4 col-span-full">Belum ada booking terbaru.</p>
+            {/each}
         </div>
     </div>
 
-    <div
-        class="bg-white rounded-2xl p-6 shadow-sm border border-gray-200"
-    >
-        <h2 class="text-lg font-bold text-dark mb-2">
-            Panel Kontrol Sistem
-        </h2>
-        <p class="text-sm text-gray-600 leading-relaxed">
-            Gunakan menu di sidebar untuk mengelola semua modul
-            Titiktemu.
-        </p>
-    </div>
+    <!-- WIDGET "PERLU TINDAKAN" -->
+    {#if stats.daily_reports.submitted > 0 || stats.payouts.pending > 0 || stats.trips.needs_mitra > 0}
+        <div class="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-3xl p-5 sm:p-6">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </div>
+                <div>
+                    <h4 class="text-sm font-extrabold text-orange-900 mb-1">Perlu Tindakan Anda</h4>
+                    <ul class="text-xs text-orange-800 space-y-1">
+                        {#if stats.daily_reports.submitted > 0}
+                            <li>• <a href="/admin/daily-reports?status=submitted" use:inertia class="font-bold underline">{stats.daily_reports.submitted} laporan harian</a> menunggu verifikasi.</li>
+                        {/if}
+                        {#if stats.payouts.pending > 0}
+                            <li>• <a href="/admin/payouts?status=pending" use:inertia class="font-bold underline">{stats.payouts.pending} pengajuan payout</a> menunggu review.</li>
+                        {/if}
+                        {#if stats.trips.needs_mitra > 0}
+                            <li>• <a href="/admin/trips" use:inertia class="font-bold underline">{stats.trips.needs_mitra} trip</a> belum punya mitra.</li>
+                        {/if}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {/if}
 </DashboardLayout>

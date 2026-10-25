@@ -19,5 +19,10 @@ class DatabaseSeeder extends Seeder
             WalletSeeder::class,
             TripMitraSeeder::class,
         ]);
+
+        // ✅ Hanya jalankan DemoDataSeeder jika BUKAN testing
+        if (! app()->environment('testing')) {
+            $this->call(DemoDataSeeder::class);
+        }
     }
 }

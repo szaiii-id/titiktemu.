@@ -11,6 +11,7 @@ import type { Locator, Page } from '@playwright/test';
  * ⚠️ FIX #3: modal heading & toast → expect.poll
  * ⚠️ FIX #4: waitForResponse → polling render
  * ⚠️ FIX #5: PKG-2026-003 draft — cek seeder dulu, skip kalau tidak ada
+ * ⚠️ FIX #6: "Per Kategori" — pakai expect.poll (tab HPP butuh waktu render)
  */
 
 // ==========================================
@@ -501,7 +502,19 @@ test.describe('Admin — Detail Paket (Show)', () => {
         });
 
         test('menampilkan section "Per Kategori"', async ({ page }) => {
-            await expect(page.getByText(/^Per Kategori$/i)).toBeVisible();
+            // ✅ FIX #6: pakai expect.poll — tab HPP baru render setelah
+            // klik, butuh waktu beberapa ms. Assertion langsung bisa gagal
+            // karena "Per Kategori" belum muncul di DOM.
+            await expect
+                .poll(
+                    async () =>
+                        await page
+                            .getByText(/^Per Kategori$/i)
+                            .isVisible()
+                            .catch(() => false),
+                    { timeout: 10_000, intervals: [100, 200, 500] },
+                )
+                .toBe(true);
         });
 
         test('menampilkan section "Rincian per Item"', async ({ page }) => {

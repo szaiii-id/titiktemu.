@@ -16,7 +16,8 @@ Artisan::command('inspire', function () {
 | Semua jadwal task otomatis:
 | - Auto-expire booking pending       (setiap jam)
 | - Auto-activate trip yang due       (setiap jam)
-| - Auto-complete trip terverifikasi  (setiap jam)  ← Fase 4
+| - Auto-complete trip terverifikasi  (setiap jam)
+| - Auto-verify laporan harian        (setiap hari jam 00:00) ← BARU
 |
 | Setup production:
 |   * * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
@@ -28,15 +29,13 @@ Artisan::command('inspire', function () {
 |   php artisan bookings:expire
 |   php artisan trips:activate
 |   php artisan trips:complete
-|   (semua bisa pakai --dry-run)
+|   php artisan reports:auto-verify
 |
 */
 
 // ==========================================
 // AUTO-EXPIRE BOOKING
 // ==========================================
-// Jalan setiap jam. Booking pending_payment yang sudah lewat
-// expired_at (created_at + 24 jam) akan otomatis di-cancel.
 Schedule::command('bookings:expire')
     ->hourly()
     ->name('bookings:expire-hourly')
@@ -47,14 +46,6 @@ Schedule::command('bookings:expire')
 // ==========================================
 // AUTO-ACTIVATE TRIP
 // ==========================================
-// Jalan setiap jam. Trip scheduled yang:
-// - tanggal_mulai <= today (timezone trip)
-// - punya minimal 1 mitra
-// akan otomatis di-activate.
-//
-// Trip yang belum punya mitra akan dilewati (log warning).
-// Admin bisa assign mitra manual, atau trip akan di-activate
-// pada run berikutnya setelah mitra di-assign.
 Schedule::command('trips:activate')
     ->hourly()
     ->name('trips:activate-hourly')
@@ -63,22 +54,27 @@ Schedule::command('trips:activate')
     ->runInBackground();
 
 // ==========================================
-// AUTO-COMPLETE TRIP (Fase 4)
+// AUTO-COMPLETE TRIP
 // ==========================================
-// Jalan setiap jam. Trip active yang:
-// - tanggal_selesai <= today
-// - SEMUA trip_day sudah punya minimal 1 daily report verified
-// akan otomatis di-complete (status → completed).
-//
-// Trip yang belum punya report verified untuk semua hari akan
-// dilewati (log warning). Admin bisa verifikasi laporan manual
-// dari UI, atau trip akan di-complete pada run berikutnya.
-//
-// Catatan: kalau report terakhir diverifikasi via UI, trip juga
-// langsung auto-complete (lewat DailyReportService::verify()).
 Schedule::command('trips:complete')
     ->hourly()
     ->name('trips:complete-hourly')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->runInBackground();
+
+// ==========================================
+// AUTO-VERIFY LAPORAN HARIAN (OPSI 1 - SLA)
+// ==========================================
+// Jalan setiap hari jam 00:00 (tengah malam).
+// Laporan yang statusnya 'submitted' dan sudah lewat 3 hari
+// akan otomatis diverifikasi oleh sistem.
+//
+// Honor mitra akan otomatis masuk ke wallet setelah auto-verify.
+// Admin tidak perlu khawatir jika lupa memverifikasi manual.
+Schedule::command('reports:auto-verify --days=3')
+    ->dailyAt('00:00')
+    ->name('reports:auto-verify-daily')
     ->withoutOverlapping()
     ->onOneServer()
     ->runInBackground();

@@ -74,9 +74,19 @@ describe('ImageUploader.svelte — Rendering Dasar', () => {
     });
 
     it('merender tombol upload jika belum ada file', () => {
+        // ✅ FIX A11Y: `aria-label` dihapus dari tombol upload, jadi
+        // accessible name = gabungan teks visible tombol:
+        // "Klik untuk upload JPG, PNG, atau WEBP".
+        //
+        // Assertion lama `/Upload Gambar/i` GAGAL karena accessible name
+        // sekarang bukan "Upload Gambar" lagi.
+        //
+        // Assertion baru: cek accessible name yang benar (dari teks visible).
+        // Alternatif: pakai getByTestId('logo-upload-button') yang lebih
+        // robust terhadap perubahan a11y di masa depan.
         render(ImageUploader, { props: {} });
         expect(
-            screen.getByRole('button', { name: /Upload Gambar/i }),
+            screen.getByRole('button', { name: /Klik untuk upload/i }),
         ).toBeInTheDocument();
     });
 
@@ -228,7 +238,7 @@ describe('ImageUploader.svelte — Validasi', () => {
         const file1 = createMockFile('1.png', 1024);
         const file2 = createMockFile('2.png', 1024);
         const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-        
+
         Object.defineProperty(input, 'files', { value: [file1, file2] });
         await fireEvent.change(input);
 
